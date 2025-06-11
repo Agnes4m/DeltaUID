@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from sqlmodel import Field, select
 from gsuid_core.webconsole import site

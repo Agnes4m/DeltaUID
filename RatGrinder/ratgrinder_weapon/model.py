@@ -1,5 +1,4 @@
-from optparse import Option
-from typing import List, Literal, Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 
 
 class WeaponInfo(TypedDict):
