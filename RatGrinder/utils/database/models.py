@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from sqlmodel import Field, select
 from gsuid_core.webconsole import site
@@ -14,7 +14,7 @@ from ..utils import create_ssplayer
 class SsBind(BaseModel, table=True):
     __table_args__ = {'extend_existing': True}
     qq_uid: str = Field(default=None, title='qqUID')
-    uid: List[str] = Field(default=None, title='其他平台UID')
+    uid_list: List[str] = Field(default=None, title='其他平台UID')
     player: SsPlayer = Field(default=create_ssplayer(), title='角色信息')
 
     @classmethod
@@ -49,6 +49,44 @@ class SsBind(BaseModel, table=True):
         result = await session.execute(stmt)
         data = result.scalars().first()
         return data
+
+    @classmethod
+    @with_session
+    async def data_update(
+        cls,
+        session: AsyncSession,
+        qq_uid: str,
+        name: str = "",
+        uid_list: List[str] = [],
+        player: Optional[SsPlayer] = None,
+    ) -> int:
+        """
+        更新指定QQ UID的数据。
+
+        参数:
+        - session (AsyncSession): 数据库会话对象。
+        - qq_uid (str): 要更新的QQ UID。
+        - name (str): 新的名称。
+        - player (SsPlayer): 新的角色信息。
+
+        返回值:
+        - int: 影响的行数（1为成功，0为未找到，-1为失败）。
+        """
+        stmt = select(cls).where(cls.qq_uid == qq_uid)
+        result = await session.execute(stmt)
+        data = result.scalars().first()
+        if data is None:
+            return 0
+        for attr, value in {
+            'name': name,
+            'uid_list': uid_list,
+            'player': player,
+        }.items():
+            if value:
+                setattr(data, attr, value)
+        session.add(data)
+        await session.commit()
+        return 1
 
 
 @site.register_admin

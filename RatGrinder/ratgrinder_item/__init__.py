@@ -6,11 +6,10 @@ from gsuid_core.utils.message import send_diff_msg
 
 from .bind import bind_qq_uid, create_player
 
-ss_create = SV('创建角色')
-ss_play = SV('账户管理')
+ss_bag = SV('背包')
 
 
-@ss_create.on_command(('创建角色', '新建角色'))
+@ss_bag.on_command(('背包查看'))
 async def send_stock_info(bot: Bot, ev: Event):
     logger.info('[RatGrinder] 开始执行[创建角色]')
     qq_uid = str(ev.user_id)
@@ -24,20 +23,3 @@ async def send_stock_info(bot: Bot, ev: Event):
             1: f"[RatG] 角色{name}({qq_uid})已经创建过了！",
         },
     )
-
-
-@ss_play.on_command(('绑定qq'))
-async def send_my_stock(bot: Bot, ev: Event):
-    """多平台绑定"""
-    logger.info('[RatGrinder] 开始执行[账号管理操作]')
-    qq_uid = str(ev.user_id)
-    user_id = ev.text.strip()
-    await bind_qq_uid(qq_uid, user_id)
-    await bot.send("")
-
-
-@ss_play.on_fullmatch(('解除绑定', '解绑'))
-async def send_future_stock(bot: Bot, ev: Event):
-    """to do以后做多平台绑定"""
-    logger.info('[RatGrinder] 开始执行[解除绑定]')
-    await bot.send("")

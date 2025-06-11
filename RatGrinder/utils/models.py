@@ -1,4 +1,6 @@
-from typing import List, TypedDict
+from typing import List, Union, Optional, TypedDict
+
+from ..ratgrinder_item.model import Pill, Hormone
 
 
 class SsPlayer(TypedDict):
@@ -6,7 +8,7 @@ class SsPlayer(TypedDict):
     money: int
     level: int
     exp: float
-    bag: List[str]
+    bag: List[Union[Pill, Hormone]]
     """
     背包物品
         1. 武器(枪)

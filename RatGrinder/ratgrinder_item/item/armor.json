@@ -1,0 +1,32 @@
+[
+    {
+        "type_": "护甲",
+        "type_info": "头甲",
+        "name": "草帽",
+        "price": "4000",
+        "icon": "",
+        "desc": "随处可见的普通帽子",
+        "limit_level": "1",
+        "quality": 1,
+        "durability": 10,
+        "defense": 5,
+        "hearing": 1.0,
+        "vision": 1.0,
+        "move_speed": 1.0
+    },
+    {
+        "type_": "护甲",
+        "type_info": "体甲",
+        "name": "休闲服",
+        "price": "6000",
+        "icon": "",
+        "desc": "随处可见的普通衣服",
+        "limit_level": "1",
+        "quality": 1,
+        "durability": 10,
+        "defense": 5,
+        "hearing": 1.0,
+        "vision": 1.0,
+        "move_speed": 1.0
+    }
+]

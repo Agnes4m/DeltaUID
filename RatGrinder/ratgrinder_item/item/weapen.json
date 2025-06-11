@@ -1,0 +1,38 @@
+[
+    {
+        "type_": "武器",
+        "type_info": "冲锋枪",
+        "name": "野牛-pp",
+        "price": "10000",
+        "icon": "icon_pp",
+        "desc": "野牛pp是一款由ak47改的武器,具有高容量和高便携性，便于携带和灵活移动，以及压制敌人，但是射程和单发威力较低，适合突击和室内战斗。",
+        "limit_level": "1",
+        "damage": "22",
+        "attack_speed": "1.2",
+        "move_speed": "1.4"
+    },
+    {
+        "type_": "武器",
+        "type_info": "冲锋枪",
+        "name": "uzi",
+        "price": "10000",
+        "icon": "icon_uzi",
+        "desc": "Uzi是一款轻便的冲锋枪，射速极高，适合近距离快速作战，便于携带和灵活移动，但射程和单发威力较低，适合突击和室内战斗。",
+        "limit_level": "1",
+        "damage": "20",
+        "attack_speed": "1.5",
+        "move_speed": "1.4"
+    },
+    {
+        "type_": "武器",
+        "type_info": "突击步枪",
+        "name": "ak-12",
+        "price": "15000",
+        "icon": "icon_ak12",
+        "desc": "AK-12是一款突击步枪，具有远射程和高伤害效率，适合中远距离室外作战，但是后坐力大，扫射精准度低。",
+        "limit_level": "1",
+        "damage": "45",
+        "attack_speed": "1",
+        "move_speed": "1"
+    },
+]
