@@ -1,8 +1,8 @@
 from typing import List, Optional
 
-from sqlmodel import Field, select
 from gsuid_core.webconsole import site
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import JSON, Field, Column, select
 from gsuid_core.webconsole.mount_app import GsAdminModel
 from fastapi_amis_admin.amis.components import PageSchema
 from gsuid_core.utils.database.base_models import BaseModel, with_session
@@ -14,8 +14,14 @@ from ..utils import create_ssplayer
 class SsBind(BaseModel, table=True):
     __table_args__ = {'extend_existing': True}
     qq_uid: str = Field(default=None, title='qqUID')
-    uid_list: List[str] = Field(default=None, title='其他平台UID')
-    player: SsPlayer = Field(default=create_ssplayer(), title='角色信息')
+    uid_list: List[str] = Field(
+        default_factory=list, sa_column=Column(JSON), title='其他平台UID'
+    )
+    player: SsPlayer = Field(
+        default_factory=create_ssplayer,
+        sa_column=Column(JSON),
+        title='角色信息',
+    )
 
     @classmethod
     @with_session
@@ -99,4 +105,5 @@ class SsPushAdmin(GsAdminModel):
 
     model = SsBind
 
+    model = SsBind
     model = SsBind

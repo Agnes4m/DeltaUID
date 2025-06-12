@@ -1,7 +1,7 @@
 # RatGrinder
 
 <p align="center">
-  <a href="https://github.com/Agnes4m/RatGrinder"><img src="./icon.jpg" width="256" height="256" alt="SayuStock"></a>
+  <a href="https://github.com/Agnes4m/RatGrinder"><img src="./icon.jpg" width="256" height="256" alt="RatGrinder"></a>
 </p>
 <h1 align = "center">鼠鼠模拟器 SayuStock 0.0.1</h1>
 <h4 align = "center">🚧支持QQ群/频道、OneBot、微信、KOOK、Tg、飞书、Discord的鼠鼠模拟器小游戏🚧</h4>

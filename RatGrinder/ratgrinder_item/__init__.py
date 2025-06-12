@@ -4,22 +4,17 @@ from gsuid_core.models import Event
 from gsuid_core.logger import logger
 from gsuid_core.utils.message import send_diff_msg
 
-from .bind import bind_qq_uid, create_player
+from .bag import get_bag_info
 
 ss_bag = SV('背包')
 
 
-@ss_bag.on_command(('背包查看'))
+@ss_bag.on_command(('仓库查看'))
 async def send_stock_info(bot: Bot, ev: Event):
-    logger.info('[RatGrinder] 开始执行[创建角色]')
+    logger.info('[RatGrinder] 开始执行[仓库查看]')
     qq_uid = str(ev.user_id)
-    name = ev.sender['nickname']
-    data = await create_player(qq_uid=qq_uid, name=name)
-    await send_diff_msg(
-        bot,
-        code=data,
-        data={
-            0: f"[RatG] 创建角色{name}({qq_uid})成功！",
-            1: f"[RatG] 角色{name}({qq_uid})已经创建过了！",
-        },
-    )
+    data = await get_bag_info(qq_uid=qq_uid)
+    if data is None:
+        await bot.send("没有绑定，请先绑定账号")
+        return
+    await bot.send(data)
