@@ -9,7 +9,7 @@ from fastapi_amis_admin.amis.components import PageSchema
 from gsuid_core.utils.database.base_models import BaseModel, with_session
 
 from ..models import SsPlayer
-from ..utils import create_ssplayer
+from ...utils.utils import create_ssplayer
 
 
 class SsBind(BaseModel, table=True):
@@ -117,4 +117,6 @@ class SsPushAdmin(GsAdminModel):
         icon='fa fa-bullhorn',
     )  # type: ignore
 
+    model = SsBind
+    model = SsBind
     model = SsBind
