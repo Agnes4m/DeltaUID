@@ -5,7 +5,7 @@ from .models import SsPlayer
 
 def create_ssplayer(
     name: str = '鼠鼠',
-    money: int = 0,
+    money: int = 50000,
     level: int = 1,
     exp: float = 0.0,
     bag: Optional[List[Any]] = None,

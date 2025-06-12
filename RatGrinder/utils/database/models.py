@@ -3,6 +3,7 @@ from typing import List, Optional
 from gsuid_core.webconsole import site
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import JSON, Field, Column, select
+from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.webconsole.mount_app import GsAdminModel
 from fastapi_amis_admin.amis.components import PageSchema
 from gsuid_core.utils.database.base_models import BaseModel, with_session
@@ -13,7 +14,7 @@ from ..utils import create_ssplayer
 
 class SsBind(BaseModel, table=True):
     __table_args__ = {'extend_existing': True}
-    qq_uid: str = Field(default=None, title='qqUID')
+    uid: Optional[str] = Field(default=None, title="ssuid")
     uid_list: List[str] = Field(
         default_factory=list, sa_column=Column(JSON), title='其他平台UID'
     )
@@ -28,30 +29,35 @@ class SsBind(BaseModel, table=True):
     async def insert_data(
         cls,
         session: AsyncSession,
-        qq_uid: str,
+        bot_id: str,
+        user_id: str,
         name: str,
         player: SsPlayer,
     ) -> int:
         return await cls.full_insert_data(
-            qq_uid=qq_uid, name=name, player=player
+            user_id=user_id,
+            uid="",
+            bot_id=bot_id,
+            name=name,
+            player=player,
         )
 
     @classmethod
     @with_session
     async def data_get(
-        cls, session: AsyncSession, qq_uid: str
+        cls, session: AsyncSession, user_id: str
     ) -> "SsBind | None":
         """
         输出指定QQ UID的数据，否则输出None。
 
         参数:
         - session (AsyncSession): 数据库会话对象。
-        - qq_uid (str): 要检查的QQ UID。
+        - user_id (str): 要检查的QQ UID。
 
         返回值:
         - bool: 如果存在数据则返回数据，否则返回False。
         """
-        stmt = select(cls).where(cls.qq_uid == qq_uid)
+        stmt = select(cls).where(cls.user_id == user_id)
         result = await session.execute(stmt)
         data = result.scalars().first()
         return data
@@ -61,7 +67,7 @@ class SsBind(BaseModel, table=True):
     async def data_update(
         cls,
         session: AsyncSession,
-        qq_uid: str,
+        user_id: str,
         name: str = "",
         uid_list: List[str] = [],
         player: Optional[SsPlayer] = None,
@@ -71,14 +77,14 @@ class SsBind(BaseModel, table=True):
 
         参数:
         - session (AsyncSession): 数据库会话对象。
-        - qq_uid (str): 要更新的QQ UID。
+        - user_id (str): 要更新的QQ UID。
         - name (str): 新的名称。
         - player (SsPlayer): 新的角色信息。
 
         返回值:
         - int: 影响的行数（1为成功，0为未找到，-1为失败）。
         """
-        stmt = select(cls).where(cls.qq_uid == qq_uid)
+        stmt = select(cls).where(cls.user_id == user_id)
         result = await session.execute(stmt)
         data = result.scalars().first()
         if data is None:
@@ -95,6 +101,14 @@ class SsBind(BaseModel, table=True):
         return 1
 
 
+exec_list.extend(
+    [
+        'ALTER TABLE SsBind ADD COLUMN uid_list JSON DEFAULT "[]"',
+        'ALTER TABLE SsBind ADD COLUMN player JSON DEFAULT \'{"name": "鼠鼠", "money": 50000, "level": 1, "exp": 0.0, "bag": []}\'',
+    ]
+)
+
+
 @site.register_admin
 class SsPushAdmin(GsAdminModel):
     pk_name = 'id'
@@ -103,7 +117,4 @@ class SsPushAdmin(GsAdminModel):
         icon='fa fa-bullhorn',
     )  # type: ignore
 
-    model = SsBind
-
-    model = SsBind
     model = SsBind
