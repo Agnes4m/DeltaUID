@@ -1,5 +1,4 @@
-from os import name
-from typing import Dict, List, Union, Optional, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
 
 class ItemInfo(TypedDict, total=False):
