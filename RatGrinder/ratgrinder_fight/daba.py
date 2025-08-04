@@ -1,7 +1,7 @@
 import random
-from typing import Dict, List
+from typing import Dict
 
-from .model import GameMap, MapCell, ItemInfo, FixedPointInfo
+from .model import GameMap, MapCell, FixedPointInfo
 
 # 关键格点位定义，每个点有唯一id、类型、物品池、概率、以及连接到的其他点
 KEY_POINTS: Dict[str, FixedPointInfo] = {
