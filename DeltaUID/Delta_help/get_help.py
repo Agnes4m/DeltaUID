@@ -26,7 +26,7 @@ async def get_help_data() -> Dict[str, PluginHelp]:
 
 async def get_help():
     return await get_new_help(
-        plugin_name="RatGrinder",
+        plugin_name="DeltaUID",
         plugin_info={f"v{RatGrinder_version}": ""},
         plugin_icon=Image.open(ICON),
         plugin_help=await get_help_data(),
