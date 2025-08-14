@@ -1,18 +1,41 @@
 from typing import Optional
 
+from fastapi_amis_admin.amis.components import PageSchema
+from plugins.DeltaUID.DeltaUID.utils.models import UserData
 from sqlmodel import Field
+
+from gsuid_core.bot import Bot, Event
+from gsuid_core.utils.database.base_models import Bind, User
 from gsuid_core.webconsole import site
 from gsuid_core.webconsole.mount_app import GsAdminModel
-from fastapi_amis_admin.amis.components import PageSchema
-from gsuid_core.utils.database.base_models import Bind, User
 
 
 class DFBind(Bind, table=True):
-    openid: Optional[str] = Field(default=None, title='三角洲uid')
+    uid: Optional[str] = Field(default=None, title='三角洲uid')
+
+    @classmethod
+    async def insert_user(cls, ev: Event, bot: Bot, data: UserData):
+        return await cls.insert_data(
+            user_id=ev.user_id,
+            bot_id=bot.bot_id,
+            uid=data['openid'],
+            group_id=data['group_id'],
+        )
 
 
 class DFUser(User, table=True):
-    openid: Optional[str] = Field(default=None, title='三角洲uid')
+    uid: Optional[str] = Field(default=None, title='三角洲uid')
+    platform: Optional[str] = Field(default=None, title='平台')
+
+    @classmethod
+    async def insert_user(cls, bot: Bot, data: UserData):
+        return await cls.insert_data(
+            user_id=data['qq_id'],
+            bot_id=bot.bot_id,
+            uid=data['openid'],
+            platform=data['platform'],
+            cookie=data['access_token'],
+        )
 
 
 @site.register_admin

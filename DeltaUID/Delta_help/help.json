@@ -3,9 +3,9 @@
     "desc": "需要创建角色,请输入指令`鼠鼠创建角色`",
     "data": [
       {
-        "name": "创建角色",
-        "desc": "创建自己的账号信息",
-        "eg": "创建角色",
+        "name": "登录",
+        "desc": "返回二维码登录信息",
+        "eg": "登录",
         "need_ck": false,
         "need_sk": false,
         "need_admin": false

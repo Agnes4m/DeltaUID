@@ -17,19 +17,19 @@ extra_standard_library = ["typing_extensions"]
 [tool.pdm]
 distribution = false
 [tool.poetry]
-name = "RatGrinder"
+name = "DeltaUID"
 version = "0.0.1"
 description = "基于GsCore, 支持OneBot(QQ)、OneBotV12、QQ频道、微信、KOOK（开黑啦）、Telegram（电报）、FeiShu（飞书）、Discord的全功能HoshinoBot/NoneBot2/Koishi/yunzai/ZeroBot鼠鼠模拟器小游戏"
 authors = ["Agnes4m <Z735803792@163.com>"]
 readme = "README.md"
-homepage = "https://github.com/Agnes4m/RatGrinder"
-repository = "https://github.com/Agnes4m/RatGrinder"
-documentation = "https://github.com/Agnes4m/RatGrinder/README.md"
-packages = [{ include = "RatGrinder" }]
+homepage = "https://github.com/Agnes4m/DeltaUID"
+repository = "https://github.com/Agnes4m/DeltaUID"
+documentation = "https://github.com/Agnes4m/DeltaUID/README.md"
+packages = [{ include = "DeltaUID" }]
 exclude = ["tests", "deploy"]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/Agnes4m/RatGrinder/issues"
+"Bug Tracker" = "https://github.com/Agnes4m/DeltaUID/issues"
 
 [tool.pyright]
 disableBytesTypePromotions = false
@@ -38,7 +38,7 @@ disableBytesTypePromotions = false
 deprecateTypingAliases = false
 
 [project]
-name = "RatGrinder"
+name = "DeltaUID"
 version = "0.0.1"
 description = "基于GsCore, 支持OneBot(QQ)、OneBotV12、QQ频道、微信、KOOK（开黑啦）、Telegram（电报）、FeiShu（飞书）、Discord的全功能HoshinoBot/NoneBot2/Koishi/yunzai/ZeroBot鼠鼠模拟器小游戏"
 authors = [

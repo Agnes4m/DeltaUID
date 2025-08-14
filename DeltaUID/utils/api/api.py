@@ -1,10 +1,11 @@
-import re
-import json
-import time
 import base64
+import json
+import re
+import time
 import urllib.parse
 
 import httpx
+
 from gsuid_core.logger import logger
 
 from .util import Util
@@ -129,7 +130,7 @@ class DeltaApi:
 
                 return {'status': True, 'message': data}
             else:
-                logger.error(f"获取二维码失败")
+                logger.error("获取二维码失败")
                 return {'status': False, 'message': "获取二维码失败"}
         except Exception as e:
             logger.exception(f"获取二维码失败: {e}")
@@ -225,7 +226,7 @@ class DeltaApi:
             if not qq_match:
                 return {'code': -4, 'message': '无法解析QQ号', 'data': {}}
 
-            qq = qq_match.group(1)
+            # qq = qq_match.group(1)
 
             # 访问重定向URL获取完整cookie
             redirect_response = await self.client.get(
@@ -463,7 +464,7 @@ class DeltaApi:
                         # 处理GBK编码的消息
                         try:
                             data[key] = value.encode('latin1').decode('gbk')
-                        except:
+                        except (UnicodeDecodeError, UnicodeEncodeError):
                             data[key] = value
                     else:
                         data[key] = value

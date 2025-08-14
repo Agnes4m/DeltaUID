@@ -2,7 +2,7 @@ from typing import TypedDict
 
 
 class UserData(TypedDict):
-    qq_id: int
+    qq_id: str
     group_id: int
     access_token: str
     openid: str

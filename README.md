@@ -21,10 +21,21 @@
 
 ## 丨安装方式(未支持,可使用文档git方式)
 
-1. ~~发送`core安装插件RatGrinder`~~
+1. ~~发送`core安装插件DeltaUID`~~
 2. 发送`gs重启`应用插件
+
+1. 进入plugins目录，`git clone --depth 1 https://github.com/username/repo.git`
+
 
 ## 丨说明
 
-三角洲信息查询
+- 查询三角洲的总体信息，日报，周报等等
 
+## 丨功能
+
+使用`鼠鼠帮助`查看帮助信息
+
+### 丨其他
+
+- 插件基于[早柚核心(gsuid_core)](https://github.com/Genshin-bots/gsuid_core)开发
+- 原代码来自[nonebot-plugin-delta-helper](https://github.com/BraveCowardp/nonebot-plugin-delta-helper)，在此基础上适配core，并优化部分功能
