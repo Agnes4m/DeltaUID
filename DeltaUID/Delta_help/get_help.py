@@ -9,7 +9,6 @@ from gsuid_core.help.draw_new_plugin_help import get_new_help
 from gsuid_core.help.model import PluginHelp
 from gsuid_core.sv import get_plugin_available_prefix
 
-from ..utils.image import get_footer
 from ..version import DeltaUID_version
 
 ICON = Path(__file__).parent.parent.parent / "ICON.png"

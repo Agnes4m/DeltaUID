@@ -28,3 +28,23 @@ class SafehouseRecord(TypedDict):
     place_name: str  # 工作台名称
     left_time: int  # 剩余时间（秒）
     push_time: int  # 推送时间戳
+
+
+class SignMsg(TypedDict):
+
+    image: str
+    cookie: str
+    qrSig: str
+    token: str
+    loginSig: str
+
+
+class Sign(TypedDict):
+    status: bool
+    message: str | SignMsg
+
+
+class LoginStatus(TypedDict):
+    code: int
+    message: str
+    data: dict

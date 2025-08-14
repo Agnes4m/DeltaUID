@@ -23,9 +23,9 @@
 
 1. ~~发送`core安装插件DeltaUID`~~
 2. 发送`gs重启`应用插件
-
-1. 进入plugins目录，`git clone --depth 1 https://github.com/username/repo.git`
-
+---
+1. 进入plugins目录，`git clone --depth 1 https://github.com/Agnes4m/DeltaUID.git`
+2. 发送`gs重启`应用插件
 
 ## 丨说明
 

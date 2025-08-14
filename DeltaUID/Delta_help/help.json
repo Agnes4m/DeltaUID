@@ -1,12 +1,25 @@
 {
-  "基础服务": {
-    "desc": "需要创建角色,请输入指令`鼠鼠创建角色`",
+  "初始操作": {
+    "desc": "可以直接使用",
     "data": [
       {
         "name": "登录",
         "desc": "返回二维码登录信息",
         "eg": "登录",
         "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
+  "基础服务": {
+    "desc": "需要登录后使用,请输入指令`鼠鼠登录`",
+    "data": [
+      {
+        "name": "信息",
+        "desc": "返回三角洲烽火和战场信息",
+        "eg": "信息",
+        "need_ck": true,
         "need_sk": false,
         "need_admin": false
       }

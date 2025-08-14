@@ -37,7 +37,7 @@ async def login(bot: Bot, ev: Event):
     if platform == "qq":
         # 获取二维码
         res = await deltaapi.get_sig()
-        if not res['status']:
+        if not res['status'] or isinstance(res['message'], str):
             await bot.send(f"获取二维码失败：{res['message']}")
             return
 

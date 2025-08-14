@@ -3,11 +3,13 @@ import json
 import re
 import time
 import urllib.parse
+from typing import cast
 
 import httpx
 
 from gsuid_core.logger import logger
 
+from ..models import LoginStatus, Sign, SignMsg
 from .util import Util
 
 CONSTANTS = {
@@ -83,7 +85,7 @@ class DeltaApi:
             logger.error(f"获取登录token失败: {e}")
             return False
 
-    async def get_sig(self):
+    async def get_sig(self) -> Sign:
         if not await self.get_login_token():
             return {'status': False, 'message': '获取登录token失败'}
 
@@ -120,13 +122,16 @@ class DeltaApi:
                 )
                 qrToken = Util.get_qr_token(qrSig)
 
-                data = {
-                    'qrSig': qrSig,
-                    'image': iamgebase64,
-                    'token': qrToken,
-                    'loginSig': loginSig,
-                    'cookie': dict(response.cookies),
-                }
+                data = cast(
+                    SignMsg,
+                    {
+                        'qrSig': qrSig,
+                        'image': iamgebase64,
+                        'token': qrToken,
+                        'loginSig': loginSig,
+                        'cookie': dict(response.cookies),
+                    },
+                )
 
                 return {'status': True, 'message': data}
             else:
@@ -141,7 +146,7 @@ class DeltaApi:
 
     async def get_login_status(
         self, cookie: str, qrSig: str, qrToken: str, loginSig: str
-    ):
+    ) -> LoginStatus:
         headers = CONSTANTS['REQUEST_HEADERS_BASE']
         url = CONSTANTS['GETLOGINSTATUS']
 
@@ -405,11 +410,12 @@ class DeltaApi:
 
             url = 'https://comm.ams.game.qq.com/ide/'
             response = await self.client.post(
-                url, data=form_data, cookies=cookies
+                CONSTANTS['GAMEBASEURL'], data=form_data, cookies=cookies
             )
 
             data = response.json()
             if data['ret'] != 0:
+                logger.warning(f"绑定检查失败: {data}")
                 return {
                     'status': False,
                     'message': '获取失败,检查鉴权是否过期',
@@ -417,7 +423,7 @@ class DeltaApi:
                 }
 
             # 检查是否已绑定
-            if not data['jData']['bindarea']:  # 未绑定游戏角色
+            if not data['jData']['bindarea']:
                 # 获取角色信息
                 params = {
                     'needGopenid': 1,

@@ -1,13 +1,14 @@
 from typing import Optional
 
 from fastapi_amis_admin.amis.components import PageSchema
-from plugins.DeltaUID.DeltaUID.utils.models import UserData
 from sqlmodel import Field
 
 from gsuid_core.bot import Bot, Event
 from gsuid_core.utils.database.base_models import Bind, User
 from gsuid_core.webconsole import site
 from gsuid_core.webconsole.mount_app import GsAdminModel
+
+from ..models import UserData
 
 
 class DFBind(Bind, table=True):
@@ -24,8 +25,8 @@ class DFBind(Bind, table=True):
 
 
 class DFUser(User, table=True):
-    uid: Optional[str] = Field(default=None, title='三角洲uid')
-    platform: Optional[str] = Field(default=None, title='平台')
+    uid: str = Field(default="", title='三角洲uid')
+    platform: str = Field(default="qq", title='平台')
 
     @classmethod
     async def insert_user(cls, bot: Bot, data: UserData):
