@@ -1,8 +1,20 @@
+# import asyncio
+import datetime
+
+# from gsuid_core.data_store import get_res_path
 from gsuid_core.logger import logger
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
 from ..utils.database.models import DFUser
+
+# import json
+
+# from gsuid_core.utils.database.models import Subscribe
+
+# from ..utils.models import SafehouseRecord
+
+SAFEHOUSE_CHECK_INTERVAL = 600
 
 
 class MsgInfo:
@@ -387,3 +399,204 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
 
                 msgs += '/n' + fallback_message
             return msgs
+
+    async def get_tqc(self):
+
+        if not self.user_data:
+            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+        deltaapi = DeltaApi(self.user_data.platform)
+        res = await deltaapi.get_safehousedevice_status(
+            access_token=self.user_data.cookie, openid=self.user_data.uid
+        )
+
+        if res['status']:
+            place_data = res['data'].get('placeData', [])
+            relate_map = res['data'].get('relateMap', {})
+            devices = []
+
+            for device in place_data:
+                object_id = device.get('objectId', 0)
+                left_time = device.get('leftTime', 0)
+                push_time = device.get('pushTime', 0)
+                place_name = device.get('placeName', '')
+
+                if object_id > 0 and left_time > 0:
+                    # 正在生产
+                    object_name = relate_map.get(str(object_id), {}).get(
+                        'objectName', f'物品{object_id}'
+                    )
+                    # 计算进度百分比
+                    total_time = device.get('totalTime', 0)
+                    progress = (
+                        100 - (left_time / total_time * 100)
+                        if total_time > 0
+                        else 0
+                    )
+
+                    devices.append(
+                        {
+                            'place_name': place_name,
+                            'status': 'producing',
+                            'object_name': object_name,
+                            'left_time': Util.seconds_to_duration(left_time),
+                            'finish_time': datetime.datetime.fromtimestamp(
+                                push_time
+                            ).strftime('%m-%d %H:%M:%S'),
+                            'progress': progress,
+                        }
+                    )
+                else:
+                    # 闲置状态
+                    devices.append(
+                        {'place_name': place_name, 'status': 'idle'}
+                    )
+
+            # if devices:
+
+            # 文本模式
+            message = None
+            for device_data in devices:
+                if device_data['status'] == 'producing':
+                    text = f"{device_data['place_name']}：{device_data['object_name']}，剩余时间：{device_data['left_time']}，完成时间：{device_data['finish_time']}"
+                else:
+                    text = f"{device_data['place_name']}：闲置中"
+
+                if not message:
+                    message = text
+                else:
+                    message += f"\n{text}"
+
+            if message:
+                return message
+            else:
+                return "特勤处状态获取成功，但没有数据"
+        else:
+            return "获取特勤处状态失败：{res['message']}"
+
+    # async def send_safehouse_message(
+    #     self, qq_id: int, object_name: str, left_time: int
+    # ):
+    #     await asyncio.sleep(left_time)
+
+    #     if self.user_data is None:
+    #         return
+    #     logger.info(f"特勤处生产完成提醒: {qq_id} - {object_name}")
+    #     return f" {object_name}生产完成！"
+
+    # async def get_tqc_push(self):
+
+    #     if not self.user_data:
+    #         return ""
+
+    #     try:
+    #         deltaapi = DeltaApi(self.user_data.platform)
+    #         res = await deltaapi.get_safehousedevice_status(
+    #             self.user_data.cookie, self.user_data.uid
+    #         )
+
+    #         if not res['status']:
+    #             logger.error(f"获取特勤处状态失败: {res['message']}")
+    #             return
+
+    #         place_data = res['data'].get('placeData', [])
+    #         relate_map = res['data'].get('relateMap', {})
+
+    #         # 获取当前用户的特勤处记录
+    #         path = get_res_path(
+    #             [
+    #                 'DeltaUID',
+    #                 'tqc',
+    #             ]
+    #         )
+    #         path.mkdir(parents=True, exist_ok=True)
+    #         if not path.joinpath(f'{self.user_data.user_id}.json').is_file():
+    #             with open(
+    #                 path.joinpath(f'{self.user_data.user_id}.json'),
+    #                 'w',
+    #                 encoding='utf-8',
+    #             ) as f:
+    #                 json.dump({}, f)
+
+    #         with open(
+    #             path.joinpath(f'{self.user_data.user_id}.json'),
+    #             'r',
+    #             encoding='utf-8',
+    #         ) as f:
+    #             current_records = json.load(f)
+    #         current_device_ids = {current_records.device_id}
+    #         info = ""
+
+    #         # 处理每个设备的状态
+    #         for device in place_data:
+    #             device_id = device.get('Id', '')
+    #             left_time = device.get('leftTime', 0)
+    #             object_id = device.get('objectId', 0)
+    #             place_name = device.get('placeName', '')
+
+    #             # 如果设备正在生产且有剩余时间
+    #             if left_time > 0 and object_id > 0:
+    #                 # 获取物品信息
+    #                 object_info = relate_map.get(str(object_id), {})
+    #                 object_name = object_info.get(
+    #                     'objectName', f'物品{object_id}'
+    #                 )
+
+    #                 # 创建或更新记录
+    #                 safehouse_record = SafehouseRecord(
+    #                     qq_id=self.user_data.user_id,
+    #                     device_id=device_id,
+    #                     object_id=object_id,
+    #                     object_name=object_name,
+    #                     place_name=place_name,
+    #                     left_time=left_time,
+    #                     push_time=device.get('pushTime', 0),
+    #                 )
+    #                 info += (
+    #                     f"{place_name} - {object_name} - 剩余{left_time}秒\n"
+    #                 )
+
+    #                 with open(
+    #                     path.joinpath(f'{self.user_data.user_id}.json'),
+    #                     'w',
+    #                     encoding='utf-8',
+    #                 ) as f:
+    #                     safehouse_record.current_records
+    #                     json.dump(safehouse_record, f)
+
+    #                 current_device_ids.discard(device_id)
+
+    #                 # 剩余时间小于检查间隔加60s，启动发送提醒任务
+    #                 if left_time <= SAFEHOUSE_CHECK_INTERVAL + 60:
+    #                     logger.info(
+    #                         f"{left_time}秒后启动发送提醒任务: {self.user_data.user_id} - {device_id}"
+    #                     )
+    #                     # 启动发送提醒任务
+    #                     msg = (
+    #                         await self.send_safehouse_message(
+    #                             int(self.user_data.user_id),
+    #                             object_name,
+    #                             left_time,
+    #                         ),
+    #                     )
+    #                     # 删除记录
+    #                     await user_data_database.delete_safehouse_record(
+    #                         qq_id, device_id
+    #                     )
+
+    #         # 删除已完成的记录（设备不再生产）
+    #         for device_id in current_device_ids:
+    #             await user_data_database.delete_safehouse_record(
+    #                 qq_id, device_id
+    #             )
+
+    #         await user_data_database.commit()
+    #         if info != "":
+    #             logger.info(f"{qq_id}特勤处状态: {info}")
+    #         else:
+    #             logger.info(f"{qq_id}特勤处状态: 闲置中")
+
+    #     except Exception as e:
+    #         logger.exception(f"监控特勤处状态失败: {e}")
+    #     finally:
+    #         await session.close()
+    #     return msg

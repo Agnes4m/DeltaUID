@@ -21,7 +21,7 @@ class LatestRecord(TypedDict):
 class SafehouseRecord(TypedDict):
     """用户特勤处生产记录"""
 
-    qq_id: int  # 用户QQ号
+    qq_id: str  # 用户QQ号
     device_id: str  # 设备ID
     object_id: int  # 生产物品ID
     object_name: str  # 生产物品名称
