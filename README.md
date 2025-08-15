@@ -33,9 +33,12 @@
 
 ## 丨功能
 
-使用`鼠鼠帮助`查看帮助信息
+使用`鼠鼠帮助`或者`ss帮助`查看帮助信息
+
+- 鼠鼠登录
+
 
 ### 丨其他
 
 - 插件基于[早柚核心(gsuid_core)](https://github.com/Genshin-bots/gsuid_core)开发
-- 原代码来自[nonebot-plugin-delta-helper](https://github.com/BraveCowardp/nonebot-plugin-delta-helper)，在此基础上适配core，并优化部分功能
+- 原代码来自[nonebot-plugin-delta-helper](https://github.com/BraveCowardp/nonebot-plugin-delta-helper)，在此基础上适配core，并优化部分功能，为防止冲突本插件不适用`三角洲`关键词前缀，改用`ss`

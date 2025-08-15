@@ -9,6 +9,7 @@ from gsuid_core.help.draw_new_plugin_help import get_new_help
 from gsuid_core.help.model import PluginHelp
 from gsuid_core.sv import get_plugin_available_prefix
 
+# from ..utils.image import get_footer
 from ..version import DeltaUID_version
 
 ICON = Path(__file__).parent.parent.parent / "ICON.png"
@@ -38,6 +39,6 @@ async def get_help():
         cag_bg=Image.open(TEXT_PATH / "cag_bg.png"),
         item_bg=Image.open(TEXT_PATH / "item.png"),
         icon_path=ICON_PATH,
-        # footer=get_footer(), 没改
+        # footer=get_footer(),
         enable_cache=True,
     )

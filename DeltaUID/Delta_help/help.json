@@ -22,6 +22,22 @@
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "战绩",
+        "desc": "返回烽火和战场历史对局信息",
+        "eg": "战绩",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "密码",
+        "desc": "查询今日密码",
+        "eg": "密码",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   }
