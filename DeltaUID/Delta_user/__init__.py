@@ -14,6 +14,8 @@ from .msg_info import MsgInfo
 
 df_info = SV("三角洲信息")
 df_tqc = SV("三角洲特勤处")
+df_day = SV("三角洲日报/周报")
+df_record = SV("三角洲战绩查询")
 
 
 @df_info.on_command(("信息"), block=True)
@@ -23,7 +25,7 @@ async def login(bot: Bot, ev: Event):
     await bot.send(await data.get_msg_info(), at_sender=True)
 
 
-@df_info.on_command(("战绩"), block=True)
+@df_record.on_command(("战绩"), block=True)
 async def get_record(
     bot: Bot,
     ev: Event,
@@ -65,3 +67,23 @@ async def get_tqc(
         logger.info("[ss]正在执行三角洲特勤处功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
         await bot.send(await data.get_tqc(), at_sender=True)
+
+
+@df_day.on_command(("日报"), block=True)
+async def get_day(
+    bot: Bot,
+    ev: Event,
+):
+    logger.info("[ss]正在执行三角洲日报功能")
+    data = MsgInfo(ev.user_id, bot.bot_id)
+    await bot.send(await data.get_daily(), at_sender=True)
+
+
+@df_day.on_command(("周报"), block=True)
+async def get_week(
+    bot: Bot,
+    ev: Event,
+):
+    logger.info("[ss]正在执行三角洲周报功能")
+    data = MsgInfo(ev.user_id, bot.bot_id)
+    await bot.send(await data.get_weekly(), at_sender=True)

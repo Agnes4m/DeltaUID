@@ -38,6 +38,22 @@
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "日报",
+        "desc": "查询今日日报",
+        "eg": "日报",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "周报",
+        "desc": "查询本周周报",
+        "eg": "周报",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   }
