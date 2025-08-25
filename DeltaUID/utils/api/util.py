@@ -114,14 +114,14 @@ class Util:
 
         if hours > 0:
             if minutes > 0:
-                return f"{hours}小时{minutes}分钟"
+                return f"{hours}h{minutes}m"
             else:
-                return f"{hours}小时"
+                return f"{hours}h"
         else:
             if minutes > 0:
-                return f"{minutes}分{second}秒"
+                return f"{minutes}m{second}s"
             else:
-                return f"{second}秒"
+                return f"{second}s"
 
     @staticmethod
     def get_Sunday_date(which_week: int = 1) -> tuple[str, str]:

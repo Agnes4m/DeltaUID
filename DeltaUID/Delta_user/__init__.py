@@ -7,6 +7,7 @@ from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
 from gsuid_core.sv import SV
 
+from .image import draw_df_info_img
 from .msg_info import MsgInfo
 
 # from gsuid_core.utils.database.api import get_uid
@@ -22,7 +23,17 @@ df_record = SV("三角洲战绩查询")
 async def login(bot: Bot, ev: Event):
     logger.info("[ss]正在执行三角洲信息功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
-    await bot.send(await data.get_msg_info(), at_sender=True)
+    msg = await data.get_msg_info(ev)
+
+    day = await data.get_daily()
+    print(day)
+    if isinstance(msg, str):
+        await bot.send(msg, at_sender=True)
+        return
+
+    info = await draw_df_info_img(msg,day, ev)
+
+    await bot.send(info, at_sender=True)
 
 
 @df_record.on_command(("战绩"), block=True)
@@ -33,6 +44,7 @@ async def get_record(
     logger.info("[ss]正在执行三角洲战绩查询功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
     raw_text = ev.text.strip() if ev.text else ""
+    print(raw_text)
     await bot.send(await data.get_record(raw_text), at_sender=True)
 
 

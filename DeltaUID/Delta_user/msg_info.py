@@ -1,29 +1,35 @@
-# import asyncio
 import datetime
 import json
 import urllib.parse
+from typing import cast
 
-# from gsuid_core.data_store import get_res_path
 from gsuid_core.logger import logger
+from gsuid_core.models import Event
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
 from ..utils.database.models import DFUser
-
-# import json
-
-# from gsuid_core.utils.database.models import Subscribe
-
-# from ..utils.models import SafehouseRecord
+from ..utils.models import InfoData
+from .image import draw_df_info_img
 
 SAFEHOUSE_CHECK_INTERVAL = 600
 
 
 class MsgInfo:
-    async def __init__(self, user_id: str, bot_id: str):
-        self.user_data = await DFUser.select_data(user_id, bot_id)
+    def __init__(self, user_id: str, bot_id: str):
+        self.user_id = user_id
+        self.bot_id = bot_id
+        self.user_data = None
+        
+    
+    async def _fetch_user_data(self):
+        self.user_data = await DFUser.select_data(self.user_id, self.bot_id)
+        return self.user_data
 
-    async def get_msg_info(self):
+
+        
+    async def get_msg_info(self, ev: Event):
+        self.user_data = await self._fetch_user_data()
 
         if self.user_data is None:
 
@@ -42,123 +48,108 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type='sol',
         )
+        print(sol_info)
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
             resource_type='mp',
         )
+        print(tdm_info)
         if basic_info['status']:
             propcapital = Util.trans_num_easy_for_read(
                 basic_info['data']['propcapital']
             )
         else:
-            propcapital = 0
-        try:
-            if res['status'] and sol_info['status'] and tdm_info['status']:
-                user_name = res['data']['player']['charac_name']
-                money = Util.trans_num_easy_for_read(res['data']['money'])
-                rankpoint = res['data']['game']['rankpoint']
-                soltotalfght = res['data']['game']['soltotalfght']
-                solttotalescape = res['data']['game']['solttotalescape']
-                soltotalkill = res['data']['game']['soltotalkill']
-                solescaperatio = res['data']['game']['solescaperatio']
-                profitLossRatio = Util.trans_num_easy_for_read(
-                    int(sol_info['data']['solDetail']['profitLossRatio'])
-                    // 100
-                )
-                highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio'])/100:.2f}"
-                medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio'])/100:.2f}"
-                lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio'])/100:.2f}"
-                totalGainedPrice = Util.trans_num_easy_for_read(
-                    sol_info['data']['solDetail']['totalGainedPrice']
-                )
-                totalGameTime = Util.seconds_to_duration(
-                    sol_info['data']['solDetail']['totalGameTime']
-                )
+            propcapital = "0"
+        # try:
+        if res['status'] and sol_info['status'] and tdm_info['status']:
+            user_name:str = res['data']['player']['charac_name']
+            money = Util.trans_num_easy_for_read(res['data']['money'])
+            rankpoint: str = res['data']['game']['rankpoint']
+            soltotalfght = res['data']['game']['soltotalfght']
+            solttotalescape = res['data']['game']['solttotalescape']
+            soltotalkill = res['data']['game']['soltotalkill']
+            solescaperatio = res['data']['game']['solescaperatio']
+            print(sol_info['data']['solDetail']['profitLossRatio'])
+            profitLossRatio = Util.trans_num_easy_for_read(
+                int(sol_info['data']['solDetail']['profitLossRatio'])
+                // 100
+            )
+            highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio'])/100:.2f}"
+            medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio'])/100:.2f}"
+            lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio'])/100:.2f}"
+            totalGainedPrice = Util.trans_num_easy_for_read(
+                sol_info['data']['solDetail']['totalGainedPrice']
+            )
+            totalGameTime = Util.seconds_to_duration(
+                sol_info['data']['solDetail']['totalGameTime']
+            )
 
-                tdmrankpoint = res['data']['game']['tdmrankpoint']
-                avgkillperminute = (
-                    f"{int(res['data']['game']['avgkillperminute'])/100:.2f}"
-                )
-                tdmtotalfight = res['data']['game']['tdmtotalfight']
-                totalwin = res['data']['game']['totalwin']
-                tdmtotalkill = int(
-                    int(res['data']['game']['tdmduration'])
-                    * int(res['data']['game']['avgkillperminute'])
-                    / 100
-                )
-                tdmduration = Util.seconds_to_duration(
-                    int(res['data']['game']['tdmduration']) * 60
-                )
-                tdmsuccessratio = res['data']['game']['tdmsuccessratio']
-                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail']['avgScorePerMinute'])/100:.2f}"
-                totalVehicleDestroyed = tdm_info['data']['mpDetail'][
-                    'totalVehicleDestroyed'
-                ]
-                totalVehicleKill = tdm_info['data']['mpDetail'][
-                    'totalVehicleKill'
-                ]
+            tdmrankpoint = res['data']['game']['tdmrankpoint']
+            avgkillperminute = (
+                f"{int(res['data']['game']['avgkillperminute'])/100:.2f}"
+            )
+            tdmtotalfight = res['data']['game']['tdmtotalfight']
+            totalwin = res['data']['game']['totalwin']
+            tdmtotalkill = int(
+                int(res['data']['game']['tdmduration'])
+                * int(res['data']['game']['avgkillperminute'])
+                / 100
+            )
+            tdmduration = Util.seconds_to_duration(
+                int(res['data']['game']['tdmduration']) * 60
+            )
+            tdmsuccessratio = res['data']['game']['tdmsuccessratio']
+            try:
+                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail'][0]['avgScorePerMinute'])/100:.2f}"
+            except (KeyError, IndexError, TypeError) as e:
+                logger.error(f"无法获取avgScorePerMinute: {e}")
+                avgScorePerMinute = "未知"
+                
+            totalVehicleDestroyed = tdm_info['data']['mpDetail'][
+                'totalVehicleDestroyed'
+            ]
+            totalVehicleKill = tdm_info['data']['mpDetail'][
+                'totalVehicleKill'
+            ]
 
-                # try:
-                #     player_data = {
-                #         'user_name': user_name,
-                #         'money': money,
-                #         'propcapital': propcapital,
-                #         'rankpoint': rankpoint,
-                #         'soltotalfght': soltotalfght,
-                #         'solttotalescape': solttotalescape,
-                #         'soltotalkill': soltotalkill,
-                #         'solescaperatio': solescaperatio,
-                #         'profitLossRatio': profitLossRatio,
-                #         'highKillDeathRatio': highKillDeathRatio,
-                #         'medKillDeathRatio': medKillDeathRatio,
-                #         'lowKillDeathRatio': lowKillDeathRatio,
-                #         'totalGainedPrice': totalGainedPrice,
-                #         'totalGameTime': totalGameTime,
-                #         'tdmrankpoint': tdmrankpoint,
-                #         'avgkillperminute': avgkillperminute,
-                #         'tdmtotalfight': tdmtotalfight,
-                #         'totalwin': totalwin,
-                #         'tdmtotalkill': tdmtotalkill,
-                #         'tdmduration': tdmduration,
-                #         'tdmsuccessratio': tdmsuccessratio,
-                #         'avgScorePerMinute': avgScorePerMinute,
-                #         'totalVehicleDestroyed': totalVehicleDestroyed,
-                #         'totalVehicleKill': totalVehicleKill,
-                #     }
-                #     img_data = await renderer.render_player_info(player_data)
-                #     await Image(image=img_data).finish(reply=True)
-                # except FinishedException:
-                #     raise
-                # except Exception as e:
-                #     logger.error(f"渲染玩家信息卡片失败: {e}")
-                #     # 降级到文本模式
+            # try:
+            player_data = cast(InfoData, {
+                'user_name': user_name,
+                'money': money,
+                'propcapital': propcapital,
+                'rankpoint': rankpoint,
+                'soltotalfght': soltotalfght,
+                'solttotalescape': solttotalescape,
+                'soltotalkill': soltotalkill,
+                'solescaperatio': solescaperatio,
+                'profitLossRatio': profitLossRatio,
+                'highKillDeathRatio': highKillDeathRatio,
+                'medKillDeathRatio': medKillDeathRatio,
+                'lowKillDeathRatio': lowKillDeathRatio,
+                'totalGainedPrice': totalGainedPrice,
+                'totalGameTime': totalGameTime,
+                'tdmrankpoint': tdmrankpoint,
+                'avgkillperminute': avgkillperminute,
+                'tdmtotalfight': tdmtotalfight,
+                'totalwin': totalwin,
+                'tdmtotalkill': str(tdmtotalkill),
+                'tdmduration': tdmduration,
+                'tdmsuccessratio': tdmsuccessratio,
+                'avgScorePerMinute': avgScorePerMinute,
+                'totalVehicleDestroyed': totalVehicleDestroyed,
+                'totalVehicleKill': totalVehicleKill,
+                })
+            # print(player_data)
 
-                message_str = f"""【{user_name}的个人信息】
---- 账户信息 ---
-现金：{money}
-仓库流动资产：{propcapital}
+            # img = await draw_df_info_img(player_data, ev)
 
---- 烽火数据 ---
-总场数：{soltotalfght} | 总撤离数：{solttotalescape} | 撤离率：{solescaperatio}
-总击杀：{soltotalkill} | 排位分：{rankpoint} | 总游戏时长：{totalGameTime}
-赚损比{profitLossRatio} | 总带出：{totalGainedPrice}
-kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {lowKillDeathRatio}
+            return player_data
+        return "未绑定三角洲账号，请先用\"鼠鼠登录\"命令登录"
 
---- 战场数据 ---
-总场数：{tdmtotalfight} | 总胜场：{totalwin} | 胜率：{tdmsuccessratio}
-总击杀：{tdmtotalkill} | 排位分：{tdmrankpoint} | 总游戏时长：{tdmduration}
-分均击杀：{avgkillperminute} | 分均得分：{avgScorePerMinute}
-总摧毁载具：{totalVehicleDestroyed} | 总载具击杀：{totalVehicleKill}
-"""
-                return message_str
+  
 
-        except Exception as e:
-            logger.exception(f"查询角色信息失败[{e}]")
-            return "查询角色信息失败，可以需要重新登录\n详情请查看日志"
-        return "查询角色信息失败，可以需要重新登录\n详情请查看日志"
-
-    async def get_record(self, raw_text):
+    async def get_record(self, raw_text: str):
         if self.user_data is None:
             return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
 
@@ -401,9 +392,10 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
 
                 msgs += '/n' + fallback_message
             return msgs
+        return "获取战绩失败，可能需要重新登录"
 
     async def get_tqc(self):
-
+        self.user_data = await self._fetch_user_data()
         if not self.user_data:
             return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
         deltaapi = DeltaApi(self.user_data.platform)
@@ -604,8 +596,9 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
     #     return msg
 
     async def get_daily(self):
+        self.user_data = await self._fetch_user_data()
         if not self.user_data:
-            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+            return {"status": False, "message": "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"}
 
         deltaapi = DeltaApi(self.user_data.platform)
         res = await deltaapi.get_daily_report(
@@ -622,6 +615,7 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
                     userCollectionList = userCollectionTop.get('list', None)
                     if userCollectionList:
                         userCollectionListStr = ""
+                        collection_details = []
                         for item in userCollectionList:
                             objectID = item.get('objectID', 0)
                             res = await deltaapi.get_object_info(
@@ -635,6 +629,10 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
                                     obj_name = obj_list[0].get(
                                         'objectName', '未知藏品'
                                     )
+                                    collection_details.append({
+                                        'objectID': objectID,
+                                        'objectName': obj_name
+                                    })
                                     if userCollectionListStr == "":
                                         userCollectionListStr = obj_name
                                     else:
@@ -642,22 +640,40 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
                                             f"、{obj_name}"
                                         )
                             else:
+                                collection_details.append({
+                                    'objectID': objectID,
+                                    'error': res['message']
+                                })
                                 userCollectionListStr += (
-                                    f"未知藏品：{objectID}\n"
+                                    f"未知藏品：{objectID}"
                                 )
+                        userCollectionData = {
+                            'list_str': userCollectionListStr,
+                            'details': collection_details
+                        }
                     else:
-                        userCollectionListStr = "未知"
+                        userCollectionData = {"list_str": "未知", "details": []}
                 else:
-                    userCollectionListStr = "未知"
-                # todo 图片
-                # recentGainDate, recentGain, gain_str, userCollectionListStr
-                return f"三角洲日报\n日报日期：{recentGainDate}\n收益：{gain_str}\n价值最高藏品：{userCollectionListStr}"
+                    userCollectionData = {"list_str": "未知", "details": []}
+                # 返回原始数据字典
+                return {
+                    "status": True,
+                    "data": {
+                        "daily_report_date": recentGainDate,
+                        "profit": recentGain,
+                        "profit_str": gain_str,
+                        "top_collections": userCollectionData
+                    }
+                }
             else:
-                return "获取三角洲日报失败，没有数据"
+                return {"status": False, "message": "获取三角洲日报失败，没有数据"}
         else:
-            return f"获取三角洲日报失败：{res['message']}"
+            return {"status": False, "message": f"获取三角洲日报失败：{res['message']}"}
+        
+        
 
     async def get_weekly(self):
+        self.user_data = await self._fetch_user_data()
         if not self.user_data:
             return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
         access_token = self.user_data.cookie
@@ -859,6 +875,7 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
                         friend_list.sort(
                             key=lambda x: x['sol_num'], reverse=True
                         )
+
                 msgs = []
                 message = f"【{user_name}烽火周报 - 日期：{statDate_str}】"
 
@@ -897,26 +914,48 @@ kd(常规 | 机密 | 绝密)：{highKillDeathRatio} | {medKillDeathRatio} | {low
                 msgs.append(message)
                 # try:
                 #     renderer = await get_renderer()
-                #     img_data = await renderer.render_weekly_report(
-                #         user_name,
-                #         statDate_str,
-                #         Gained_Price_Str,
-                #         consume_Price_Str,
-                #         rise_Price_Str,
-                #         profit_str,
-                #         total_ArmedForceId_num_list,
-                #         total_mapid_num_list,
-                #         friend_list,
-                #         profit,
-                #         rise_Price,
-                #         total_sol_num,
-                #         total_Online_Time_str,
-                #         total_Kill_Player,
-                #         total_Death_Count,
-                #         total_exacuation_num,
-                #         GainedPrice_overmillion_num,
-                #         price_list,
-                #     )
+                img_data = {
+                    "user_name": user_name,
+                    "statDate_str": statDate_str,
+                    "Gained_Price_Str": Gained_Price_Str,
+                    "consume_Price_Str": consume_Price_Str,
+                    "rise_Price_Str": rise_Price_Str,
+                    # "profit_str": profit_str,
+                    "total_ArmedForceId_num_list": total_ArmedForceId_num_list,
+                    "total_mapid_num_list": total_mapid_num_list,
+                    "friend_list": friend_list,
+                    "profit": profit,
+                    "rise_Price": rise_Price,
+                    "total_sol_num": total_sol_num,
+                    "total_Online_Time_str": total_Online_Time_str,
+                    "total_Kill_Player": total_Kill_Player,
+                    "total_Death_Count": total_Death_Count,
+                    "total_exacuation_num": total_exacuation_num,
+                    "GainedPrice_overmillion_num": GainedPrice_overmillion_num,
+                    "price_list": price_list
+
+                }
+                print(img_data)
+
+                    #     "user_name",
+                    #     statDate_str,
+                    #     Gained_Price_Str,
+                    #     consume_Price_Str,
+                    #     rise_Price_Str,
+                    #     total_ArmedForceId_num_list,
+                    #     total_mapid_num_list,
+                    #     friend_list,
+                    #     profit,
+                    #     rise_Price,
+                    #     total_sol_num,
+                    #     total_Online_Time_str,
+                    #     total_Kill_Player,
+                    #     total_Death_Count,
+                    #     total_exacuation_num,
+                    #     GainedPrice_overmillion_num,
+                    #     price_list,
+                    # )
+                    
                 #     await Image(image=img_data).finish()
 
                 return msgs

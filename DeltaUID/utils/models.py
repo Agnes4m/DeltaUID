@@ -48,3 +48,64 @@ class LoginStatus(TypedDict):
     code: int
     message: str
     data: dict
+
+class InfoData(TypedDict):
+    user_name: str
+    """用户名"""
+
+    money: str
+    """现金"""
+    propcapital: str
+    """仓库总资产"""
+    rankpoint: str
+    soltotalfght: str
+    """总战斗场次"""
+    solttotalescape: str
+    """总撤离场次"""
+
+    soltotalkill: str
+    """总击杀"""
+
+    solescaperatio: str
+    """撤离率"""
+    profitLossRatio: str
+    """赚损比"""
+    highKillDeathRatio: str
+    """绝密KD"""
+    medKillDeathRatio: str
+    """机密KD"""
+    lowKillDeathRatio: str
+    """常规KD"""
+    totalGainedPrice: str
+    """总盈利"""
+    totalGameTime: str
+    """总游戏时间"""
+
+    # 全面战场
+    tdmrankpoint: str
+    """全面战场积分"""
+
+    avgkillperminute: str
+    """平均每分击杀数"""
+
+    tdmtotalfight: str
+    """总战斗场次"""
+
+    totalwin: str
+    """总胜利场次"""
+
+    tdmtotalkill: str
+    """总击杀"""
+
+    tdmduration: str
+    """总游戏时间"""
+    tdmsuccessratio: str
+    """全面战场胜率"""
+
+    avgScorePerMinute: str
+    """平均每分得分"""
+
+    totalVehicleDestroyed: str
+    """总载具摧毁数"""
+    totalVehicleKill: str
+    """总载具击杀数"""
