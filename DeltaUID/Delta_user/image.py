@@ -1,6 +1,5 @@
 from copy import deepcopy
 from pathlib import Path
-from typing import Optional
 
 from PIL import Image, ImageDraw
 from PIL.ImageDraw import ImageDraw as ID
@@ -15,11 +14,13 @@ from gsuid_core.utils.image.image_tools import (
     draw_pic_with_ring,
     easy_paste,
     get_event_avatar,
+    get_pic,
 )
 
-from ..utils.models import InfoData
+from ..utils.models import DayInfoData, InfoData
 
 TEXTURE = Path(__file__).parent / "texture"
+green = (28,241,161)
 
 async def draw_title(data: InfoData,ev: Event):
     title = Image.open(TEXTURE / "header.png")
@@ -50,7 +51,7 @@ async def draw_title(data: InfoData,ev: Event):
     title_draw.text(
         (860, 290),
         "排位分",
-        (28,241,161),
+        green,
         df_font(30),
         "mm",
     )
@@ -74,7 +75,7 @@ async def draw_one_msg(draw: ID,name: str, value: str,pos: tuple[int,int], size:
         (pos[0]+45, pos[1]+80),
 
         name,
-        (28,241,161),
+        green,
         df_font(size),
         "mm",
     )
@@ -82,7 +83,7 @@ async def draw_one_msg(draw: ID,name: str, value: str,pos: tuple[int,int], size:
 
 
 # @gs_cache()
-async def draw_df_info_img(data: InfoData, day, ev: Event):
+async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
 
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
     
@@ -155,10 +156,43 @@ async def draw_df_info_img(data: InfoData, day, ev: Event):
 
     # 日报
     day_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
-    easy_paste(img, day_bar, (30, 1250), "lt")
-    easy_paste(img, day_bar, (240, 1250), "lt")
-    easy_paste(img, day_bar, (460, 1250), "lt")
-    easy_paste(img, day_bar, (680, 1250), "lt")
+    
+    day_money = deepcopy(day_bar)
+    day_money_draw = ImageDraw.Draw(day_money)
+    day_money_draw.text(
+        (150, 100),
+        f"日期: {day['profit_str']}",
+        green,
+        df_font(25),
+        "mm",
+    )
+    easy_paste(day_money, money_1.resize((120,120)), (90, 170), "lt")
+
+
+    easy_paste(img, day_money, (30, 1250), "lt")
+    
+    for i in range(3):
+        day_sth = deepcopy(day_bar)
+        day_sth_draw = ImageDraw.Draw(day_sth)
+        day_sth_draw.text(
+            (150, 100),
+            f"{day['top_collections']['details'][i]['objectName']}",
+            green,
+            df_font(25),
+            "mm",
+        )
+
+
+        st1 = (await get_pic(day['top_collections']['details'][i]['pic'], size=(120, 120)))
+        easy_paste(day_sth, st1, (90, 170), "mm")
+
+        easy_paste(img, day_sth, (i * 220 + 240, 1250), "lt")
+
+
+    
+    # easy_paste(img, day_bar, (240, 1250), "lt")
+    # easy_paste(img, day_bar, (460, 1250), "lt")
+    # easy_paste(img, day_bar, (680, 1250), "lt")
     
 
     img.paste(header, (0, 0), header)
@@ -167,7 +201,7 @@ async def draw_df_info_img(data: InfoData, day, ev: Event):
 
     img.paste(tdm_bg, (0, 880), tdm_bg)
     img.paste(day_bg, (0, 1220), day_bg)
-    img.paste(history_bg, (0, 1600), history_bg)
+    # img.paste(history_bg, (0, 1600), history_bg)
 
     return await convert_img(img)
 

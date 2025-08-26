@@ -9,8 +9,7 @@ from gsuid_core.models import Event
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
 from ..utils.database.models import DFUser
-from ..utils.models import InfoData
-from .image import draw_df_info_img
+from ..utils.models import DayInfoData, DayListData, InfoData
 
 SAFEHOUSE_CHECK_INTERVAL = 600
 
@@ -595,10 +594,10 @@ class MsgInfo:
     #         await session.close()
     #     return msg
 
-    async def get_daily(self):
+    async def get_daily(self) -> DayInfoData | str:
         self.user_data = await self._fetch_user_data()
         if not self.user_data:
-            return {"status": False, "message": "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"}
+            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
 
         deltaapi = DeltaApi(self.user_data.platform)
         res = await deltaapi.get_daily_report(
@@ -616,6 +615,7 @@ class MsgInfo:
                     if userCollectionList:
                         userCollectionListStr = ""
                         collection_details = []
+                        
                         for item in userCollectionList:
                             objectID = item.get('objectID', 0)
                             res = await deltaapi.get_object_info(
@@ -629,9 +629,18 @@ class MsgInfo:
                                     obj_name = obj_list[0].get(
                                         'objectName', '未知藏品'
                                     )
+                                    pic = obj_list[0].get(
+                                        'pic', ''
+                                    )
+                                    avgPrice = obj_list[0].get(
+                                        'avgPrice', 0
+                                    )
                                     collection_details.append({
                                         'objectID': objectID,
-                                        'objectName': obj_name
+                                        'objectName': obj_name,
+                                        'pic': pic,
+                                        'avgPrice': f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(avgPrice))}",
+
                                     })
                                     if userCollectionListStr == "":
                                         userCollectionListStr = obj_name
@@ -647,9 +656,9 @@ class MsgInfo:
                                 userCollectionListStr += (
                                     f"未知藏品：{objectID}"
                                 )
-                        userCollectionData = {
+                        userCollectionData: DayListData = {
                             'list_str': userCollectionListStr,
-                            'details': collection_details
+                            'details': collection_details,
                         }
                     else:
                         userCollectionData = {"list_str": "未知", "details": []}
@@ -657,18 +666,15 @@ class MsgInfo:
                     userCollectionData = {"list_str": "未知", "details": []}
                 # 返回原始数据字典
                 return {
-                    "status": True,
-                    "data": {
                         "daily_report_date": recentGainDate,
                         "profit": recentGain,
                         "profit_str": gain_str,
                         "top_collections": userCollectionData
                     }
-                }
             else:
-                return {"status": False, "message": "获取三角洲日报失败，没有数据"}
+                return  "获取三角洲日报失败，没有数据"
         else:
-            return {"status": False, "message": f"获取三角洲日报失败：{res['message']}"}
+            return f"获取三角洲日报失败：{res['message']}"
         
         
 

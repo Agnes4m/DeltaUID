@@ -109,3 +109,27 @@ class InfoData(TypedDict):
     """总载具摧毁数"""
     totalVehicleKill: str
     """总载具击杀数"""
+
+
+class DayMoneyData(TypedDict):
+    """日物品"""
+    objectID: str
+    objectName: str
+    pic: str
+    avgPrice: str
+
+class DayListData(TypedDict):
+    list_str: str
+    details: list[DayMoneyData]
+
+
+class DayInfoData(TypedDict):
+    """日数据"""
+    daily_report_date: str
+    """日期"""
+    profit: int
+    """利润"""
+    profit_str: str
+    """利润字符串"""
+
+    top_collections: DayListData
