@@ -1,5 +1,6 @@
 from copy import deepcopy
 from pathlib import Path
+from typing import cast
 
 from PIL import Image, ImageDraw
 from PIL.ImageDraw import ImageDraw as ID
@@ -17,7 +18,7 @@ from gsuid_core.utils.image.image_tools import (
     get_pic,
 )
 
-from ..utils.models import DayInfoData, InfoData
+from ..utils.models import DayInfoData, InfoData, RecordSolData, RecordTdmData
 
 TEXTURE = Path(__file__).parent / "texture"
 green = (28, 241, 161)
@@ -77,7 +78,6 @@ async def draw_title(data: InfoData, ev: Event):
 async def draw_one_msg(
     draw: ID, name: str, value: str, pos: tuple[int, int], size: int = 33
 ):
-
     draw.text(
         (pos[0] + 45, pos[1] + 30),
         value,
@@ -96,7 +96,6 @@ async def draw_one_msg(
 
 # @gs_cache()
 async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
-
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
 
     header = await draw_title(data, ev)
@@ -105,7 +104,7 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     sol_bg = Image.open(TEXTURE / "banner2.png")
     tdm_bg: ImageFile = Image.open(TEXTURE / "banner3.png")
     day_bg = Image.open(TEXTURE / "banner4.png")
-    history_bg = Image.open(TEXTURE / "banner5.png")
+    # history_bg = Image.open(TEXTURE / "banner5.png")
 
     # 仓库
     img.paste(prop_bg, (0, 350), prop_bg)
@@ -113,13 +112,9 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
 
     prop_bar_1 = Image.open(TEXTURE / "仓库bar.png").convert("RGBA")
     prop_bar_2 = deepcopy(prop_bar_1)
-    money_1 = (
-        Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
-    )
+    money_1 = Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
 
-    money_2 = (
-        Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
-    )
+    money_2 = Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
 
     prop_draw_1 = ImageDraw.Draw(prop_bar_1)
     prop_draw_1.text(
@@ -153,16 +148,20 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     await draw_one_msg(img_draw, "撤离数", data["solttotalescape"], (450, sol_tap))
     await draw_one_msg(img_draw, "总击杀", data["soltotalkill"], (620, sol_tap))
     await draw_one_msg(img_draw, "赚损比", data["profitLossRatio"], (790, sol_tap))
-    await draw_one_msg(img_draw, "总带出", data["totalGainedPrice"], (90, sol_tap+150))
-    await draw_one_msg(img_draw, "游戏时长", data["totalGameTime"], (270, sol_tap+150))
     await draw_one_msg(
-        img_draw, "绝密KD", data["highKillDeathRatio"], (450, sol_tap+150)
+        img_draw, "总带出", data["totalGainedPrice"], (90, sol_tap + 150)
     )
     await draw_one_msg(
-        img_draw, "机密KD", data["medKillDeathRatio"], (620, sol_tap+150)
+        img_draw, "游戏时长", data["totalGameTime"], (270, sol_tap + 150)
     )
     await draw_one_msg(
-        img_draw, "普通KD", data["lowKillDeathRatio"], (790, sol_tap+150)
+        img_draw, "绝密KD", data["highKillDeathRatio"], (450, sol_tap + 150)
+    )
+    await draw_one_msg(
+        img_draw, "机密KD", data["medKillDeathRatio"], (620, sol_tap + 150)
+    )
+    await draw_one_msg(
+        img_draw, "普通KD", data["lowKillDeathRatio"], (790, sol_tap + 150)
     )
     # 全面战场
     img.paste(tdm_bg, (0, 1100), tdm_bg)
@@ -174,17 +173,20 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     await draw_one_msg(img_draw, "排位分", data["tdmrankpoint"], (790, tdm_tap))
 
     await draw_one_msg(
-        img_draw, "击杀/min", data["avgkillperminute"], (90, tdm_tap+150)
+        img_draw, "击杀/min", data["avgkillperminute"], (90, tdm_tap + 150)
     )
-    await draw_one_msg(img_draw, "游戏时长", data["tdmduration"], (270, tdm_tap+150))
+    await draw_one_msg(img_draw, "游戏时长", data["tdmduration"], (270, tdm_tap + 150))
     await draw_one_msg(
-        img_draw, "分数/min", data["avgScorePerMinute"], (450, tdm_tap+150)
-    )
-    await draw_one_msg(
-        img_draw, "载具摧毁", data["totalVehicleDestroyed"], (620, tdm_tap+150)
+        img_draw, "分数/min", data["avgScorePerMinute"], (450, tdm_tap + 150)
     )
     await draw_one_msg(
-        img_draw, "载具击杀", data["totalVehicleKill"], (790, tdm_tap+150)
+        img_draw,
+        "载具摧毁",
+        data["totalVehicleDestroyed"],
+        (620, tdm_tap + 150),
+    )
+    await draw_one_msg(
+        img_draw, "载具击杀", data["totalVehicleKill"], (790, tdm_tap + 150)
     )
 
     # 日报
@@ -203,11 +205,11 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     )
     easy_paste(day_money, money_1.resize((120, 120)), (90, 170), "lt")
 
-    easy_paste(img, day_money, (30, day_tap+80), "lt")
+    easy_paste(img, day_money, (30, day_tap + 80), "lt")
 
     for i in range(3):
         day_sth = deepcopy(day_bar)
-        if len(day['top_collections']['details']) != i:
+        if len(day["top_collections"]["details"]) != i:
             day_sth_draw = ImageDraw.Draw(day_sth)
             day_sth_draw.text(
                 (150, 100),
@@ -218,21 +220,105 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
             )
 
             st1 = await get_pic(
-                day['top_collections']['details'][i]['pic'], size=(120, 120)
+                day["top_collections"]["details"][i]["pic"], size=(120, 120)
             )
             easy_paste(day_sth, st1, (90, 170), "mm")
 
-        easy_paste(img, day_sth, (i * 220 + 240, day_tap+80), "lt")
+        easy_paste(img, day_sth, (i * 220 + 240, day_tap + 80), "lt")
 
     img.paste(header, (0, 0), header)
-    
-    
 
-    
-    
     # img.paste(history_bg, (0, 1600), history_bg)
 
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
     img.paste(footer, (0, 2000), footer)
 
+    return await convert_img(img)
+
+
+async def draw_record_sol(ev: Event, data: list[RecordSolData]):
+    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
+    data_one = cast(
+        InfoData,
+        {
+            "user_name": data[0]["user_name"],
+            "rankpoint": "114514",
+        },
+    )
+    header = await draw_title(data_one, ev)
+    img.paste(header, (0, 0), header)
+
+    history_bg = Image.open(TEXTURE / "banner5.png")
+    easy_paste(img, history_bg, (0, 400), "lt")
+
+    # 战绩
+    record_win = Image.open(TEXTURE / "frame_win.png")
+    record_fail = Image.open(TEXTURE / "frame_fail.png")
+
+    for i in range(min(len(data), 10)):
+        xy = (0, 500 + i * 200)
+        if data[i]["result"] == "撤离成功":
+            bg = deepcopy(record_win)
+
+        elif data[i]["result"] == "撤离失败":
+            bg = deepcopy(record_fail)
+
+        else:
+            continue
+        draw_bg = ImageDraw.Draw(bg)
+        draw_bg.text(
+            (122, 33),
+            data[i]["result"][2:],
+            "black",
+            df_font(30),
+            "mm",
+        )
+        draw_bg.text(
+            (195, 125),
+            f"击杀{data[i]['kill_count']}",
+            "black",
+            df_font(25),
+            "mm",
+        )
+        draw_bg.text(
+            (900, 45),
+            f"{data[i]['map_name']}",
+            "white",
+            df_font(40),
+            "rm",
+        )
+        draw_bg.text(
+            (900, 90),
+            f"利润{data[i]['price']}/损失{data[i]['profit']}",
+            green,
+            df_font(30),
+            "rm",
+        )
+        draw_bg.text(
+            (900, 126),
+            f"存活:{data[i]['duration']}",
+            "white",
+            df_font(25),
+            "rm",
+        )
+        img.paste(bg, xy, bg)
+    footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
+    img.paste(footer, (0, 2000), footer)
+    return await convert_img(img)
+
+
+async def draw_record_tdm(ev: Event, data: list[RecordTdmData]):
+    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
+    data_one = cast(
+        InfoData,
+        {
+            "user_name": "测试用户",
+            "rankpoint": "1234",
+        },
+    )
+
+    header = await draw_title(data_one, ev)
+    img.paste(header, (0, 0), header)
+    # history_bg = Image.open(TEXTURE / "banner5.png")
+    # img.paste(history_bg, (0, 1600), history_bg)
     return await convert_img(img)

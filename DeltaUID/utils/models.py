@@ -31,7 +31,6 @@ class SafehouseRecord(TypedDict):
 
 
 class SignMsg(TypedDict):
-
     image: str
     cookie: str
     qrSig: str
@@ -137,3 +136,36 @@ class DayInfoData(TypedDict):
     """利润字符串"""
 
     top_collections: DayListData
+
+
+class RecordSolData(TypedDict):
+    """战绩数据"""
+
+    user_name: str
+    time: str
+    map_name: str
+    armed_force: str
+    result: str
+    duration: str
+    kill_count: int
+    price: str
+    profit: str
+    title: str
+
+
+class RecordTdmData(TypedDict):
+    """战绩数据"""
+
+    title: str
+    time: str
+    user_name: str
+    map_name: str
+    armed_force: str
+    result: str
+    gametime: str
+    kill_count: int
+    death_count: int
+    assist_count: int
+    rescue_count: str
+    total_score: int
+    avg_score_per_minute: int

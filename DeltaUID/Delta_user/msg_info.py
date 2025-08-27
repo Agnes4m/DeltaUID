@@ -8,7 +8,13 @@ from gsuid_core.logger import logger
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
 from ..utils.database.models import DFUser
-from ..utils.models import DayInfoData, DayListData, InfoData
+from ..utils.models import (
+    DayInfoData,
+    DayListData,
+    InfoData,
+    RecordSolData,
+    RecordTdmData,
+)
 
 SAFEHOUSE_CHECK_INTERVAL = 600
 
@@ -27,8 +33,7 @@ class MsgInfo:
         self.user_data = await self._fetch_user_data()
 
         if self.user_data is None:
-
-            return "未绑定三角洲账号，请先用\"鼠鼠登录\"命令登录"
+            return '未绑定三角洲账号，请先用"鼠鼠登录"命令登录'
 
         deltaapi = DeltaApi(self.user_data.platform)
         res = await deltaapi.get_player_info(
@@ -41,98 +46,108 @@ class MsgInfo:
         sol_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
-            resource_type='sol',
+            resource_type="sol",
         )
         print(sol_info)
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
-            resource_type='mp',
+            resource_type="mp",
         )
         print(tdm_info)
-        if basic_info['status']:
+        if basic_info["status"]:
             propcapital = Util.trans_num_easy_for_read(
-                basic_info['data']['propcapital']
+                basic_info["data"]["propcapital"]
             )
         else:
             propcapital = "0"
         # try:
-        if res['status'] and sol_info['status'] and tdm_info['status']:
-            user_name: str = res['data']['player']['charac_name']
-            money = Util.trans_num_easy_for_read(res['data']['money'])
-            rankpoint: str = res['data']['game']['rankpoint']
-            soltotalfght = res['data']['game']['soltotalfght']
-            solttotalescape = res['data']['game']['solttotalescape']
-            soltotalkill = res['data']['game']['soltotalkill']
-            solescaperatio = res['data']['game']['solescaperatio']
-            print(sol_info['data']['solDetail']['profitLossRatio'])
+        if res["status"] and sol_info["status"] and tdm_info["status"]:
+            user_name: str = res["data"]["player"]["charac_name"]
+            money = Util.trans_num_easy_for_read(res["data"]["money"])
+            rankpoint: str = res["data"]["game"]["rankpoint"]
+            soltotalfght = res["data"]["game"]["soltotalfght"]
+            solttotalescape = res["data"]["game"]["solttotalescape"]
+            soltotalkill = res["data"]["game"]["soltotalkill"]
+            solescaperatio = res["data"]["game"]["solescaperatio"]
+            print(sol_info["data"]["solDetail"]["profitLossRatio"])
             profitLossRatio = Util.trans_num_easy_for_read(
-                int(sol_info['data']['solDetail']['profitLossRatio']) // 100
+                int(sol_info["data"]["solDetail"]["profitLossRatio"]) // 100
             )
-            highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio'])/100:.2f}"
-            medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio'])/100:.2f}"
-            lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio'])/100:.2f}"
+            highKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['highKillDeathRatio']) / 100:.2f}"
+            )
+            medKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['medKillDeathRatio']) / 100:.2f}"
+            )
+            lowKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['lowKillDeathRatio']) / 100:.2f}"
+            )
             totalGainedPrice = Util.trans_num_easy_for_read(
-                sol_info['data']['solDetail']['totalGainedPrice']
+                sol_info["data"]["solDetail"]["totalGainedPrice"]
             )
             totalGameTime = Util.seconds_to_duration(
-                sol_info['data']['solDetail']['totalGameTime']
+                sol_info["data"]["solDetail"]["totalGameTime"]
             )
 
-            tdmrankpoint = res['data']['game']['tdmrankpoint']
+            tdmrankpoint = res["data"]["game"]["tdmrankpoint"]
             avgkillperminute = (
-                f"{int(res['data']['game']['avgkillperminute'])/100:.2f}"
+                f"{int(res['data']['game']['avgkillperminute']) / 100:.2f}"
             )
-            tdmtotalfight = res['data']['game']['tdmtotalfight']
-            totalwin = res['data']['game']['totalwin']
+            tdmtotalfight = res["data"]["game"]["tdmtotalfight"]
+            totalwin = res["data"]["game"]["totalwin"]
             tdmtotalkill = int(
-                int(res['data']['game']['tdmduration'])
-                * int(res['data']['game']['avgkillperminute'])
+                int(res["data"]["game"]["tdmduration"])
+                * int(res["data"]["game"]["avgkillperminute"])
                 / 100
             )
             tdmduration = Util.seconds_to_duration(
-                int(res['data']['game']['tdmduration']) * 60
+                int(res["data"]["game"]["tdmduration"]) * 60
             )
-            tdmsuccessratio = res['data']['game']['tdmsuccessratio']
+            tdmsuccessratio = res["data"]["game"]["tdmsuccessratio"]
             try:
-                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail'][0]['avgScorePerMinute'])/100:.2f}"
+                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail'][0]['avgScorePerMinute']) / 100:.2f}"
             except (KeyError, IndexError, TypeError) as e:
                 logger.error(f"无法获取avgScorePerMinute: {e}")
                 avgScorePerMinute = "未知"
 
-            totalVehicleDestroyed = tdm_info['data']['mpDetail'][
-                'totalVehicleDestroyed'
-            ]
-            totalVehicleKill = tdm_info['data']['mpDetail']['totalVehicleKill']
+            try:
+                totalVehicleDestroyed = tdm_info["data"]["mpDetail"][
+                    "totalVehicleDestroyed"
+                ]
+            except (KeyError, IndexError, TypeError) as e:
+                logger.error(f"无法获取totalVehicleDestroyed: {e}")
+                totalVehicleDestroyed = "未知"
+            totalVehicleKill = tdm_info["data"]["mpDetail"]["totalVehicleKill"]
 
             # try:
             player_data = cast(
                 InfoData,
                 {
-                    'user_name': user_name,
-                    'money': money,
-                    'propcapital': propcapital,
-                    'rankpoint': rankpoint,
-                    'soltotalfght': soltotalfght,
-                    'solttotalescape': solttotalescape,
-                    'soltotalkill': soltotalkill,
-                    'solescaperatio': solescaperatio,
-                    'profitLossRatio': profitLossRatio,
-                    'highKillDeathRatio': highKillDeathRatio,
-                    'medKillDeathRatio': medKillDeathRatio,
-                    'lowKillDeathRatio': lowKillDeathRatio,
-                    'totalGainedPrice': totalGainedPrice,
-                    'totalGameTime': totalGameTime,
-                    'tdmrankpoint': tdmrankpoint,
-                    'avgkillperminute': avgkillperminute,
-                    'tdmtotalfight': tdmtotalfight,
-                    'totalwin': totalwin,
-                    'tdmtotalkill': str(tdmtotalkill),
-                    'tdmduration': tdmduration,
-                    'tdmsuccessratio': tdmsuccessratio,
-                    'avgScorePerMinute': avgScorePerMinute,
-                    'totalVehicleDestroyed': totalVehicleDestroyed,
-                    'totalVehicleKill': totalVehicleKill,
+                    "user_name": user_name,
+                    "money": money,
+                    "propcapital": propcapital,
+                    "rankpoint": rankpoint,
+                    "soltotalfght": soltotalfght,
+                    "solttotalescape": solttotalescape,
+                    "soltotalkill": soltotalkill,
+                    "solescaperatio": solescaperatio,
+                    "profitLossRatio": profitLossRatio,
+                    "highKillDeathRatio": highKillDeathRatio,
+                    "medKillDeathRatio": medKillDeathRatio,
+                    "lowKillDeathRatio": lowKillDeathRatio,
+                    "totalGainedPrice": totalGainedPrice,
+                    "totalGameTime": totalGameTime,
+                    "tdmrankpoint": tdmrankpoint,
+                    "avgkillperminute": avgkillperminute,
+                    "tdmtotalfight": tdmtotalfight,
+                    "totalwin": totalwin,
+                    "tdmtotalkill": str(tdmtotalkill),
+                    "tdmduration": tdmduration,
+                    "tdmsuccessratio": tdmsuccessratio,
+                    "avgScorePerMinute": avgScorePerMinute,
+                    "totalVehicleDestroyed": totalVehicleDestroyed,
+                    "totalVehicleKill": totalVehicleKill,
                 },
             )
             # print(player_data)
@@ -140,12 +155,12 @@ class MsgInfo:
             # img = await draw_df_info_img(player_data, ev)
 
             return player_data
-        return "未绑定三角洲账号，请先用\"鼠鼠登录\"命令登录"
+        return '未绑定三角洲账号，请先用"鼠鼠登录"命令登录'
 
     async def get_record(self, raw_text: str):
         self.user_data = await self._fetch_user_data()
         if self.user_data is None:
-            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+            return 0, '未绑定三角洲账号，请先用"三角洲登录"命令登录'
 
         # 解析参数，支持：
         # [模式] [页码] L[战绩条数上限]
@@ -163,17 +178,17 @@ class MsgInfo:
 
             for token in tokens:
                 # 处理条数上限 L<number>
-                if token.startswith(('L', 'l')):
+                if token.startswith(("L", "l")):
                     if seen_limit:
-                        return "参数过多"
+                        return 0, "参数过多"
 
                     limit_str = token[1:]
                     if not limit_str.isdigit():
-                        return "参数错误"
+                        return 0, "参数错误"
 
                     value = int(limit_str)
                     if value <= 0:
-                        return "参数错误"
+                        return 0, "参数错误"
                     line_limit = value
                     seen_limit = True
                     continue
@@ -181,13 +196,13 @@ class MsgInfo:
                 # 处理模式
                 if token in ["烽火", "烽火行动"]:
                     if seen_mode:
-                        return "参数过多"
+                        return 0, "参数过多"
                     type_id = 4
                     seen_mode = True
                     continue
                 if token in ["战场", "大战场", "全面战场"]:
                     if seen_mode:
-                        return "参数过多"
+                        return 0, "参数过多"
 
                     type_id = 5
                     seen_mode = True
@@ -197,37 +212,40 @@ class MsgInfo:
                 try:
                     page_value = int(token)
                     if page_value <= 0:
-                        return "参数错误"
+                        return 0, "参数错误"
                     if seen_page:
-                        return "参数过多"
+                        return 0, "参数过多"
                     page = page_value
                     seen_page = True
                 except ValueError:
                     # 非法的词元（既不是模式、也不是数字、也不是L上限）
-                    return "请输入正确参数，格式：三角洲战绩 [模式] [页码] L[战绩条数上限]"
-
+                    return (
+                        0,
+                        "请输入正确参数，格式：三角洲战绩 [模式] [页码] L[战绩条数上限]",
+                    )
         deltaapi = DeltaApi(self.user_data.platform)
         res = await deltaapi.get_player_info(
             access_token=self.user_data.cookie, openid=self.user_data.uid
         )
-        if not res['status']:
-            return "获取玩家信息失败，可能需要重新登录"
-        user_name = res['data']['player']['charac_name']
+        if not res["status"]:
+            return 0, "获取玩家信息失败，可能需要重新登录"
+        user_name = res["data"]["player"]["charac_name"]
 
         res = await deltaapi.get_record(
             self.user_data.cookie, self.user_data.uid, type_id, page
         )
-        if not res['status']:
-            return "获取战绩失败，可能需要重新登录"
+        if not res["status"]:
+            return 0, "获取战绩失败，可能需要重新登录"
+        card_list: list[RecordTdmData | RecordSolData] = []
 
         if type_id == 4:
-            if not res['data']['gun']:
-                return "本页没有战绩"
+            if not res["data"]["gun"]:
+                return 0, "最近7天没有战绩"
 
             index = 1
             msgs = f"{user_name}烽火战绩 第{page}页"
 
-            for record in res['data']['gun']:
+            for record in res["data"]["gun"]:
                 # 捕获当前循环变量至局部，避免闭包引用问题
                 cur_index = index
                 index += 1
@@ -235,28 +253,26 @@ class MsgInfo:
                 if cur_index > line_limit:
                     break
                 # 解析时间
-                event_time = record.get('dtEventTime', '')
+                event_time = record.get("dtEventTime", "")
                 # 解析地图
-                map_id = record.get('MapId', '')
+                map_id = record.get("MapId", "")
                 map_name = Util.get_map_name(map_id)
                 # 解析结果
-                escape_fail_reason = record.get('EscapeFailReason', 0)
-                result_str = (
-                    "撤离成功" if escape_fail_reason == 1 else "撤离失败"
-                )
+                escape_fail_reason = record.get("EscapeFailReason", 0)
+                result_str = "撤离成功" if escape_fail_reason == 1 else "撤离失败"
                 # 解析时长
-                duration_seconds = record.get('DurationS', 0)
+                duration_seconds = record.get("DurationS", 0)
                 minutes = duration_seconds // 60
                 seconds = duration_seconds % 60
                 duration_str = f"{minutes}分{seconds}秒"
                 # 解析击杀数
-                kill_count = record.get('KillCount', 0)
+                kill_count = record.get("KillCount", 0)
                 # 解析收益
-                final_price = record.get('FinalPrice', '0')
+                final_price = record.get("FinalPrice", "0")
                 if final_price is None:
                     final_price = "未知"
                 # 解析纯利润
-                flow_cal_gained_price = record.get('flowCalGainedPrice', 0)
+                flow_cal_gained_price = record.get("flowCalGainedPrice", 0)
                 flow_cal_gained_price_str = f"{'' if flow_cal_gained_price >= 0 else '-'}{Util.trans_num_easy_for_read(abs(flow_cal_gained_price))}"
                 # 格式化收益
                 try:
@@ -266,7 +282,7 @@ class MsgInfo:
                     price_str = final_price
 
                 # 解析干员
-                ArmedForceId = record.get('ArmedForceId', '')
+                ArmedForceId = record.get("ArmedForceId", "")
                 ArmedForce = Util.get_armed_force_name(ArmedForceId)
 
                 fallback_message = (
@@ -278,39 +294,39 @@ class MsgInfo:
                     f"💸 利润: {flow_cal_gained_price_str}"
                 )
 
-                # card_data = {
-                #     'user_name': user_name,
-                #     'time': event_time,
-                #     'map_name': map_name,
-                #     'armed_force': ArmedForce,
-                #     'result': result_str,
-                #     'duration': duration_str,
-                #     'kill_count': kill_count,
-                #     'price': price_str,
-                #     'profit': flow_cal_gained_price_str,
-                #     'title': f"#{cur_index}",
-                # }
+                card_data_sol: RecordSolData = {
+                    "user_name": user_name,
+                    "time": event_time,
+                    "map_name": map_name,
+                    "armed_force": ArmedForce,
+                    "result": result_str,
+                    "duration": duration_str,
+                    "kill_count": kill_count,
+                    "price": price_str,
+                    "profit": flow_cal_gained_price_str,
+                    "title": f"#{cur_index}",
+                }
+                card_list.append(card_data_sol)
 
-                msgs += '/n' + fallback_message
-            return msgs
-
+                msgs += "/n" + fallback_message
+            return 1, card_list
         elif type_id == 5:
-            if not res['data']['operator']:
-                return "本页没有战绩"
+            if not res["data"]["operator"]:
+                return 0, "最近7天没有战绩"
 
             index = 1
             msgs = f"{user_name}战场战绩 第{page}页"
 
-            for record in res['data']['operator']:
+            for record in res["data"]["operator"]:
                 cur_index = index
                 index += 1
                 # 解析时间
-                event_time = record.get('dtEventTime', '')
+                event_time = record.get("dtEventTime", "")
                 # 解析地图
-                map_id = record.get('MapID', '')
+                map_id = record.get("MapID", "")
                 map_name = Util.get_map_name(map_id)
                 # 解析结果
-                MatchResult = record.get('MatchResult', 0)
+                MatchResult = record.get("MatchResult", 0)
                 if MatchResult == 1:
                     result_str = "胜利"
                 elif MatchResult == 2:
@@ -320,28 +336,26 @@ class MsgInfo:
                 else:
                     result_str = f"未知{MatchResult}"
                 # 解析时长
-                gametime = record.get('gametime', 0)
+                gametime = record.get("gametime", 0)
                 minutes = gametime // 60
                 seconds = gametime % 60
                 duration_str = f"{minutes}分{seconds}秒"
                 # 解析KDA
-                KillNum = record.get('KillNum', 0)
-                Death = record.get('Death', 0)
-                Assist = record.get('Assist', 0)
+                KillNum = record.get("KillNum", 0)
+                Death = record.get("Death", 0)
+                Assist = record.get("Assist", 0)
 
                 # 解析救援数
-                RescueTeammateCount = record.get('RescueTeammateCount', 0)
-                RoomId = record.get('RoomId', '')
+                RescueTeammateCount = record.get("RescueTeammateCount", 0)
+                RoomId = record.get("RoomId", "")
                 res = await deltaapi.get_tdm_detail(
                     self.user_data.cookie, self.user_data.uid, RoomId
                 )
-                if res['status'] and res['data']:
-                    mpDetailList = res['data'].get('mpDetailList', [])
+                if res["status"] and res["data"]:
+                    mpDetailList = res["data"].get("mpDetailList", [])
                     for mpDetail in mpDetailList:
-                        if mpDetail.get('isCurrentUser', False):
-                            rescueTeammateCount = mpDetail.get(
-                                'rescueTeammateCount', 0
-                            )
+                        if mpDetail.get("isCurrentUser", False):
+                            rescueTeammateCount = mpDetail.get("rescueTeammateCount", 0)
                             if rescueTeammateCount > 0:
                                 RescueTeammateCount = rescueTeammateCount
                                 break
@@ -349,15 +363,13 @@ class MsgInfo:
                     logger.error(f"获取战绩详情失败: {res['message']}")
 
                 # 解析总得分
-                TotalScore = record.get('TotalScore', 0)
+                TotalScore = record.get("TotalScore", 0)
                 avgScorePerMinute = (
-                    int(TotalScore * 60 / gametime)
-                    if gametime and gametime > 0
-                    else 0
+                    int(TotalScore * 60 / gametime) if gametime and gametime > 0 else 0
                 )
 
                 # 解析干员
-                ArmedForceId = record.get('ArmedForceId', '')
+                ArmedForceId = record.get("ArmedForceId", "")
                 ArmedForce = Util.get_armed_force_name(ArmedForceId)
 
                 fallback_message = (
@@ -368,83 +380,79 @@ class MsgInfo:
                     f"🥇 总得分: {TotalScore} | 分均得分: {avgScorePerMinute}"
                 )
 
-                # card_data = {
-                #     'title': f"#{cur_index}",
-                #     'time': event_time,
-                #     'user_name': user_name,
-                #     'map_name': map_name,
-                #     'armed_force': ArmedForce,
-                #     'result': result_str,
-                #     'gametime': duration_str,
-                #     'kill_count': KillNum,
-                #     'death_count': Death,
-                #     'assist_count': Assist,
-                #     'rescue_count': RescueTeammateCount,
-                #     'total_score': TotalScore,
-                #     'avg_score_per_minute': avgScorePerMinute,
-                # }
-
-                msgs += '/n' + fallback_message
-            return msgs
-        return "获取战绩失败，可能需要重新登录"
+                card_data: RecordTdmData = {
+                    "title": f"#{cur_index}",
+                    "time": event_time,
+                    "user_name": user_name,
+                    "map_name": map_name,
+                    "armed_force": ArmedForce,
+                    "result": result_str,
+                    "gametime": duration_str,
+                    "kill_count": KillNum,
+                    "death_count": Death,
+                    "assist_count": Assist,
+                    "rescue_count": RescueTeammateCount,
+                    "total_score": TotalScore,
+                    "avg_score_per_minute": avgScorePerMinute,
+                }
+                card_list.append(card_data)
+                msgs += "/n" + fallback_message
+            return 2, card_list
+        return 0, "获取战绩失败，可能需要重新登录"
 
     async def get_tqc(self):
         self.user_data = await self._fetch_user_data()
         if not self.user_data:
-            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+            return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
         deltaapi = DeltaApi(self.user_data.platform)
         res = await deltaapi.get_safehousedevice_status(
             access_token=self.user_data.cookie, openid=self.user_data.uid
         )
 
-        if res['status']:
-            place_data = res['data'].get('placeData', [])
-            relate_map = res['data'].get('relateMap', {})
+        if res["status"]:
+            place_data = res["data"].get("placeData", [])
+            relate_map = res["data"].get("relateMap", {})
             devices = []
 
             for device in place_data:
-                object_id = device.get('objectId', 0)
-                left_time = device.get('leftTime', 0)
-                push_time = device.get('pushTime', 0)
-                place_name = device.get('placeName', '')
+                object_id = device.get("objectId", 0)
+                left_time = device.get("leftTime", 0)
+                push_time = device.get("pushTime", 0)
+                place_name = device.get("placeName", "")
 
                 if object_id > 0 and left_time > 0:
                     # 正在生产
                     object_name = relate_map.get(str(object_id), {}).get(
-                        'objectName', f'物品{object_id}'
+                        "objectName", f"物品{object_id}"
                     )
                     # 计算进度百分比
-                    total_time = device.get('totalTime', 0)
+                    total_time = device.get("totalTime", 0)
                     progress = (
-                        100 - (left_time / total_time * 100)
-                        if total_time > 0
-                        else 0
+                        100 - (left_time / total_time * 100) if total_time > 0 else 0
                     )
 
                     devices.append(
                         {
-                            'place_name': place_name,
-                            'status': 'producing',
-                            'object_name': object_name,
-                            'left_time': Util.seconds_to_duration(left_time),
-                            'finish_time': datetime.datetime.fromtimestamp(
+                            "place_name": place_name,
+                            "status": "producing",
+                            "object_name": object_name,
+                            "left_time": Util.seconds_to_duration(left_time),
+                            "finish_time": datetime.datetime.fromtimestamp(
                                 push_time
-                            ).strftime('%m-%d %H:%M:%S'),
-                            'progress': progress,
+                            ).strftime("%m-%d %H:%M:%S"),
+                            "progress": progress,
                         }
                     )
                 else:
                     # 闲置状态
-                    devices.append(
-                        {'place_name': place_name, 'status': 'idle'}
-                    )
+                    devices.append({"place_name": place_name, "status": "idle"})
 
             # if devices:
 
             # 文本模式
             message = None
             for device_data in devices:
-                if device_data['status'] == 'producing':
+                if device_data["status"] == "producing":
                     text = f"{device_data['place_name']}：{device_data['object_name']}，剩余时间：{device_data['left_time']}，完成时间：{device_data['finish_time']}"
                 else:
                     text = f"{device_data['place_name']}：闲置中"
@@ -592,67 +600,59 @@ class MsgInfo:
     async def get_daily(self) -> DayInfoData | str:
         self.user_data = await self._fetch_user_data()
         if not self.user_data:
-            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+            return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
 
         deltaapi = DeltaApi(self.user_data.platform)
-        res = await deltaapi.get_daily_report(
-            self.user_data.cookie, self.user_data.uid
-        )
-        if res['status']:
-            solDetail = res['data'].get('solDetail', None)
+        res = await deltaapi.get_daily_report(self.user_data.cookie, self.user_data.uid)
+        if res["status"]:
+            solDetail = res["data"].get("solDetail", None)
             if solDetail:
-                recentGainDate = solDetail.get('recentGainDate', '未知')
-                recentGain = solDetail.get('recentGain', 0)
+                recentGainDate = solDetail.get("recentGainDate", "未知")
+                recentGain = solDetail.get("recentGain", 0)
                 gain_str = f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(recentGain))}"
-                userCollectionTop = solDetail.get('userCollectionTop', None)
+                userCollectionTop = solDetail.get("userCollectionTop", None)
                 if userCollectionTop:
-                    userCollectionList = userCollectionTop.get('list', None)
+                    userCollectionList = userCollectionTop.get("list", None)
                     if userCollectionList:
                         userCollectionListStr = ""
                         collection_details = []
 
                         for item in userCollectionList:
-                            objectID = item.get('objectID', 0)
+                            objectID = item.get("objectID", 0)
                             res = await deltaapi.get_object_info(
                                 access_token=self.user_data.cookie,
                                 openid=self.user_data.uid,
                                 object_id=objectID,
                             )
-                            if res['status']:
-                                obj_list = res['data'].get('list', [])
+                            if res["status"]:
+                                obj_list = res["data"].get("list", [])
                                 if obj_list:
-                                    obj_name = obj_list[0].get(
-                                        'objectName', '未知藏品'
-                                    )
-                                    pic = obj_list[0].get('pic', '')
-                                    avgPrice = obj_list[0].get('avgPrice', 0)
+                                    obj_name = obj_list[0].get("objectName", "未知藏品")
+                                    pic = obj_list[0].get("pic", "")
+                                    avgPrice = obj_list[0].get("avgPrice", 0)
                                     collection_details.append(
                                         {
-                                            'objectID': objectID,
-                                            'objectName': obj_name,
-                                            'pic': pic,
-                                            'avgPrice': f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(avgPrice))}",
+                                            "objectID": objectID,
+                                            "objectName": obj_name,
+                                            "pic": pic,
+                                            "avgPrice": f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(avgPrice))}",
                                         }
                                     )
                                     if userCollectionListStr == "":
                                         userCollectionListStr = obj_name
                                     else:
-                                        userCollectionListStr += (
-                                            f"、{obj_name}"
-                                        )
+                                        userCollectionListStr += f"、{obj_name}"
                             else:
                                 collection_details.append(
                                     {
-                                        'objectID': objectID,
-                                        'error': res['message'],
+                                        "objectID": objectID,
+                                        "error": res["message"],
                                     }
                                 )
-                                userCollectionListStr += (
-                                    f"未知藏品：{objectID}"
-                                )
+                                userCollectionListStr += f"未知藏品：{objectID}"
                         userCollectionData: DayListData = {
-                            'list_str': userCollectionListStr,
-                            'details': collection_details,
+                            "list_str": userCollectionListStr,
+                            "details": collection_details,
                         }
                     else:
                         userCollectionData = {
@@ -676,17 +676,15 @@ class MsgInfo:
     async def get_weekly(self):
         self.user_data = await self._fetch_user_data()
         if not self.user_data:
-            return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
+            return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
         access_token = self.user_data.cookie
         openid = self.user_data.uid
         platform = self.user_data.platform
 
         deltaapi = DeltaApi(platform)
-        res = await deltaapi.get_player_info(
-            access_token=access_token, openid=openid
-        )
-        if res['status'] and 'charac_name' in res['data']['player']:
-            user_name = res['data']['player']['charac_name']
+        res = await deltaapi.get_player_info(access_token=access_token, openid=openid)
+        if res["status"] and "charac_name" in res["data"]["player"]:
+            user_name = res["data"]["player"]["charac_name"]
         else:
             return "获取角色信息失败，可能需要重新登录"
         for i in range(1, 3):
@@ -694,13 +692,13 @@ class MsgInfo:
             res = await deltaapi.get_weekly_report(
                 access_token=access_token, openid=openid, statDate=statDate
             )
-            if res['status'] and res['data']:
+            if res["status"] and res["data"]:
                 # 解析总带出
-                Gained_Price = int(res['data'].get('Gained_Price', 0))
+                Gained_Price = int(res["data"].get("Gained_Price", 0))
                 Gained_Price_Str = Util.trans_num_easy_for_read(Gained_Price)
 
                 # 解析总带入
-                consume_Price = int(res['data'].get('consume_Price', 0))
+                consume_Price = int(res["data"].get("consume_Price", 0))
                 consume_Price_Str = Util.trans_num_easy_for_read(consume_Price)
 
                 # 解析总利润
@@ -708,156 +706,129 @@ class MsgInfo:
                 # profit_str = f"{'-' if profit < 0 else ''}{Util.trans_num_easy_for_read(abs(profit))}"
 
                 # 解析使用干员信息
-                total_ArmedForceId_num = res['data'].get(
-                    'total_ArmedForceId_num', ''
-                )
-                total_ArmedForceId_num = total_ArmedForceId_num.replace(
-                    "'", '"'
-                )
+                total_ArmedForceId_num = res["data"].get("total_ArmedForceId_num", "")
+                total_ArmedForceId_num = total_ArmedForceId_num.replace("'", '"')
                 total_ArmedForceId_num_list = list(
-                    map(json.loads, total_ArmedForceId_num.split('#'))
+                    map(json.loads, total_ArmedForceId_num.split("#"))
                 )
-                total_ArmedForceId_num_list.sort(
-                    key=lambda x: x['inum'], reverse=True
-                )
+                total_ArmedForceId_num_list.sort(key=lambda x: x["inum"], reverse=True)
 
                 # 解析资产变化
-                Total_Price = res['data'].get('Total_Price', '')
+                Total_Price = res["data"].get("Total_Price", "")
                 import re
 
                 def extract_price(text: str) -> str:
-                    m = re.match(r'(\w+)-(\d+)-(\d+)', text)
+                    m = re.match(r"(\w+)-(\d+)-(\d+)", text)
                     if m:
                         return m.group(3)
                     return ""
 
-                price_list = list(map(extract_price, Total_Price.split(',')))
+                price_list = list(map(extract_price, Total_Price.split(",")))
 
                 # 解析资产净增
                 rise_Price = int(price_list[-1]) - int(price_list[0])
                 rise_Price_Str = f"{'-' if rise_Price < 0 else ''}{Util.trans_num_easy_for_read(abs(rise_Price))}"
 
                 # 解析总场次
-                total_sol_num = res['data'].get('total_sol_num', '0')
+                total_sol_num = res["data"].get("total_sol_num", "0")
 
                 # 解析总击杀
-                total_Kill_Player = res['data'].get('total_Kill_Player', '0')
+                total_Kill_Player = res["data"].get("total_Kill_Player", "0")
 
                 # 解析总死亡
-                total_Death_Count = res['data'].get('total_Death_Count', '0')
+                total_Death_Count = res["data"].get("total_Death_Count", "0")
 
                 # 解析总在线时间
-                total_Online_Time = res['data'].get('total_Online_Time', '0')
-                total_Online_Time_str = Util.seconds_to_duration(
-                    total_Online_Time
-                )
+                total_Online_Time = res["data"].get("total_Online_Time", "0")
+                total_Online_Time_str = Util.seconds_to_duration(total_Online_Time)
 
                 # 解析撤离成功次数
-                total_exacuation_num = res['data'].get(
-                    'total_exacuation_num', '0'
-                )
+                total_exacuation_num = res["data"].get("total_exacuation_num", "0")
 
                 # 解析百万撤离次数
-                GainedPrice_overmillion_num = res['data'].get(
-                    'GainedPrice_overmillion_num', '0'
+                GainedPrice_overmillion_num = res["data"].get(
+                    "GainedPrice_overmillion_num", "0"
                 )
 
                 # 解析游玩地图信息
-                total_mapid_num = res['data'].get('total_mapid_num', '')
+                total_mapid_num = res["data"].get("total_mapid_num", "")
                 total_mapid_num = total_mapid_num.replace("'", '"')
-                total_mapid_num_list = list(
-                    map(json.loads, total_mapid_num.split('#'))
-                )
-                total_mapid_num_list.sort(
-                    key=lambda x: x['inum'], reverse=True
-                )
+                total_mapid_num_list = list(map(json.loads, total_mapid_num.split("#")))
+                total_mapid_num_list.sort(key=lambda x: x["inum"], reverse=True)
 
                 res = await deltaapi.get_weekly_friend_report(
                     access_token=access_token, openid=openid, statDate=statDate
                 )
 
                 friend_list = []
-                if res['status'] and res['data']:
-                    friends_sol_record = res['data'].get(
-                        'friends_sol_record', []
-                    )
+                if res["status"] and res["data"]:
+                    friends_sol_record = res["data"].get("friends_sol_record", [])
                     if friends_sol_record:
                         for friend in friends_sol_record:
                             friend_dict = {}
                             Friend_is_Escape1_num = friend.get(
-                                'Friend_is_Escape1_num', 0
+                                "Friend_is_Escape1_num", 0
                             )
                             Friend_is_Escape2_num = friend.get(
-                                'Friend_is_Escape2_num', 0
+                                "Friend_is_Escape2_num", 0
                             )
-                            if (
-                                Friend_is_Escape1_num + Friend_is_Escape2_num
-                                <= 0
-                            ):
+                            if Friend_is_Escape1_num + Friend_is_Escape2_num <= 0:
                                 continue
 
-                            friend_openid = friend.get('friend_openid', '')
+                            friend_openid = friend.get("friend_openid", "")
                             res = await deltaapi.get_user_info(
                                 access_token=access_token,
                                 openid=openid,
                                 user_openid=friend_openid,
                             )
-                            if res['status']:
-                                charac_name = res['data'].get(
-                                    'charac_name', ''
-                                )
+                            if res["status"]:
+                                charac_name = res["data"].get("charac_name", "")
                                 charac_name = (
                                     urllib.parse.unquote(charac_name)
                                     if charac_name
                                     else "未知好友"
                                 )
                                 Friend_Escape1_consume_Price = friend.get(
-                                    'Friend_Escape1_consume_Price', 0
+                                    "Friend_Escape1_consume_Price", 0
                                 )
                                 Friend_Escape2_consume_Price = friend.get(
-                                    'Friend_Escape2_consume_Price', 0
+                                    "Friend_Escape2_consume_Price", 0
                                 )
                                 Friend_Sum_Escape1_Gained_Price = friend.get(
-                                    'Friend_Sum_Escape1_Gained_Price', 0
+                                    "Friend_Sum_Escape1_Gained_Price", 0
                                 )
                                 Friend_Sum_Escape2_Gained_Price = friend.get(
-                                    'Friend_Sum_Escape2_Gained_Price', 0
+                                    "Friend_Sum_Escape2_Gained_Price", 0
                                 )
                                 Friend_is_Escape1_num = friend.get(
-                                    'Friend_is_Escape1_num', 0
+                                    "Friend_is_Escape1_num", 0
                                 )
                                 Friend_is_Escape2_num = friend.get(
-                                    'Friend_is_Escape2_num', 0
+                                    "Friend_is_Escape2_num", 0
                                 )
                                 Friend_total_sol_KillPlayer = friend.get(
-                                    'Friend_total_sol_KillPlayer', 0
+                                    "Friend_total_sol_KillPlayer", 0
                                 )
                                 Friend_total_sol_DeathCount = friend.get(
-                                    'Friend_total_sol_DeathCount', 0
+                                    "Friend_total_sol_DeathCount", 0
                                 )
                                 Friend_total_sol_num = friend.get(
-                                    'Friend_total_sol_num', 0
+                                    "Friend_total_sol_num", 0
                                 )
 
-                                friend_dict['charac_name'] = charac_name
-                                friend_dict['sol_num'] = Friend_total_sol_num
-                                friend_dict['kill_num'] = (
-                                    Friend_total_sol_KillPlayer
-                                )
-                                friend_dict['death_num'] = (
-                                    Friend_total_sol_DeathCount
-                                )
-                                friend_dict['escape_num'] = (
-                                    Friend_is_Escape1_num
-                                )
-                                friend_dict['fail_num'] = Friend_is_Escape2_num
-                                friend_dict['gained_str'] = (
+                                friend_dict["charac_name"] = charac_name
+                                friend_dict["sol_num"] = Friend_total_sol_num
+                                friend_dict["kill_num"] = Friend_total_sol_KillPlayer
+                                friend_dict["death_num"] = Friend_total_sol_DeathCount
+                                friend_dict["escape_num"] = Friend_is_Escape1_num
+                                friend_dict["fail_num"] = Friend_is_Escape2_num
+                                friend_dict["gained_str"] = (
                                     Util.trans_num_easy_for_read(
                                         Friend_Sum_Escape1_Gained_Price
                                         + Friend_Sum_Escape2_Gained_Price
                                     )
                                 )
-                                friend_dict['consume_str'] = (
+                                friend_dict["consume_str"] = (
                                     Util.trans_num_easy_for_read(
                                         Friend_Escape1_consume_Price
                                         + Friend_Escape2_consume_Price
@@ -869,13 +840,11 @@ class MsgInfo:
                                     - Friend_Escape1_consume_Price
                                     - Friend_Escape2_consume_Price
                                 )
-                                friend_dict['profit_str'] = (
+                                friend_dict["profit_str"] = (
                                     f"{'-' if profit < 0 else ''}{Util.trans_num_easy_for_read(abs(profit))}"
                                 )
                                 friend_list.append(friend_dict)
-                        friend_list.sort(
-                            key=lambda x: x['sol_num'], reverse=True
-                        )
+                        friend_list.sort(key=lambda x: x["sol_num"], reverse=True)
 
                 msgs = []
                 message = f"【{user_name}烽火周报 - 日期：{statDate_str}】"
@@ -883,9 +852,7 @@ class MsgInfo:
                 msgs.append(message)
                 message = "--- 基本信息 ---\n"
                 message += f"总览：{total_sol_num}场 | {total_exacuation_num}成功撤离 | {GainedPrice_overmillion_num}百万撤离\n"
-                message += (
-                    f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
-                )
+                message += f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
                 message += f"在线时间：{total_Online_Time_str}\n"
                 message += f"总带出：{Gained_Price_Str} | 总带入：{consume_Price_Str}\n"
                 message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"
@@ -896,15 +863,15 @@ class MsgInfo:
                 message = "--- 干员使用情况 ---"
                 for armed_force in total_ArmedForceId_num_list:
                     armed_force_name = Util.get_armed_force_name(
-                        armed_force.get('ArmedForceId', 0)
+                        armed_force.get("ArmedForceId", 0)
                     )
-                    armed_force_num = armed_force.get('inum', 0)
+                    armed_force_num = armed_force.get("inum", 0)
                     message += f"\n{armed_force_name}：{armed_force_num}场"
                 msgs.append(message)
                 message = "--- 地图游玩情况 ---"
                 for map_info in total_mapid_num_list:
-                    map_name = Util.get_map_name(map_info.get('MapId', 0))
-                    map_num = map_info.get('inum', 0)
+                    map_name = Util.get_map_name(map_info.get("MapId", 0))
+                    map_num = map_info.get("inum", 0)
                     message += f"\n{map_name}：{map_num}场"
                 msgs.append(message)
                 message = "--- 队友协作情况 ---\n注：KD为好友KD，带出和带入为本人的数据"
