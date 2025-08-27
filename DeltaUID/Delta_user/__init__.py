@@ -18,13 +18,14 @@ df_tqc = SV("三角洲特勤处")
 df_day = SV("三角洲日报/周报")
 df_record = SV("三角洲战绩查询")
 
+
 @df_day.on_command(("日报"), block=True)
-@df_info.on_command(("信息","查询"), block=True)
+@df_info.on_command(("信息", "查询"), block=True)
 async def login(bot: Bot, ev: Event):
     logger.info("[ss]正在执行三角洲信息功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
-    msg = await data.get_msg_info(ev)
-
+    msg = await data.get_msg_info()
+    print(msg)
     day = await data.get_daily()
     print(day)
     if isinstance(msg, str):
@@ -34,8 +35,7 @@ async def login(bot: Bot, ev: Event):
         await bot.send(day, at_sender=True)
         return
 
-
-    info = await draw_df_info_img(msg,day, ev)
+    info = await draw_df_info_img(msg, day, ev)
 
     await bot.send(info, at_sender=True)
 

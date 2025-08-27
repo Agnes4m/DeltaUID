@@ -4,7 +4,6 @@ import urllib.parse
 from typing import cast
 
 from gsuid_core.logger import logger
-from gsuid_core.models import Event
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
@@ -19,15 +18,12 @@ class MsgInfo:
         self.user_id = user_id
         self.bot_id = bot_id
         self.user_data = None
-        
-    
+
     async def _fetch_user_data(self):
         self.user_data = await DFUser.select_data(self.user_id, self.bot_id)
         return self.user_data
 
-
-        
-    async def get_msg_info(self, ev: Event):
+    async def get_msg_info(self):
         self.user_data = await self._fetch_user_data()
 
         if self.user_data is None:
@@ -62,7 +58,7 @@ class MsgInfo:
             propcapital = "0"
         # try:
         if res['status'] and sol_info['status'] and tdm_info['status']:
-            user_name:str = res['data']['player']['charac_name']
+            user_name: str = res['data']['player']['charac_name']
             money = Util.trans_num_easy_for_read(res['data']['money'])
             rankpoint: str = res['data']['game']['rankpoint']
             soltotalfght = res['data']['game']['soltotalfght']
@@ -71,8 +67,7 @@ class MsgInfo:
             solescaperatio = res['data']['game']['solescaperatio']
             print(sol_info['data']['solDetail']['profitLossRatio'])
             profitLossRatio = Util.trans_num_easy_for_read(
-                int(sol_info['data']['solDetail']['profitLossRatio'])
-                // 100
+                int(sol_info['data']['solDetail']['profitLossRatio']) // 100
             )
             highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio'])/100:.2f}"
             medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio'])/100:.2f}"
@@ -104,41 +99,42 @@ class MsgInfo:
             except (KeyError, IndexError, TypeError) as e:
                 logger.error(f"无法获取avgScorePerMinute: {e}")
                 avgScorePerMinute = "未知"
-                
+
             totalVehicleDestroyed = tdm_info['data']['mpDetail'][
                 'totalVehicleDestroyed'
             ]
-            totalVehicleKill = tdm_info['data']['mpDetail'][
-                'totalVehicleKill'
-            ]
+            totalVehicleKill = tdm_info['data']['mpDetail']['totalVehicleKill']
 
             # try:
-            player_data = cast(InfoData, {
-                'user_name': user_name,
-                'money': money,
-                'propcapital': propcapital,
-                'rankpoint': rankpoint,
-                'soltotalfght': soltotalfght,
-                'solttotalescape': solttotalescape,
-                'soltotalkill': soltotalkill,
-                'solescaperatio': solescaperatio,
-                'profitLossRatio': profitLossRatio,
-                'highKillDeathRatio': highKillDeathRatio,
-                'medKillDeathRatio': medKillDeathRatio,
-                'lowKillDeathRatio': lowKillDeathRatio,
-                'totalGainedPrice': totalGainedPrice,
-                'totalGameTime': totalGameTime,
-                'tdmrankpoint': tdmrankpoint,
-                'avgkillperminute': avgkillperminute,
-                'tdmtotalfight': tdmtotalfight,
-                'totalwin': totalwin,
-                'tdmtotalkill': str(tdmtotalkill),
-                'tdmduration': tdmduration,
-                'tdmsuccessratio': tdmsuccessratio,
-                'avgScorePerMinute': avgScorePerMinute,
-                'totalVehicleDestroyed': totalVehicleDestroyed,
-                'totalVehicleKill': totalVehicleKill,
-                })
+            player_data = cast(
+                InfoData,
+                {
+                    'user_name': user_name,
+                    'money': money,
+                    'propcapital': propcapital,
+                    'rankpoint': rankpoint,
+                    'soltotalfght': soltotalfght,
+                    'solttotalescape': solttotalescape,
+                    'soltotalkill': soltotalkill,
+                    'solescaperatio': solescaperatio,
+                    'profitLossRatio': profitLossRatio,
+                    'highKillDeathRatio': highKillDeathRatio,
+                    'medKillDeathRatio': medKillDeathRatio,
+                    'lowKillDeathRatio': lowKillDeathRatio,
+                    'totalGainedPrice': totalGainedPrice,
+                    'totalGameTime': totalGameTime,
+                    'tdmrankpoint': tdmrankpoint,
+                    'avgkillperminute': avgkillperminute,
+                    'tdmtotalfight': tdmtotalfight,
+                    'totalwin': totalwin,
+                    'tdmtotalkill': str(tdmtotalkill),
+                    'tdmduration': tdmduration,
+                    'tdmsuccessratio': tdmsuccessratio,
+                    'avgScorePerMinute': avgScorePerMinute,
+                    'totalVehicleDestroyed': totalVehicleDestroyed,
+                    'totalVehicleKill': totalVehicleKill,
+                },
+            )
             # print(player_data)
 
             # img = await draw_df_info_img(player_data, ev)
@@ -146,9 +142,8 @@ class MsgInfo:
             return player_data
         return "未绑定三角洲账号，请先用\"鼠鼠登录\"命令登录"
 
-  
-
     async def get_record(self, raw_text: str):
+        self.user_data = await self._fetch_user_data()
         if self.user_data is None:
             return "未绑定三角洲账号，请先用\"三角洲登录\"命令登录"
 
@@ -615,7 +610,7 @@ class MsgInfo:
                     if userCollectionList:
                         userCollectionListStr = ""
                         collection_details = []
-                        
+
                         for item in userCollectionList:
                             objectID = item.get('objectID', 0)
                             res = await deltaapi.get_object_info(
@@ -629,19 +624,16 @@ class MsgInfo:
                                     obj_name = obj_list[0].get(
                                         'objectName', '未知藏品'
                                     )
-                                    pic = obj_list[0].get(
-                                        'pic', ''
+                                    pic = obj_list[0].get('pic', '')
+                                    avgPrice = obj_list[0].get('avgPrice', 0)
+                                    collection_details.append(
+                                        {
+                                            'objectID': objectID,
+                                            'objectName': obj_name,
+                                            'pic': pic,
+                                            'avgPrice': f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(avgPrice))}",
+                                        }
                                     )
-                                    avgPrice = obj_list[0].get(
-                                        'avgPrice', 0
-                                    )
-                                    collection_details.append({
-                                        'objectID': objectID,
-                                        'objectName': obj_name,
-                                        'pic': pic,
-                                        'avgPrice': f"{'-' if recentGain < 0 else ''}{Util.trans_num_easy_for_read(abs(avgPrice))}",
-
-                                    })
                                     if userCollectionListStr == "":
                                         userCollectionListStr = obj_name
                                     else:
@@ -649,10 +641,12 @@ class MsgInfo:
                                             f"、{obj_name}"
                                         )
                             else:
-                                collection_details.append({
-                                    'objectID': objectID,
-                                    'error': res['message']
-                                })
+                                collection_details.append(
+                                    {
+                                        'objectID': objectID,
+                                        'error': res['message'],
+                                    }
+                                )
                                 userCollectionListStr += (
                                     f"未知藏品：{objectID}"
                                 )
@@ -661,22 +655,23 @@ class MsgInfo:
                             'details': collection_details,
                         }
                     else:
-                        userCollectionData = {"list_str": "未知", "details": []}
+                        userCollectionData = {
+                            "list_str": "未知",
+                            "details": [],
+                        }
                 else:
                     userCollectionData = {"list_str": "未知", "details": []}
                 # 返回原始数据字典
                 return {
-                        "daily_report_date": recentGainDate,
-                        "profit": recentGain,
-                        "profit_str": gain_str,
-                        "top_collections": userCollectionData
-                    }
+                    "daily_report_date": recentGainDate,
+                    "profit": recentGain,
+                    "profit_str": gain_str,
+                    "top_collections": userCollectionData,
+                }
             else:
-                return  "获取三角洲日报失败，没有数据"
+                return "获取三角洲日报失败，没有数据"
         else:
             return f"获取三角洲日报失败：{res['message']}"
-        
-        
 
     async def get_weekly(self):
         self.user_data = await self._fetch_user_data()
@@ -938,30 +933,29 @@ class MsgInfo:
                     "total_Death_Count": total_Death_Count,
                     "total_exacuation_num": total_exacuation_num,
                     "GainedPrice_overmillion_num": GainedPrice_overmillion_num,
-                    "price_list": price_list
-
+                    "price_list": price_list,
                 }
                 print(img_data)
 
-                    #     "user_name",
-                    #     statDate_str,
-                    #     Gained_Price_Str,
-                    #     consume_Price_Str,
-                    #     rise_Price_Str,
-                    #     total_ArmedForceId_num_list,
-                    #     total_mapid_num_list,
-                    #     friend_list,
-                    #     profit,
-                    #     rise_Price,
-                    #     total_sol_num,
-                    #     total_Online_Time_str,
-                    #     total_Kill_Player,
-                    #     total_Death_Count,
-                    #     total_exacuation_num,
-                    #     GainedPrice_overmillion_num,
-                    #     price_list,
-                    # )
-                    
+                #     "user_name",
+                #     statDate_str,
+                #     Gained_Price_Str,
+                #     consume_Price_Str,
+                #     rise_Price_Str,
+                #     total_ArmedForceId_num_list,
+                #     total_mapid_num_list,
+                #     friend_list,
+                #     profit,
+                #     rise_Price,
+                #     total_sol_num,
+                #     total_Online_Time_str,
+                #     total_Kill_Player,
+                #     total_Death_Count,
+                #     total_exacuation_num,
+                #     GainedPrice_overmillion_num,
+                #     price_list,
+                # )
+
                 #     await Image(image=img_data).finish()
 
                 return msgs

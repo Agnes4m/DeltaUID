@@ -8,6 +8,7 @@ from gsuid_core.bot import Bot
 # from gsuid_core.logger import logger
 from gsuid_core.models import Event, Message
 from gsuid_core.sv import SV
+from gsuid_core.utils.image.image_tools import get_pic
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
@@ -135,12 +136,13 @@ async def login(bot: Bot, ev: Event):
         if not res['status']:
             await bot.send(f"获取二维码失败：{res['message']}")
             return
-        img_url = res['data']['qrCode']
+        img_url: str = res['data']['qrCode']
+        img = await get_pic(img_url)
         uuid = res['data']['uuid']
         await bot.send(
             [
                 Message(type="text", data=("请打开手机微信使用摄像头扫码")),
-                Message(type="image", data=img_url),
+                Message(type="image", data=img),
             ],
             at_sender=True,
         )

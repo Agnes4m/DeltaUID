@@ -49,6 +49,7 @@ class LoginStatus(TypedDict):
     message: str
     data: dict
 
+
 class InfoData(TypedDict):
     user_name: str
     """用户名"""
@@ -113,10 +114,12 @@ class InfoData(TypedDict):
 
 class DayMoneyData(TypedDict):
     """日物品"""
+
     objectID: str
     objectName: str
     pic: str
     avgPrice: str
+
 
 class DayListData(TypedDict):
     list_str: str
@@ -125,6 +128,7 @@ class DayListData(TypedDict):
 
 class DayInfoData(TypedDict):
     """日数据"""
+
     daily_report_date: str
     """日期"""
     profit: int
