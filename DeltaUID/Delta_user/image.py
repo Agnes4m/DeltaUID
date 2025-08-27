@@ -112,9 +112,13 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
 
     prop_bar_1 = Image.open(TEXTURE / "仓库bar.png").convert("RGBA")
     prop_bar_2 = deepcopy(prop_bar_1)
-    money_1 = Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
+    money_1 = (
+        Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
+    )
 
-    money_2 = Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
+    money_2 = (
+        Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
+    )
 
     prop_draw_1 = ImageDraw.Draw(prop_bar_1)
     prop_draw_1.text(
@@ -143,11 +147,21 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     img.paste(sol_bg, (0, 650), sol_bg)
     sol_tap = 770
     img_draw = ImageDraw.Draw(img)
-    await draw_one_msg(img_draw, "撤离率", data["solescaperatio"], (90, sol_tap))
-    await draw_one_msg(img_draw, "总场数", data["soltotalfght"], (270, sol_tap))
-    await draw_one_msg(img_draw, "撤离数", data["solttotalescape"], (450, sol_tap))
-    await draw_one_msg(img_draw, "总击杀", data["soltotalkill"], (620, sol_tap))
-    await draw_one_msg(img_draw, "赚损比", data["profitLossRatio"], (790, sol_tap))
+    await draw_one_msg(
+        img_draw, "撤离率", data["solescaperatio"], (90, sol_tap)
+    )
+    await draw_one_msg(
+        img_draw, "总场数", data["soltotalfght"], (270, sol_tap)
+    )
+    await draw_one_msg(
+        img_draw, "撤离数", data["solttotalescape"], (450, sol_tap)
+    )
+    await draw_one_msg(
+        img_draw, "总击杀", data["soltotalkill"], (620, sol_tap)
+    )
+    await draw_one_msg(
+        img_draw, "赚损比", data["profitLossRatio"], (790, sol_tap)
+    )
     await draw_one_msg(
         img_draw, "总带出", data["totalGainedPrice"], (90, sol_tap + 150)
     )
@@ -166,16 +180,26 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     # 全面战场
     img.paste(tdm_bg, (0, 1100), tdm_bg)
     tdm_tap = 1220
-    await draw_one_msg(img_draw, "胜率", data["tdmsuccessratio"], (90, tdm_tap))
-    await draw_one_msg(img_draw, "总场数", data["tdmtotalfight"], (270, tdm_tap))
+    await draw_one_msg(
+        img_draw, "胜率", data["tdmsuccessratio"], (90, tdm_tap)
+    )
+    await draw_one_msg(
+        img_draw, "总场数", data["tdmtotalfight"], (270, tdm_tap)
+    )
     await draw_one_msg(img_draw, "胜利数", data["totalwin"], (450, tdm_tap))
-    await draw_one_msg(img_draw, "总击杀", data["tdmtotalkill"], (620, tdm_tap))
-    await draw_one_msg(img_draw, "排位分", data["tdmrankpoint"], (790, tdm_tap))
+    await draw_one_msg(
+        img_draw, "总击杀", data["tdmtotalkill"], (620, tdm_tap)
+    )
+    await draw_one_msg(
+        img_draw, "排位分", data["tdmrankpoint"], (790, tdm_tap)
+    )
 
     await draw_one_msg(
         img_draw, "击杀/min", data["avgkillperminute"], (90, tdm_tap + 150)
     )
-    await draw_one_msg(img_draw, "游戏时长", data["tdmduration"], (270, tdm_tap + 150))
+    await draw_one_msg(
+        img_draw, "游戏时长", data["tdmduration"], (270, tdm_tap + 150)
+    )
     await draw_one_msg(
         img_draw, "分数/min", data["avgScorePerMinute"], (450, tdm_tap + 150)
     )
