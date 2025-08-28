@@ -1,7 +1,7 @@
 import datetime
 import json
 import urllib.parse
-from typing import cast
+from typing import Any, cast
 
 from gsuid_core.logger import logger
 
@@ -74,9 +74,15 @@ class MsgInfo:
             profitLossRatio = Util.trans_num_easy_for_read(
                 int(sol_info["data"]["solDetail"]["profitLossRatio"]) // 100
             )
-            highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio']) / 100:.2f}"
-            medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio']) / 100:.2f}"
-            lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio']) / 100:.2f}"
+            highKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['highKillDeathRatio']) / 100:.2f}"
+            )
+            medKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['medKillDeathRatio']) / 100:.2f}"
+            )
+            lowKillDeathRatio = (
+                f"{int(sol_info['data']['solDetail']['lowKillDeathRatio']) / 100:.2f}"
+            )
             totalGainedPrice = Util.trans_num_easy_for_read(
                 sol_info["data"]["solDetail"]["totalGainedPrice"]
             )
@@ -223,11 +229,12 @@ class MsgInfo:
         )
         if not res["status"]:
             return 0, "获取玩家信息失败，可能需要重新登录"
-        user_name = res["data"]["player"]["charac_name"]
-
+        user_name: Any = res["data"]["player"]["charac_name"]
+        print(res)
         res = await deltaapi.get_record(
             self.user_data.cookie, self.user_data.uid, type_id, page
         )
+        print(res)
         if not res["status"]:
             return 0, "获取战绩失败，可能需要重新登录"
         card_list: list[RecordTdmData | RecordSolData] = []
@@ -253,9 +260,7 @@ class MsgInfo:
                 map_name = Util.get_map_name(map_id)
                 # 解析结果
                 escape_fail_reason = record.get("EscapeFailReason", 0)
-                result_str = (
-                    "撤离成功" if escape_fail_reason == 1 else "撤离失败"
-                )
+                result_str = "撤离成功" if escape_fail_reason == 1 else "撤离失败"
                 # 解析时长
                 duration_seconds = record.get("DurationS", 0)
                 minutes = duration_seconds // 60
@@ -351,9 +356,7 @@ class MsgInfo:
                     mpDetailList = res["data"].get("mpDetailList", [])
                     for mpDetail in mpDetailList:
                         if mpDetail.get("isCurrentUser", False):
-                            rescueTeammateCount = mpDetail.get(
-                                "rescueTeammateCount", 0
-                            )
+                            rescueTeammateCount = mpDetail.get("rescueTeammateCount", 0)
                             if rescueTeammateCount > 0:
                                 RescueTeammateCount = rescueTeammateCount
                                 break
@@ -363,9 +366,7 @@ class MsgInfo:
                 # 解析总得分
                 TotalScore = record.get("TotalScore", 0)
                 avgScorePerMinute = (
-                    int(TotalScore * 60 / gametime)
-                    if gametime and gametime > 0
-                    else 0
+                    int(TotalScore * 60 / gametime) if gametime and gametime > 0 else 0
                 )
 
                 # 解析干员
@@ -428,9 +429,7 @@ class MsgInfo:
                     # 计算进度百分比
                     total_time = device.get("totalTime", 0)
                     progress = (
-                        100 - (left_time / total_time * 100)
-                        if total_time > 0
-                        else 0
+                        100 - (left_time / total_time * 100) if total_time > 0 else 0
                     )
 
                     devices.append(
@@ -447,9 +446,7 @@ class MsgInfo:
                     )
                 else:
                     # 闲置状态
-                    devices.append(
-                        {"place_name": place_name, "status": "idle"}
-                    )
+                    devices.append({"place_name": place_name, "status": "idle"})
 
             # if devices:
 
@@ -607,9 +604,7 @@ class MsgInfo:
             return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
 
         deltaapi = DeltaApi(self.user_data.platform)
-        res = await deltaapi.get_daily_report(
-            self.user_data.cookie, self.user_data.uid
-        )
+        res = await deltaapi.get_daily_report(self.user_data.cookie, self.user_data.uid)
         if res["status"]:
             solDetail = res["data"].get("solDetail", None)
             if solDetail:
@@ -633,9 +628,7 @@ class MsgInfo:
                             if res["status"]:
                                 obj_list = res["data"].get("list", [])
                                 if obj_list:
-                                    obj_name = obj_list[0].get(
-                                        "objectName", "未知藏品"
-                                    )
+                                    obj_name = obj_list[0].get("objectName", "未知藏品")
                                     pic = obj_list[0].get("pic", "")
                                     avgPrice = obj_list[0].get("avgPrice", 0)
                                     collection_details.append(
@@ -649,9 +642,7 @@ class MsgInfo:
                                     if userCollectionListStr == "":
                                         userCollectionListStr = obj_name
                                     else:
-                                        userCollectionListStr += (
-                                            f"、{obj_name}"
-                                        )
+                                        userCollectionListStr += f"、{obj_name}"
                             else:
                                 collection_details.append(
                                     {
@@ -659,9 +650,7 @@ class MsgInfo:
                                         "error": res["message"],
                                     }
                                 )
-                                userCollectionListStr += (
-                                    f"未知藏品：{objectID}"
-                                )
+                                userCollectionListStr += f"未知藏品：{objectID}"
                         userCollectionData: DayListData = {
                             "list_str": userCollectionListStr,
                             "details": collection_details,
@@ -694,9 +683,7 @@ class MsgInfo:
         platform = self.user_data.platform
 
         deltaapi = DeltaApi(platform)
-        res = await deltaapi.get_player_info(
-            access_token=access_token, openid=openid
-        )
+        res = await deltaapi.get_player_info(access_token=access_token, openid=openid)
         if res["status"] and "charac_name" in res["data"]["player"]:
             user_name = res["data"]["player"]["charac_name"]
         else:
@@ -720,18 +707,12 @@ class MsgInfo:
                 # profit_str = f"{'-' if profit < 0 else ''}{Util.trans_num_easy_for_read(abs(profit))}"
 
                 # 解析使用干员信息
-                total_ArmedForceId_num = res["data"].get(
-                    "total_ArmedForceId_num", ""
-                )
-                total_ArmedForceId_num = total_ArmedForceId_num.replace(
-                    "'", '"'
-                )
+                total_ArmedForceId_num = res["data"].get("total_ArmedForceId_num", "")
+                total_ArmedForceId_num = total_ArmedForceId_num.replace("'", '"')
                 total_ArmedForceId_num_list = list(
                     map(json.loads, total_ArmedForceId_num.split("#"))
                 )
-                total_ArmedForceId_num_list.sort(
-                    key=lambda x: x["inum"], reverse=True
-                )
+                total_ArmedForceId_num_list.sort(key=lambda x: x["inum"], reverse=True)
 
                 # 解析资产变化
                 Total_Price = res["data"].get("Total_Price", "")
@@ -760,14 +741,10 @@ class MsgInfo:
 
                 # 解析总在线时间
                 total_Online_Time = res["data"].get("total_Online_Time", "0")
-                total_Online_Time_str = Util.seconds_to_duration(
-                    total_Online_Time
-                )
+                total_Online_Time_str = Util.seconds_to_duration(total_Online_Time)
 
                 # 解析撤离成功次数
-                total_exacuation_num = res["data"].get(
-                    "total_exacuation_num", "0"
-                )
+                total_exacuation_num = res["data"].get("total_exacuation_num", "0")
 
                 # 解析百万撤离次数
                 GainedPrice_overmillion_num = res["data"].get(
@@ -777,12 +754,8 @@ class MsgInfo:
                 # 解析游玩地图信息
                 total_mapid_num = res["data"].get("total_mapid_num", "")
                 total_mapid_num = total_mapid_num.replace("'", '"')
-                total_mapid_num_list = list(
-                    map(json.loads, total_mapid_num.split("#"))
-                )
-                total_mapid_num_list.sort(
-                    key=lambda x: x["inum"], reverse=True
-                )
+                total_mapid_num_list = list(map(json.loads, total_mapid_num.split("#")))
+                total_mapid_num_list.sort(key=lambda x: x["inum"], reverse=True)
 
                 res = await deltaapi.get_weekly_friend_report(
                     access_token=access_token, openid=openid, statDate=statDate
@@ -790,9 +763,7 @@ class MsgInfo:
 
                 friend_list = []
                 if res["status"] and res["data"]:
-                    friends_sol_record = res["data"].get(
-                        "friends_sol_record", []
-                    )
+                    friends_sol_record = res["data"].get("friends_sol_record", [])
                     if friends_sol_record:
                         for friend in friends_sol_record:
                             friend_dict = {}
@@ -802,10 +773,7 @@ class MsgInfo:
                             Friend_is_Escape2_num = friend.get(
                                 "Friend_is_Escape2_num", 0
                             )
-                            if (
-                                Friend_is_Escape1_num + Friend_is_Escape2_num
-                                <= 0
-                            ):
+                            if Friend_is_Escape1_num + Friend_is_Escape2_num <= 0:
                                 continue
 
                             friend_openid = friend.get("friend_openid", "")
@@ -815,9 +783,7 @@ class MsgInfo:
                                 user_openid=friend_openid,
                             )
                             if res["status"]:
-                                charac_name = res["data"].get(
-                                    "charac_name", ""
-                                )
+                                charac_name = res["data"].get("charac_name", "")
                                 charac_name = (
                                     urllib.parse.unquote(charac_name)
                                     if charac_name
@@ -853,15 +819,9 @@ class MsgInfo:
 
                                 friend_dict["charac_name"] = charac_name
                                 friend_dict["sol_num"] = Friend_total_sol_num
-                                friend_dict["kill_num"] = (
-                                    Friend_total_sol_KillPlayer
-                                )
-                                friend_dict["death_num"] = (
-                                    Friend_total_sol_DeathCount
-                                )
-                                friend_dict["escape_num"] = (
-                                    Friend_is_Escape1_num
-                                )
+                                friend_dict["kill_num"] = Friend_total_sol_KillPlayer
+                                friend_dict["death_num"] = Friend_total_sol_DeathCount
+                                friend_dict["escape_num"] = Friend_is_Escape1_num
                                 friend_dict["fail_num"] = Friend_is_Escape2_num
                                 friend_dict["gained_str"] = (
                                     Util.trans_num_easy_for_read(
@@ -885,9 +845,7 @@ class MsgInfo:
                                     f"{'-' if profit < 0 else ''}{Util.trans_num_easy_for_read(abs(profit))}"
                                 )
                                 friend_list.append(friend_dict)
-                        friend_list.sort(
-                            key=lambda x: x["sol_num"], reverse=True
-                        )
+                        friend_list.sort(key=lambda x: x["sol_num"], reverse=True)
 
                 msgs = []
                 message = f"【{user_name}烽火周报 - 日期：{statDate_str}】"
@@ -895,9 +853,7 @@ class MsgInfo:
                 msgs.append(message)
                 message = "--- 基本信息 ---\n"
                 message += f"总览：{total_sol_num}场 | {total_exacuation_num}成功撤离 | {GainedPrice_overmillion_num}百万撤离\n"
-                message += (
-                    f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
-                )
+                message += f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
                 message += f"在线时间：{total_Online_Time_str}\n"
                 message += f"总带出：{Gained_Price_Str} | 总带入：{consume_Price_Str}\n"
                 message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"

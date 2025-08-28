@@ -49,7 +49,8 @@ async def get_record(
     ev: Event,
 ):
     logger.info("[ss]正在执行三角洲战绩查询功能")
-    data = MsgInfo(ev.user_id, bot.bot_id)
+    user_id = ev.at if ev.at is not None else ev.user_id
+    data = MsgInfo(user_id, bot.bot_id)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
     if index == 0 and isinstance(record, str):
