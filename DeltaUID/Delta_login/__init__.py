@@ -1,19 +1,13 @@
-import asyncio
-import base64
-import json
-from typing import cast
-
 from gsuid_core.bot import Bot
+from gsuid_core.logger import logger
+from gsuid_core.models import Event
 
 # from gsuid_core.logger import logger
-from gsuid_core.models import Event, Message
 from gsuid_core.sv import SV
-from gsuid_core.utils.image.image_tools import get_pic
+from gsuid_core.utils.message import send_diff_msg
 
-from ..utils.api.api import DeltaApi
-from ..utils.api.util import Util
-from ..utils.database.models import DFBind, DFUser
-from ..utils.models import UserData
+from ..utils.database.models import DFBind
+from .login import login_in, out_login
 
 # from gsuid_core.utils.database.api import get_uid
 
@@ -21,197 +15,68 @@ from ..utils.models import UserData
 df_login = SV("三角洲登录")
 
 
-@df_login.on_command(("登录"), block=True)
+@df_login.on_command(
+    keyword=(
+        "登录",
+        "切换",
+        "删除",
+    ),
+    block=True,
+)
 async def login(bot: Bot, ev: Event):
-    platform = ev.text.lower() if ev.text else "qq"
+    await bot.logger.info("[DF] 开始执行[登录用户信息]")
+    qid = ev.user_id
+    await bot.logger.info("[DF] [绑定/解绑]UserID: {}".format(qid))
 
-    if platform in ("", "qq"):
-        platform = "qq"
-    elif platform == "微信":
-        platform = "wx"
-    else:
-        await bot.send("平台参数错误，请使用QQ或微信", at_sender=True)
+    if "登录" in ev.command:
+        login_info = await login_in(bot, ev)
+        print(login_info)
+        if login_info is None:
+            logger.error("[DF] 登录失败")
+            return
+        uid = login_info["openid"]
+        data = await DFBind.insert_uid(qid, ev.bot_id, uid, ev.group_id)
         return
-
-    deltaapi = DeltaApi(platform)
-
-    if platform == "qq":
-        # 获取二维码
-        res = await deltaapi.get_sig()
-        if not res['status'] or isinstance(res['message'], str):
-            await bot.send(f"获取二维码失败：{res['message']}")
-            return
-
-        # 解码二维码
-        iamgebase64 = res['message']['image']
-        cookie = json.dumps(res['message']['cookie'])
-        # logger.debug(f"cookie: {cookie},type: {type(cookie)}")
-        qrSig = res['message']['qrSig']
-        qrToken = res['message']['token']
-        loginSig = res['message']['loginSig']
-
-        img = base64.b64decode(iamgebase64)
-        await bot.send(
-            [
-                Message(type="text", data="请打开手机qq使用摄像头扫码"),
-                Message(type="image", data=img),
-            ],
-            at_sender=True,
+    elif "切换" in ev.command:
+        retcode = await DFBind.switch_uid_by_game(qid, ev.bot_id)
+        if retcode == 0:
+            return await bot.send("[DF] 切换UID成功！")
+        elif retcode == -3:
+            now_uid = await DFBind.get_uid_by_game(qid, ev.bot_id)
+            if now_uid:
+                return await bot.send(
+                    f"[DF] 你目前只绑定了一个UID{now_uid}, 无法切换!"
+                )
+            else:
+                return await bot.send("[DF] 你尚未绑定任何UID, 无法切换!")
+        else:
+            return await bot.send("[DF] 尚未绑定该UID")
+    else:
+        now_uid = await DFBind.get_uid_by_game(qid, ev.bot_id)
+        if now_uid is None:
+            return await bot.send("[DF] 你尚未绑定任何UID, 无法删除!")
+        data = await DFBind.delete_uid(qid, ev.bot_id, now_uid)
+        return await send_diff_msg(
+            bot,
+            data,
+            {
+                0: "[DF] 删除UID成功！",
+                -1: "[DF] 该UID不在已绑定列表中！",
+            },
         )
 
-        # 等待扫码登录
-        while True:
-            res = await deltaapi.get_login_status(
-                cookie, qrSig, qrToken, loginSig
-            )
-            if res['code'] == 0:
-                cookie = json.dumps(res['data']['cookie'])
-                res = await deltaapi.get_access_token(cookie)
-                if res['status']:
-                    access_token = res['data']['access_token']
-                    openid = res['data']['openid']
-                    qq_id = ev.user_id
-                    if ev.group_id:
-                        group_id = ev.group_id
-                    else:
-                        group_id = 0
-                    res = await deltaapi.bind(
-                        access_token=access_token, openid=openid
-                    )
-                    if not res['status']:
-                        await bot.send(
-                            f"绑定失败：{res['message']}", at_sender=True
-                        )
-                        break
-                    res = await deltaapi.get_player_info(
-                        access_token=access_token, openid=openid
-                    )
-                    if res['status']:
-                        user_data = cast(
-                            UserData,
-                            {
-                                "qq_id": qq_id,
-                                "group_id": group_id,
-                                "access_token": access_token,
-                                "openid": openid,
-                                "platform": platform,
-                            },
-                        )
-                        await DFUser.insert_user(bot, user_data)
-                        await DFBind.insert_user(ev, bot, user_data)
 
-                        user_name = res['data']['player']['charac_name']
+@df_login.on_command(
+    keyword=("导出"),
+    block=True,
+)
+async def out_l(bot: Bot, ev: Event):
+    await bot.logger.info("[DF] 开始执行[导出用户信息]")
+    if ev.group_id is not None:
+        return await bot.send("[DF] 请在私聊中使用该命令!")
+    qid = ev.user_id
+    await bot.logger.info("[DF] [导出用户信息]UserID: {}".format(qid))
 
-                        await bot.send(
-                            f"登录成功，角色名：{user_name}，现金：{Util.trans_num_easy_for_read(res['data']['money'])}\n登录有效期60天，在小程序登录会使这里的登录状态失效",
-                            at_sender=True,
-                        )
-                        break
-
-                    else:
-                        await bot.send(
-                            f"查询角色信息失败：{res['message']}",
-                            at_sender=True,
-                        )
-                        break
-                else:
-                    await bot.send(
-                        f"登录失败：{res['message']}", at_sender=True
-                    )
-                    break
-
-            elif res['code'] == -4 or res['code'] == -2 or res['code'] == -3:
-                await bot.send(f"登录失败：{res['message']}", at_sender=True)
-                break
-
-            elif res['code'] == -1:  # 假设-1表示超时
-                await bot.send("登录超时，请重新尝试", at_sender=True)
-                break
-
-            await asyncio.sleep(0.5)
-
-    elif platform == "wx":
-        # 获取微信登录二维码
-        res = await deltaapi.get_wechat_login_qr()
-        if not res['status']:
-            await bot.send(f"获取二维码失败：{res['message']}")
-            return
-        img_url: str = res['data']['qrCode']
-        img = await get_pic(img_url)
-        uuid = res['data']['uuid']
-        await bot.send(
-            [
-                Message(type="text", data=("请打开手机微信使用摄像头扫码")),
-                Message(type="image", data=img),
-            ],
-            at_sender=True,
-        )
-        # 等待扫码登录
-        max_attempts = 120  # 最多尝试120次，约60秒
-        attempts = 0
-        while attempts < max_attempts:
-            res = await deltaapi.check_wechat_login_status(uuid)
-            if res['status'] and res['code'] == 3:
-                wx_code = res['data']['wx_code']
-                res = await deltaapi.get_wechat_access_token(wx_code)
-                if res['status']:
-                    access_token = res['data']['access_token']
-                    openid = res['data']['openid']
-                    qq_id = ev.user_id
-                    if ev.group_id:
-                        group_id = ev.group_id
-                    else:
-                        group_id = 0
-                    res = await deltaapi.bind(
-                        access_token=access_token, openid=openid
-                    )
-                    if not res['status']:
-                        await bot.send(
-                            f"绑定失败：{res['message']}", at_sender=True
-                        )
-                        break
-                    res = await deltaapi.get_player_info(
-                        access_token=access_token, openid=openid
-                    )
-                    if res['status']:
-                        user_data = cast(
-                            UserData,
-                            {
-                                "qq_id": qq_id,
-                                "group_id": group_id,
-                                "access_token": access_token,
-                                "openid": openid,
-                                "platform": platform,
-                            },
-                        )
-                        await DFUser.insert_user(bot, user_data)
-                        await DFBind.insert_user(ev, bot, user_data)
-
-                        user_name = res['data']['player']['charac_name']
-
-                        await bot.send(
-                            f"登录成功，角色名：{user_name}，现金：{Util.trans_num_easy_for_read(res['data']['money'])}\n登录有效期60天，在小程序登录会使这里的登录状态失效",
-                            at_sender=True,
-                        )
-                        break
-                    else:
-                        await bot.send(
-                            f"查询角色信息失败：{res['message']}",
-                            at_sender=True,
-                        )
-                        break
-                else:
-                    await bot.send(
-                        f"登录失败：{res['message']}", at_sender=True
-                    )
-                    break
-
-            elif not res['status']:
-                await bot.send(f"登录失败：{res['message']}", at_sender=True)
-                break
-            attempts += 1
-
-            if attempts >= max_attempts:
-                await bot.send("登录超时，请重新尝试", at_sender=True)
-                break
-            await asyncio.sleep(0.5)
+    login_info = await out_login(bot, ev)
+    print(login_info)
+    return await bot.send(str(login_info))

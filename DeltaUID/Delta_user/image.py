@@ -271,6 +271,7 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
     )
     header = await draw_title(data_one, ev)
     img.paste(header, (0, 0), header)
+    img_draw = ImageDraw.Draw(img)
 
     history_bg = Image.open(TEXTURE / "banner5.png")
     easy_paste(img, history_bg, (0, 400), "lt")
@@ -280,7 +281,24 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
     record_fail = Image.open(TEXTURE / "frame_fail.png")
 
     for i in range(min(len(data), 10)):
-        xy = (0, 500 + i * 200)
+        xy = (0, 550 + i * 200)
+        # 时间
+        img_draw.text(
+            (80, 500 + i * 200),
+            data[i]["time"],
+            "black",
+            df_font(25),
+            "lt",
+        )
+
+        # 地图
+        img_base = Image.new("RGBA", (1000, 164), (255, 255, 255, 0))
+        map_path = TEXTURE / "mapsol" / f"{data[i]['map_name']}.png"
+        bg_map = Image.open(map_path).convert("RGBA").resize((844, 120))
+        easy_paste(img_base, bg_map, (78, 22), "lt")
+
+        # 内容
+
         if data[i]["result"] == "撤离成功":
             bg = deepcopy(record_win)
 
@@ -289,7 +307,10 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
 
         else:
             continue
-        draw_bg = ImageDraw.Draw(bg)
+        easy_paste(img_base, bg, (0, 0), "lt")
+
+        # 文字
+        draw_bg = ImageDraw.Draw(im=img_base)
         draw_bg.text(
             (122, 33),
             data[i]["result"][2:],
@@ -325,7 +346,7 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
             df_font(25),
             "rm",
         )
-        img.paste(bg, xy, bg)
+        img.paste(img_base, xy, img_base)
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
     img.paste(footer, (0, 2000), footer)
     return await convert_img(img)

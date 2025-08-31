@@ -1,6 +1,5 @@
-# import asyncio
-
 # from gsuid_core.aps import scheduler
+import time
 from typing import cast
 
 from gsuid_core.bot import Bot
@@ -13,7 +12,8 @@ from ..utils.models import RecordSolData, RecordTdmData
 from .image import draw_df_info_img, draw_record_sol, draw_record_tdm
 from .msg_info import MsgInfo
 
-# from gsuid_core.utils.database.api import get_uid
+# 用户调用记录：{user_id: last_call_timestamp}
+last_call_times = {}
 
 
 df_info = SV("三角洲信息")
@@ -49,7 +49,18 @@ async def get_record(
     ev: Event,
 ):
     logger.info("[ss]正在执行三角洲战绩查询功能")
+    await bot.send("正在请求，时间较长请耐心等待")
     user_id = ev.at if ev.at is not None else ev.user_id
+
+    # 60s内最多一次
+    current_time = time.time()
+    if (
+        user_id in last_call_times
+        and current_time - last_call_times[user_id] < 60
+    ):
+        await bot.send("操作过于频繁，请一分钟后再试", at_sender=True)
+        return
+
     data = MsgInfo(user_id, bot.bot_id)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
@@ -67,7 +78,7 @@ async def get_record(
         await bot.send(await draw_record_tdm(ev, record_tdm), at_sender=True)
 
         return
-
+    last_call_times[user_id] = current_time
     return
 
 

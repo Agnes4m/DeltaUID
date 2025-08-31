@@ -221,16 +221,15 @@ class MsgInfo:
         res = await deltaapi.get_player_info(
             access_token=self.user_data.cookie, openid=self.user_data.uid
         )
-        if not res["status"]:
+        if not res["status"] or not res["data"].get("player"):
             return 0, "获取玩家信息失败，可能需要重新登录"
         user_name: Any = res["data"]["player"]["charac_name"]
-        print(res)
         res = await deltaapi.get_record(
             self.user_data.cookie, self.user_data.uid, type_id, page
         )
         print(res)
         if not res["status"]:
-            return 0, "获取战绩失败，可能需要重新登录"
+            return 0, res["message"]
         card_list: list[RecordTdmData | RecordSolData] = []
 
         if type_id == 4:
@@ -242,6 +241,8 @@ class MsgInfo:
 
             for record in res["data"]["gun"]:
                 # 捕获当前循环变量至局部，避免闭包引用问题
+                if not record:
+                    continue
                 cur_index = index
                 index += 1
 
@@ -259,6 +260,8 @@ class MsgInfo:
                 )
                 # 解析时长
                 duration_seconds = record.get("DurationS", 0)
+                if not duration_seconds:
+                    duration_seconds = 0
                 minutes = duration_seconds // 60
                 seconds = duration_seconds % 60
                 duration_str = f"{minutes}分{seconds}秒"
@@ -399,7 +402,7 @@ class MsgInfo:
                 card_list.append(card_data)
                 msgs += "/n" + fallback_message
             return 2, card_list
-        return 0, "获取战绩失败，可能需要重新登录"
+        return 0, "请求超时，请稍后重试"
 
     async def get_tqc(self):
         self.user_data = await self._fetch_user_data()
