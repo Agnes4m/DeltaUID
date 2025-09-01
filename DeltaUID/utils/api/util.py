@@ -9,9 +9,9 @@ class Util:
         if num < 1000:
             return str(num)
         elif num < 1000000:
-            return f"{num/1000:.1f}K"
+            return f"{num / 1000:.1f}K"
         else:
-            return f"{num/1000000:.1f}M"
+            return f"{num / 1000000:.1f}M"
 
     @staticmethod
     def get_qr_token(qrsig: str) -> int:
@@ -24,9 +24,7 @@ class Util:
         hash_val = 0
         for i in range(length):
             # 对应PHP: $hash += (($hash << 5) & 2147483647) + ord($qrSig[$i]) & 2147483647;
-            hash_val += ((hash_val << 5) & 2147483647) + ord(
-                qrsig[i]
-            ) & 2147483647
+            hash_val += ((hash_val << 5) & 2147483647) + ord(qrsig[i]) & 2147483647
             # 对应PHP: $hash &= 2147483647;
             hash_val &= 2147483647
 
@@ -38,40 +36,40 @@ class Util:
         if isinstance(map_id, int):
             map_id = str(map_id)
         map_dict = {
-            '2231': "零号大坝-前夜",
-            '2232': "零号大坝-永夜",
-            '2201': "零号大坝-常规",
-            '2202': "零号大坝-机密",
-            '1901': "长弓溪谷-常规",
-            '1902': "长弓溪谷-机密",
-            '1912': "长弓溪谷-机密(单排模式)",
-            '3901': "航天基地-机密",
-            '3902': "航天基地-绝密",
-            '8102': "巴克什-机密",
-            '8103': "巴克什-绝密",
-            '8803': "潮汐监狱-绝密",
-            '2212': "零号大坝-机密(单排模式)",
-            '34': "烬区-占领",
-            '33': "烬区-攻防",
-            '54': "攀升-攻防",
-            '75': "临界点-攻防",
-            '103': "攀升-占领",
-            '107': "沟壕战-攻防",
-            '108': "沟壕战-占领",
-            '111': "断轨-攻防",
-            '112': "断轨-占领",
-            '113': "贯穿-攻防",
-            '114': "贯穿-占领",
-            '117': "攀升-钢铁洪流",
-            '121': "刀锋-攻防",
-            '122': "刀锋-占领",
-            '210': "临界点-占领",
-            '227': "沟壕战-钢铁洪流",
-            '302': "风暴眼-攻防",
-            '303': "风暴眼-占领",
-            '516': "沟壕战-霰弹风暴",
-            '517': "攀升-霰弹风暴",
-            '526': "断轨-钢铁洪流",
+            "2231": "零号大坝-前夜",
+            "2232": "零号大坝-永夜",
+            "2201": "零号大坝-常规",
+            "2202": "零号大坝-机密",
+            "1901": "长弓溪谷-常规",
+            "1902": "长弓溪谷-机密",
+            "1912": "长弓溪谷-机密(单排模式)",
+            "3901": "航天基地-机密",
+            "3902": "航天基地-绝密",
+            "8102": "巴克什-机密",
+            "8103": "巴克什-绝密",
+            "8803": "潮汐监狱-绝密",
+            "2212": "零号大坝-机密(单排模式)",
+            "34": "烬区-占领",
+            "33": "烬区-攻防",
+            "54": "攀升-攻防",
+            "75": "临界点-攻防",
+            "103": "攀升-占领",
+            "107": "沟壕战-攻防",
+            "108": "沟壕战-占领",
+            "111": "断轨-攻防",
+            "112": "断轨-占领",
+            "113": "贯穿-攻防",
+            "114": "贯穿-占领",
+            "117": "攀升-钢铁洪流",
+            "121": "刀锋-攻防",
+            "122": "刀锋-占领",
+            "210": "临界点-占领",
+            "227": "沟壕战-钢铁洪流",
+            "302": "风暴眼-攻防",
+            "303": "风暴眼-占领",
+            "516": "沟壕战-霰弹风暴",
+            "517": "攀升-霰弹风暴",
+            "526": "断轨-钢铁洪流",
         }
         return map_dict.get(map_id, f"未知地图{map_id}")
 
@@ -89,7 +87,7 @@ class Util:
 
         try:
             dt = datetime.datetime.fromtimestamp(timestamp)
-            return dt.strftime('%Y-%m-%d %H:%M:%S')
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
             return "未知时间"
 
@@ -151,7 +149,7 @@ class Util:
             days_to_last_sunday = (weekday + 1) + 7 * (which_week - 1)
 
         sunday = today - datetime.timedelta(days=days_to_last_sunday)
-        return sunday.strftime('%Y%m%d'), sunday.strftime('%Y-%m-%d')
+        return sunday.strftime("%Y%m%d"), sunday.strftime("%Y-%m-%d")
 
     @staticmethod
     def get_armed_force_name(armed_force_id: int | str) -> str:
@@ -171,9 +169,7 @@ class Util:
             40010: "骇爪",
         }
 
-        return armed_force_dict.get(
-            armed_force_id, f"未知干员{armed_force_id}"
-        )
+        return armed_force_dict.get(armed_force_id, "未知干员")
 
     @staticmethod
     def get_tdm_match_result(result: int | str) -> str:

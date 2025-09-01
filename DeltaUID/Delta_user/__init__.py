@@ -55,17 +55,14 @@ async def get_record(
 
     # 60s内最多一次
     current_time = time.time()
-    if (
-        user_id in last_call_times
-        and current_time - last_call_times[user_id] < 60
-    ):
+    if user_id in last_call_times and current_time - last_call_times[user_id] < 60:
         await bot.send("操作过于频繁，请一分钟后再试", at_sender=True)
         return
 
     data = MsgInfo(user_id, bot.bot_id)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
-    if index == 0 and isinstance(record, str):
+    if index == 0 or isinstance(record, str):
         await bot.send(str(record), at_sender=True)
         return
     if index == 1:
