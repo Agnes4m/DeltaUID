@@ -232,7 +232,7 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
 
     for i in range(3):
         day_sth = deepcopy(day_bar)
-        if len(day["top_collections"]["details"]) != i:
+        if i < len(day["top_collections"]["details"]):
             day_sth_draw = ImageDraw.Draw(day_sth)
             day_sth_draw.text(
                 (150, 100),
@@ -283,9 +283,9 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
         xy = (0, 550 + i * 200)
         # 时间
         img_draw.text(
-            (80, 500 + i * 200),
+            (650, 720 + i * 200),
             data[i]["time"],
-            "black",
+            green,
             df_font(25),
             "lt",
         )

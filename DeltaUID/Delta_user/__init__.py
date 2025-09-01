@@ -28,9 +28,10 @@ async def login(bot: Bot, ev: Event):
     logger.info("[ss]正在执行三角洲信息功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
     msg = await data.get_msg_info()
-    print(msg)
+    # print(msg)
     day = await data.get_daily()
-    print(day)
+    # print(day)
+    logger.success("成功获取,正在生成图片")
     if isinstance(msg, str):
         await bot.send(msg, at_sender=True)
         return

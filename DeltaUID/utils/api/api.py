@@ -600,7 +600,7 @@ class DeltaApi:
                     game_data[key] = int(
                         data["jData"]["data"][0].get("totalMoney", 0)
                     )
-
+            # logger.debug({"status": True, "message": "获取成功", "data": game_data})
             return {"status": True, "message": "获取成功", "data": game_data}
 
         except Exception as e:

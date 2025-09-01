@@ -40,6 +40,7 @@ class MsgInfo:
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
         )
+
         basic_info = await deltaapi.get_role_basic_info(
             access_token=self.user_data.cookie, openid=self.user_data.uid
         )
@@ -48,13 +49,13 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="sol",
         )
-        print(sol_info)
+
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
             resource_type="mp",
         )
-        print(tdm_info)
+
         if basic_info["status"]:
             propcapital = Util.trans_num_easy_for_read(
                 basic_info["data"]["propcapital"]

@@ -16,9 +16,9 @@
     "desc": "需要登录后使用,请输入指令`鼠鼠登录`",
     "data": [
       {
-        "name": "信息",
+        "name": "查询",
         "desc": "返回三角洲烽火和战场信息",
-        "eg": "信息",
+        "eg": "查询 烽火",
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
@@ -26,7 +26,7 @@
       {
         "name": "战绩",
         "desc": "返回烽火和战场历史对局信息",
-        "eg": "战绩",
+        "eg": "战绩 烽火",
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
@@ -41,7 +41,7 @@
       },
       {
         "name": "日报",
-        "desc": "查询今日日报",
+        "desc": "查询今日日报，与信息合并",
         "eg": "日报",
         "need_ck": true,
         "need_sk": false,
