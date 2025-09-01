@@ -1,5 +1,4 @@
 from copy import deepcopy
-from pathlib import Path
 from typing import cast
 
 from PIL import Image, ImageDraw
@@ -18,9 +17,9 @@ from gsuid_core.utils.image.image_tools import (
     get_pic,
 )
 
+from ..utils.image import TEXT_PATH as TEXTURE
 from ..utils.models import DayInfoData, InfoData, RecordSolData, RecordTdmData
 
-TEXTURE = Path(__file__).parent / "texture"
 green = (28, 241, 161)
 
 

@@ -99,8 +99,9 @@ class MsgInfo:
                 int(res["data"]["game"]["tdmduration"]) * 60
             )
             tdmsuccessratio = res["data"]["game"]["tdmsuccessratio"]
+
             try:
-                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail'][0]['avgScorePerMinute']) / 100:.2f}"
+                avgScorePerMinute = f"{int(tdm_info['data']['mpDetail']['avgScorePerMinute']) / 100:.2f}"
             except (KeyError, IndexError, TypeError) as e:
                 logger.error(f"无法获取avgScorePerMinute: {e}")
                 avgScorePerMinute = "未知"

@@ -54,7 +54,9 @@ async def login_in(bot: Bot, ev: Event):
 
         # 等待扫码登录
         while True:
-            res = await deltaapi.get_login_status(cookie, qrSig, qrToken, loginSig)
+            res = await deltaapi.get_login_status(
+                cookie, qrSig, qrToken, loginSig
+            )
             if res["code"] == 0:
                 cookie = json.dumps(res["data"]["cookie"])
                 res = await deltaapi.get_access_token(cookie)
@@ -67,9 +69,13 @@ async def login_in(bot: Bot, ev: Event):
                         group_id = ev.group_id
                     else:
                         group_id = 0
-                    res = await deltaapi.bind(access_token=access_token, openid=openid)
+                    res = await deltaapi.bind(
+                        access_token=access_token, openid=openid
+                    )
                     if not res["status"]:
-                        await bot.send(f"绑定失败：{res['message']}", at_sender=True)
+                        await bot.send(
+                            f"绑定失败：{res['message']}", at_sender=True
+                        )
                         break
                     res = await deltaapi.get_player_info(
                         access_token=access_token, openid=openid
@@ -103,7 +109,9 @@ async def login_in(bot: Bot, ev: Event):
                         )
                         break
                 else:
-                    await bot.send(f"登录失败：{res['message']}", at_sender=True)
+                    await bot.send(
+                        f"登录失败：{res['message']}", at_sender=True
+                    )
                     break
 
             elif res["code"] == -4 or res["code"] == -2 or res["code"] == -3:
@@ -148,9 +156,13 @@ async def login_in(bot: Bot, ev: Event):
                         group_id = ev.group_id
                     else:
                         group_id = 0
-                    res = await deltaapi.bind(access_token=access_token, openid=openid)
+                    res = await deltaapi.bind(
+                        access_token=access_token, openid=openid
+                    )
                     if not res["status"]:
-                        await bot.send(f"绑定失败：{res['message']}", at_sender=True)
+                        await bot.send(
+                            f"绑定失败：{res['message']}", at_sender=True
+                        )
                         break
                     res = await deltaapi.get_player_info(
                         access_token=access_token, openid=openid
@@ -183,7 +195,9 @@ async def login_in(bot: Bot, ev: Event):
                         )
                         break
                 else:
-                    await bot.send(f"登录失败：{res['message']}", at_sender=True)
+                    await bot.send(
+                        f"登录失败：{res['message']}", at_sender=True
+                    )
                     break
 
             elif not res["status"]:
