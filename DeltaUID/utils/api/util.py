@@ -24,7 +24,9 @@ class Util:
         hash_val = 0
         for i in range(length):
             # 对应PHP: $hash += (($hash << 5) & 2147483647) + ord($qrSig[$i]) & 2147483647;
-            hash_val += ((hash_val << 5) & 2147483647) + ord(qrsig[i]) & 2147483647
+            hash_val += ((hash_val << 5) & 2147483647) + ord(
+                qrsig[i]
+            ) & 2147483647
             # 对应PHP: $hash &= 2147483647;
             hash_val &= 2147483647
 

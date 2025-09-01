@@ -20,6 +20,7 @@ from gsuid_core.utils.image.image_tools import (
 from ..utils.image import TEXT_PATH as TEXTURE
 from ..utils.models import DayInfoData, InfoData, RecordSolData, RecordTdmData
 
+avatar_path = TEXTURE / "avatar"
 green = (28, 241, 161)
 
 
@@ -295,6 +296,12 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
         map_path = TEXTURE / "mapsol" / f"{data[i]['map_name']}.png"
         bg_map = Image.open(map_path).convert("RGBA").resize((844, 120))
         easy_paste(img_base, bg_map, (78, 22), "lt")
+
+        # 头像
+        avatar = Image.open(
+            avatar_path / f"{data[i]['armed_force']}.png"
+        ).resize((120, 120))
+        easy_paste(img_base, avatar, (140, 20), "lt")
 
         # 内容
 
