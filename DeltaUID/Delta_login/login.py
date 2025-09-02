@@ -7,6 +7,7 @@ from gsuid_core.bot import Bot
 
 # from gsuid_core.logger import logger
 from gsuid_core.models import Event, Message
+from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import get_pic
 
 from ..utils.api.api import DeltaApi
@@ -133,10 +134,11 @@ async def login_in(bot: Bot, ev: Event):
         img_url: str = res["data"]["qrCode"]
         img = await get_pic(img_url)
         uuid = res["data"]["uuid"]
+        img_bytes = await convert_img(img)
         await bot.send(
             [
                 Message(type="text", data=("请打开手机微信使用摄像头扫码")),
-                Message(type="image", data=img),
+                Message(type="image", data=img_bytes),
             ],
             at_sender=True,
         )
