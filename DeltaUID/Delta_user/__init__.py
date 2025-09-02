@@ -11,6 +11,7 @@ from gsuid_core.sv import SV
 from ..utils.models import RecordSolData, RecordTdmData
 from .image import draw_df_info_img, draw_record_sol, draw_record_tdm
 from .msg_info import MsgInfo
+from .utils import get_user_id
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}
@@ -26,7 +27,8 @@ df_record = SV("三角洲战绩查询")
 @df_info.on_command(("信息", "查询"), block=True)
 async def login(bot: Bot, ev: Event):
     logger.info("[ss]正在执行三角洲信息功能")
-    data = MsgInfo(ev.user_id, bot.bot_id)
+    user_id = await get_user_id(ev)
+    data = MsgInfo(user_id, bot.bot_id)
     msg = await data.get_msg_info()
     # print(msg)
     day = await data.get_daily()
@@ -51,7 +53,7 @@ async def get_record(
 ):
     logger.info("[ss]正在执行三角洲战绩查询功能")
     await bot.send("正在请求，时间较长请耐心等待")
-    user_id = ev.at if ev.at is not None else ev.user_id
+    user_id = await get_user_id(ev)
 
     # 60s内最多一次
     current_time = time.time()

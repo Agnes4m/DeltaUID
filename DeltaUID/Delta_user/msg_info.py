@@ -114,7 +114,13 @@ class MsgInfo:
             except (KeyError, IndexError, TypeError) as e:
                 logger.error(f"无法获取totalVehicleDestroyed: {e}")
                 totalVehicleDestroyed = "未知"
-            totalVehicleKill = tdm_info["data"]["mpDetail"]["totalVehicleKill"]
+            try:
+                totalVehicleKill = tdm_info["data"]["mpDetail"][
+                    "totalVehicleKill"
+                ]
+            except (KeyError, IndexError, TypeError) as e:
+                logger.error(f"无法获取totalVehicleKill: {e}")
+                totalVehicleKill = "未知"
 
             # try:
             player_data = cast(
@@ -229,7 +235,7 @@ class MsgInfo:
         res = await deltaapi.get_record(
             self.user_data.cookie, self.user_data.uid, type_id, page
         )
-        print(res)
+        # print(res)
         if not res["status"]:
             return 0, res["message"]
         card_list: list[RecordTdmData | RecordSolData] = []

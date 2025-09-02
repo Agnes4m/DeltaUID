@@ -180,6 +180,82 @@ class Util:
         result_dict = {1: "胜利", 2: "失败", 3: "中途退出"}
         return result_dict.get(result, f"未知结果{result}")
 
+    @staticmethod
+    def get_rank_by_score_sol(score: int) -> str:
+        """根据分数计算段位"""
+        if score <= 1000:
+            return "无段位"
+
+        rank_params = [
+            ("青铜", 3, 1000, 150, 3),
+            ("白银", 3, 1450, 150, 3),
+            ("黄金", 4, 1900, 200, 4),
+            ("铂金", 4, 2700, 200, 4),
+            ("钻石", 5, 3500, 250, 5),
+            ("黑鹰", 5, 4750, 250, 5),
+        ]
+
+        for (
+            rank_name,
+            sub_ranks,
+            start_score,
+            interval,
+            stars_per_sub,
+        ) in rank_params:
+            max_score = start_score + sub_ranks * interval
+            if score < max_score:
+                sub_rank = sub_ranks - int((score - start_score) // interval)
+                sub_rank = max(sub_rank, 1)
+                score_in_sub = score - (
+                    start_score + (sub_ranks - sub_rank) * interval
+                )
+                stars = (score_in_sub // 50) + 1
+                return f"{rank_name}{sub_rank}★{stars}"
+            start_score = max_score
+
+        # 三角洲巅峰，每50分一颗星
+        delta_peak_score = score - 6000
+        stars = delta_peak_score // 50
+        return f"三角洲巅峰⭐{stars}"
+
+    @staticmethod
+    def get_rank_by_score_tdm(score: int) -> str:
+        """根据分数计算段位"""
+        if score <= 1000:
+            return "无段位"
+
+        rank_params = [
+            ("列兵", 3, 1000, 150, 3),
+            ("上等兵", 3, 1450, 150, 3),
+            ("军士长", 4, 1900, 200, 4),
+            ("尉官", 4, 2700, 200, 4),
+            ("校官", 5, 3500, 250, 5),
+            ("将军", 5, 4750, 250, 5),
+        ]
+
+        for (
+            rank_name,
+            sub_ranks,
+            start_score,
+            interval,
+            stars_per_sub,
+        ) in rank_params:
+            max_score = start_score + sub_ranks * interval
+            if score < max_score:
+                sub_rank = sub_ranks - int((score - start_score) // interval)
+                sub_rank = max(sub_rank, 1)
+                score_in_sub = score - (
+                    start_score + (sub_ranks - sub_rank) * interval
+                )
+                stars = score_in_sub // 50 + 1
+                return f"{rank_name}{sub_rank}★{stars}"
+            start_score = max_score
+
+        # 三角洲巅峰，每50分一颗星
+        delta_peak_score = score - 6000
+        stars = delta_peak_score // 50
+        return f"统帅⭐{stars}"
+
 
 if __name__ == "__main__":
     print(Util.get_Sunday_date())

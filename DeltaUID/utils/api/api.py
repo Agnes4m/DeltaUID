@@ -600,7 +600,9 @@ class DeltaApi:
                     game_data[key] = int(
                         data["jData"]["data"][0].get("totalMoney", 0)
                     )
-            # logger.debug({"status": True, "message": "获取成功", "data": game_data})
+            logger.info(
+                {"status": True, "message": "获取成功", "data": game_data}
+            )
             return {"status": True, "message": "获取成功", "data": game_data}
 
         except Exception as e:
@@ -705,7 +707,7 @@ class DeltaApi:
             )
 
             data = response.json()
-            print(data["ret"])
+            # print(data["ret"])
             if data["ret"] == 0 and data["jData"]["data"]:
                 # 合并数据
                 game_data[key].extend(data["jData"]["data"])

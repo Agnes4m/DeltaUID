@@ -17,6 +17,7 @@ from gsuid_core.utils.image.image_tools import (
     get_pic,
 )
 
+from ..utils.api.util import Util
 from ..utils.image import TEXT_PATH as TEXTURE
 from ..utils.models import DayInfoData, InfoData, RecordSolData, RecordTdmData
 
@@ -43,16 +44,18 @@ async def draw_title(data: InfoData, ev: Event):
         df_font(40),
         "lt",
     )
+    rank_sol = Util.get_rank_by_score_sol(int(data["rankpoint"]))
     title_draw.text(
         (290, 150),
-        "烽火段位:",
+        f"烽火段位: {rank_sol}",
         "white",
         df_font(35),
         "lt",
     )
+    rank_tdm = Util.get_rank_by_score_tdm(int(data["rankpoint"]))
     title_draw.text(
         (290, 195),
-        "全战段位:",
+        f"全战段位:{rank_tdm}",
         "white",
         df_font(35),
         "lt",
