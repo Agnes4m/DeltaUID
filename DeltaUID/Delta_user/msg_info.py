@@ -63,6 +63,8 @@ class MsgInfo:
         else:
             propcapital = "0"
         # try:
+        if not sol_info["data"]:
+            return "服务器忙碌,请稍后重试"
         if res["status"] and sol_info["status"] and tdm_info["status"]:
             user_name: str = res["data"]["player"]["charac_name"]
             money = Util.trans_num_easy_for_read(res["data"]["money"])
@@ -71,19 +73,27 @@ class MsgInfo:
             solttotalescape = res["data"]["game"]["solttotalescape"]
             soltotalkill = res["data"]["game"]["soltotalkill"]
             solescaperatio = res["data"]["game"]["solescaperatio"]
-            print(sol_info["data"]["solDetail"]["profitLossRatio"])
-            profitLossRatio = Util.trans_num_easy_for_read(
-                int(sol_info["data"]["solDetail"]["profitLossRatio"]) // 100
-            )
-            highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio']) / 100:.2f}"
-            medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio']) / 100:.2f}"
-            lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio']) / 100:.2f}"
-            totalGainedPrice = Util.trans_num_easy_for_read(
-                sol_info["data"]["solDetail"]["totalGainedPrice"]
-            )
-            totalGameTime = Util.seconds_to_duration(
-                sol_info["data"]["solDetail"]["totalGameTime"]
-            )
+            if sol_info["data"]:
+                profitLossRatio = Util.trans_num_easy_for_read(
+                    int(sol_info["data"]["solDetail"]["profitLossRatio"])
+                    // 100
+                )
+                highKillDeathRatio = f"{int(sol_info['data']['solDetail']['highKillDeathRatio']) / 100:.2f}"
+                medKillDeathRatio = f"{int(sol_info['data']['solDetail']['medKillDeathRatio']) / 100:.2f}"
+                lowKillDeathRatio = f"{int(sol_info['data']['solDetail']['lowKillDeathRatio']) / 100:.2f}"
+                totalGainedPrice = Util.trans_num_easy_for_read(
+                    sol_info["data"]["solDetail"]["totalGainedPrice"]
+                )
+                totalGameTime = Util.seconds_to_duration(
+                    sol_info["data"]["solDetail"]["totalGameTime"]
+                )
+            else:
+                profitLossRatio = "未知"
+                highKillDeathRatio = "未知"
+                medKillDeathRatio = "未知"
+                lowKillDeathRatio = "未知"
+                totalGainedPrice = "未知"
+                totalGameTime = "未知"
 
             tdmrankpoint = res["data"]["game"]["tdmrankpoint"]
             avgkillperminute = (
@@ -463,7 +473,8 @@ class MsgInfo:
                         {"place_name": place_name, "status": "idle"}
                     )
 
-            # if devices:
+            if devices:
+                return devices
 
             # 文本模式
             message = None
@@ -483,7 +494,7 @@ class MsgInfo:
             else:
                 return "特勤处状态获取成功，但没有数据"
         else:
-            return "获取特勤处状态失败：{res['message']}"
+            return f"获取特勤处状态失败：{res['message']}"
 
     # async def send_safehouse_message(
     #     self, qq_id: int, object_name: str, left_time: int

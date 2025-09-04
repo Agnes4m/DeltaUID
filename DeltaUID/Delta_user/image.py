@@ -19,7 +19,13 @@ from gsuid_core.utils.image.image_tools import (
 
 from ..utils.api.util import Util
 from ..utils.image import TEXT_PATH as TEXTURE
-from ..utils.models import DayInfoData, InfoData, RecordSolData, RecordTdmData
+from ..utils.models import (
+    DayInfoData,
+    InfoData,
+    RecordSolData,
+    RecordTdmData,
+    TQCData,
+)
 
 avatar_path = TEXTURE / "avatar"
 green = (28, 241, 161)
@@ -79,7 +85,7 @@ async def draw_title(data: InfoData, ev: Event):
 
 
 async def draw_one_msg(
-    draw: ID, name: str, value: str, pos: tuple[int, int], size: int = 33
+    draw: ID, name: str, value: str, pos: tuple[int, int], size: int = 30
 ):
     draw.text(
         (pos[0] + 45, pos[1] + 30),
@@ -89,7 +95,7 @@ async def draw_one_msg(
         "mm",
     )
     draw.text(
-        (pos[0] + 45, pos[1] + 100),
+        (pos[0] + 45, pos[1] + 70),
         name,
         green,
         df_font(size),
@@ -98,7 +104,9 @@ async def draw_one_msg(
 
 
 # @gs_cache()
-async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
+async def draw_df_info_img(
+    data: InfoData, day: DayInfoData, tqc: list[TQCData], ev: Event
+):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
 
     header = await draw_title(data, ev)
@@ -109,9 +117,54 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     day_bg = Image.open(TEXTURE / "banner4.png")
     # history_bg = Image.open(TEXTURE / "banner5.png")
 
+    # 特勤处
+    tqc_tap = 300
+    tqc_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
+    img.paste(day_bg, (0, tqc_tap), day_bg)
+
+    for i in range(4):
+        tqc_sth = deepcopy(tqc_bar)
+        tqc_sth_draw = ImageDraw.Draw(tqc_sth)
+        tqc_sth_draw.text(
+            (150, 100),
+            f"{tqc[i]['place_name']}",
+            green,
+            df_font(25),
+            "mm",
+        )
+
+        if tqc[i] == "producing":
+            tqc_sth_draw.text(
+                (150, 170),
+                f"{tqc[i]['object_name']}",
+                green,
+                df_font(25),
+                "mm",
+            )
+            tqc_sth_draw.text(
+                (150, 220),
+                f"{tqc[i]['left_time']}",
+                green,
+                df_font(25),
+                "mm",
+            )
+
+        else:
+            tqc_sth_draw.text(
+                (150, 220),
+                "空闲中",
+                green,
+                df_font(25),
+                "mm",
+            )
+
+        easy_paste(img, tqc_sth, (i * 220 + 20, tqc_tap + 40), "lt")
+
+    img.paste(header, (0, 0), header)
+
     # 仓库
-    img.paste(prop_bg, (0, 350), prop_bg)
-    prop_tap = 500
+    prop_tap = 800
+    img.paste(prop_bg, (0, prop_tap - 120), prop_bg)
 
     prop_bar_1 = Image.open(TEXTURE / "仓库bar.png").convert("RGBA")
     prop_bar_2 = deepcopy(prop_bar_1)
@@ -147,77 +200,134 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     easy_paste(img, prop_bar_2, (500, prop_tap), "lt")
 
     # 烽火
-    img.paste(sol_bg, (0, 650), sol_bg)
-    sol_tap = 770
+    sol_tap = 1050
+    sol_indent = 160
+    sol_base = 120
+    img.paste(sol_bg, (0, sol_tap - 100), sol_bg)
+
     img_draw = ImageDraw.Draw(img)
     await draw_one_msg(
-        img_draw, "撤离率", data["solescaperatio"], (90, sol_tap)
+        img_draw, "撤离率", data["solescaperatio"], (sol_base, sol_tap)
     )
     await draw_one_msg(
-        img_draw, "总场数", data["soltotalfght"], (270, sol_tap)
+        img_draw,
+        "总场数",
+        data["soltotalfght"],
+        (sol_base + sol_indent, sol_tap),
     )
     await draw_one_msg(
-        img_draw, "撤离数", data["solttotalescape"], (450, sol_tap)
+        img_draw,
+        "撤离数",
+        data["solttotalescape"],
+        (sol_base + sol_indent * 2, sol_tap),
     )
     await draw_one_msg(
-        img_draw, "总击杀", data["soltotalkill"], (620, sol_tap)
+        img_draw,
+        "总击杀",
+        data["soltotalkill"],
+        (sol_base + sol_indent * 3, sol_tap),
     )
     await draw_one_msg(
-        img_draw, "赚损比", data["profitLossRatio"], (790, sol_tap)
+        img_draw,
+        "赚损比",
+        data["profitLossRatio"],
+        (sol_base + sol_indent * 4, sol_tap),
     )
     await draw_one_msg(
-        img_draw, "总带出", data["totalGainedPrice"], (90, sol_tap + 150)
+        img_draw, "总带出", data["totalGainedPrice"], (sol_base, sol_tap + 120)
     )
     await draw_one_msg(
-        img_draw, "游戏时长", data["totalGameTime"], (270, sol_tap + 150)
+        img_draw,
+        "游戏时长",
+        data["totalGameTime"],
+        (sol_base + sol_indent, sol_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "绝密KD", data["highKillDeathRatio"], (450, sol_tap + 150)
+        img_draw,
+        "绝密KD",
+        data["highKillDeathRatio"],
+        (sol_base + sol_indent * 2, sol_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "机密KD", data["medKillDeathRatio"], (620, sol_tap + 150)
+        img_draw,
+        "机密KD",
+        data["medKillDeathRatio"],
+        (sol_base + sol_indent * 3, sol_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "普通KD", data["lowKillDeathRatio"], (790, sol_tap + 150)
+        img_draw,
+        "普通KD",
+        data["lowKillDeathRatio"],
+        (sol_base + sol_indent * 4, sol_tap + 120),
     )
+
     # 全面战场
-    img.paste(tdm_bg, (0, 1100), tdm_bg)
-    tdm_tap = 1220
+
+    tdm_tap = 1420
+    tdm_indent = 160
+    tdm_base = 120
+    img.paste(tdm_bg, (0, tdm_tap - 100), tdm_bg)
     await draw_one_msg(
-        img_draw, "胜率", data["tdmsuccessratio"], (90, tdm_tap)
+        img_draw, "胜率", data["tdmsuccessratio"], (tdm_base, tdm_tap)
     )
     await draw_one_msg(
-        img_draw, "总场数", data["tdmtotalfight"], (270, tdm_tap)
+        img_draw,
+        "总场数",
+        data["tdmtotalfight"],
+        (tdm_base + tdm_indent, tdm_tap),
     )
-    await draw_one_msg(img_draw, "胜利数", data["totalwin"], (450, tdm_tap))
     await draw_one_msg(
-        img_draw, "总击杀", data["tdmtotalkill"], (620, tdm_tap)
+        img_draw,
+        "胜利数",
+        data["totalwin"],
+        (tdm_base + tdm_indent * 2, tdm_tap),
     )
     await draw_one_msg(
-        img_draw, "排位分", data["tdmrankpoint"], (790, tdm_tap)
+        img_draw,
+        "总击杀",
+        data["tdmtotalkill"],
+        (tdm_base + tdm_indent * 3, tdm_tap),
+    )
+    await draw_one_msg(
+        img_draw,
+        "排位分",
+        data["tdmrankpoint"],
+        (tdm_base + tdm_indent * 4, tdm_tap),
     )
 
     await draw_one_msg(
-        img_draw, "击杀/min", data["avgkillperminute"], (90, tdm_tap + 150)
+        img_draw,
+        "击杀/min",
+        data["avgkillperminute"],
+        (tdm_base, tdm_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "游戏时长", data["tdmduration"], (270, tdm_tap + 150)
+        img_draw,
+        "游戏时长",
+        data["tdmduration"],
+        (tdm_base + tdm_indent, tdm_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "分数/min", data["avgScorePerMinute"], (450, tdm_tap + 150)
+        img_draw,
+        "分数/min",
+        data["avgScorePerMinute"],
+        (tdm_base + tdm_indent * 2, tdm_tap + 120),
     )
     await draw_one_msg(
         img_draw,
         "载具摧毁",
         data["totalVehicleDestroyed"],
-        (620, tdm_tap + 150),
+        (tdm_base + tdm_indent * 3, tdm_tap + 120),
     )
     await draw_one_msg(
-        img_draw, "载具击杀", data["totalVehicleKill"], (790, tdm_tap + 150)
+        img_draw,
+        "载具击杀",
+        data["totalVehicleKill"],
+        (tdm_base + tdm_indent * 4, tdm_tap + 120),
     )
 
     # 日报
-    day_tap = 1550
+    day_tap = 1640
     day_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
     img.paste(day_bg, (0, day_tap), day_bg)
 
@@ -232,7 +342,7 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
     )
     easy_paste(day_money, money_1.resize((120, 120)), (90, 170), "lt")
 
-    easy_paste(img, day_money, (30, day_tap + 80), "lt")
+    easy_paste(img, day_money, (30, day_tap + 20), "lt")
 
     for i in range(3):
         day_sth = deepcopy(day_bar)
@@ -251,11 +361,9 @@ async def draw_df_info_img(data: InfoData, day: DayInfoData, ev: Event):
             )
             easy_paste(day_sth, st1, (90, 170), "mm")
 
-        easy_paste(img, day_sth, (i * 220 + 240, day_tap + 80), "lt")
+        easy_paste(img, day_sth, (i * 220 + 240, day_tap + 20), "lt")
 
     img.paste(header, (0, 0), header)
-
-    # img.paste(history_bg, (0, 1600), history_bg)
 
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
     img.paste(footer, (0, 2000), footer)

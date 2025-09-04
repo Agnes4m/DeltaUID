@@ -169,3 +169,21 @@ class RecordTdmData(TypedDict):
     rescue_count: str
     total_score: int
     avg_score_per_minute: int
+
+
+class TQCData(TypedDict):
+    """特勤处数据"""
+
+    place_name: str
+    """特勤处名称"""
+    status: str
+    """特勤处状态
+    - idle - 空闲中
+    - producing - 正在生产
+    """
+    object_name: str
+    """物品名称"""
+    left_time: str
+    """剩余时间"""
+    finish_time: str
+    """完成时间"""

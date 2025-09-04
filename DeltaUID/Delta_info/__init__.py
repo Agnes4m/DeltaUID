@@ -22,7 +22,7 @@ async def _(bot: Bot, event: Event):
         deltaapi = DeltaApi(user_data.platform)
         res = await deltaapi.get_password(user_data.cookie, user_data.uid)
         msgs = None
-        password_list = res['data'].get('list', [])
+        password_list = res["data"].get("list", [])
         if password_list:
             for password in password_list:
                 if msgs is None:
@@ -34,6 +34,6 @@ async def _(bot: Bot, event: Event):
                 await bot.send(msgs)
             return
     await bot.send(
-        "所有已绑定账号已过期，请先用\"三角洲登录\"命令登录至少一个账号",
+        '所有已绑定账号已过期，请先用"三角洲登录"命令登录至少一个账号',
         at_sender=True,
     )

@@ -30,9 +30,9 @@ async def login(bot: Bot, ev: Event):
     user_id = await get_user_id(ev)
     data = MsgInfo(user_id, bot.bot_id)
     msg = await data.get_msg_info()
-    # print(msg)
     day = await data.get_daily()
-    # print(day)
+    tqc = await data.get_tqc()
+
     logger.success("成功获取,正在生成图片")
     if isinstance(msg, str):
         await bot.send(msg, at_sender=True)
@@ -40,8 +40,11 @@ async def login(bot: Bot, ev: Event):
     if isinstance(day, str):
         await bot.send(day, at_sender=True)
         return
+    if isinstance(tqc, str):
+        await bot.send(tqc, at_sender=True)
+        return
 
-    info = await draw_df_info_img(msg, day, ev)
+    info = await draw_df_info_img(msg, day, tqc, ev)
 
     await bot.send(info, at_sender=True)
 
@@ -115,7 +118,9 @@ async def get_tqc(
     else:
         logger.info("[ss]正在执行三角洲特勤处功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
-        await bot.send(await data.get_tqc(), at_sender=True)
+        a = await data.get_tqc()
+        print(a)
+        await bot.send(str(a), at_sender=True)
 
 
 # @df_day.on_command(("日报"), block=True)
