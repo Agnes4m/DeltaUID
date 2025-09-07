@@ -68,20 +68,28 @@ async def get_record(
         return
 
     data = MsgInfo(user_id, bot.bot_id)
+    msg = await data.get_msg_info()
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
-    if index == 0 or isinstance(record, str):
+    if index == 0 or isinstance(record, str) or isinstance(msg, str):
         await bot.send(str(record), at_sender=True)
         return
     if index == 1:
         record_sol = cast(list[RecordSolData], record)
 
-        await bot.send(await draw_record_sol(ev, record_sol), at_sender=True)
+        await bot.send(
+            await draw_record_sol(ev, record_sol, msg), at_sender=True
+        )
         return
     if index == 2:
+        await bot.send("to do")
+        return
+
         record_tdm = cast(list[RecordTdmData], record)
 
-        await bot.send(await draw_record_tdm(ev, record_tdm), at_sender=True)
+        await bot.send(
+            await draw_record_tdm(ev, record_tdm, msg), at_sender=True
+        )
 
         return
     last_call_times[user_id] = current_time

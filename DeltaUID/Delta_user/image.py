@@ -31,7 +31,7 @@ avatar_path = TEXTURE / "avatar"
 green = (28, 241, 161)
 
 
-async def draw_title(data: InfoData, ev: Event):
+async def draw_title(data: InfoData, ev: Event, mode: int = 0):
     title = Image.open(TEXTURE / "header.png")
 
     header_center = Image.open(TEXTURE / "头像背景.png").convert("RGBA")
@@ -50,22 +50,42 @@ async def draw_title(data: InfoData, ev: Event):
         df_font(40),
         "lt",
     )
-    rank_sol = Util.get_rank_by_score_sol(int(data["rankpoint"]))
-    title_draw.text(
-        (290, 150),
-        f"烽火段位: {rank_sol}",
-        "white",
-        df_font(35),
-        "lt",
-    )
-    rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
-    title_draw.text(
-        (290, 195),
-        f"全战段位:{rank_tdm}",
-        "white",
-        df_font(35),
-        "lt",
-    )
+    print(data)
+    if mode == 1:
+        rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
+        title_draw.text(
+            (290, 150),
+            f"全战段位:{rank_tdm}",
+            "white",
+            df_font(35),
+            "lt",
+        )
+    elif mode == 2:
+        rank_sol = Util.get_rank_by_score_sol(int(data["rankpoint"]))
+        title_draw.text(
+            (290, 150),
+            f"烽火段位: {rank_sol}",
+            "white",
+            df_font(35),
+            "lt",
+        )
+    else:
+        rank_sol = Util.get_rank_by_score_sol(int(data["rankpoint"]))
+        title_draw.text(
+            (290, 150),
+            f"烽火段位: {rank_sol}",
+            "white",
+            df_font(35),
+            "lt",
+        )
+        rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
+        title_draw.text(
+            (290, 195),
+            f"全战段位:{rank_tdm}",
+            "white",
+            df_font(35),
+            "lt",
+        )
     title_draw.text(
         (860, 250),
         data["rankpoint"],
@@ -371,16 +391,17 @@ async def draw_df_info_img(
     return await convert_img(img)
 
 
-async def draw_record_sol(ev: Event, data: list[RecordSolData]):
+async def draw_record_sol(ev: Event, data: list[RecordSolData], msg: InfoData):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
+    print(data)
     data_one = cast(
         InfoData,
         {
-            "user_name": data[0]["user_name"],
-            "rankpoint": "114514",
+            "user_name": msg["user_name"],
+            "rankpoint": msg["rankpoint"],
         },
     )
-    header = await draw_title(data_one, ev)
+    header = await draw_title(data_one, ev, 2)
     img.paste(header, (0, 0), header)
     img_draw = ImageDraw.Draw(img)
 
@@ -469,17 +490,17 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData]):
     return await convert_img(img)
 
 
-async def draw_record_tdm(ev: Event, data: list[RecordTdmData]):
+async def draw_record_tdm(ev: Event, data: list[RecordTdmData], msg: InfoData):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
     data_one = cast(
         InfoData,
         {
-            "user_name": "测试用户",
-            "rankpoint": "1234",
+            "user_name": msg["user_name"],
+            "tdmrankpoint": msg["tdmrankpoint"],
         },
     )
 
-    header = await draw_title(data_one, ev)
+    header = await draw_title(data_one, ev, 1)
     img.paste(header, (0, 0), header)
     # history_bg = Image.open(TEXTURE / "banner5.png")
     # img.paste(history_bg, (0, 1600), history_bg)
