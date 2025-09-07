@@ -49,7 +49,7 @@
       },
       {
         "name": "周报",
-        "desc": "查询本周周报",
+        "desc": "查询本周周报,仅限烽火",
         "eg": "周报",
         "need_ck": true,
         "need_sk": false,

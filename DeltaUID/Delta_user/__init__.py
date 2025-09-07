@@ -33,7 +33,6 @@ async def login(bot: Bot, ev: Event):
     day = await data.get_daily()
     tqc = await data.get_tqc()
 
-    logger.success("成功获取,正在生成图片")
     if isinstance(msg, str):
         await bot.send(msg, at_sender=True)
         return
@@ -43,7 +42,8 @@ async def login(bot: Bot, ev: Event):
     if isinstance(tqc, str):
         await bot.send(tqc, at_sender=True)
         return
-
+    print(day)
+    logger.success("成功获取,正在生成图片")
     info = await draw_df_info_img(msg, day, tqc, ev)
 
     await bot.send(info, at_sender=True)
@@ -140,4 +140,9 @@ async def get_week(
 ):
     logger.info("[ss]正在执行三角洲周报功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
-    await bot.send(await data.get_weekly(), at_sender=True)
+    week_data = await data.get_weekly()
+    if isinstance(week_data, str):
+        await bot.send(week_data, at_sender=True)
+        return
+    # to do 周报图
+    await bot.send("\n".join(week_data), at_sender=True)

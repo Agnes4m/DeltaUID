@@ -58,7 +58,7 @@ async def draw_title(data: InfoData, ev: Event):
         df_font(35),
         "lt",
     )
-    rank_tdm = Util.get_rank_by_score_tdm(int(data["rankpoint"]))
+    rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
     title_draw.text(
         (290, 195),
         f"全战段位:{rank_tdm}",
@@ -132,7 +132,7 @@ async def draw_df_info_img(
             df_font(25),
             "mm",
         )
-
+        print(tqc)
         if tqc[i] == "producing":
             tqc_sth_draw.text(
                 (150, 170),

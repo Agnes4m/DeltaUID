@@ -49,7 +49,10 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="sol",
         )
-
+        if not sol_info["data"]:
+            return "服务器忙碌,请稍后重试"
+        if sol_info["data"]["ret"] == 101:
+            return "登录信息已过期，请重新登录"
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
@@ -62,9 +65,7 @@ class MsgInfo:
             )
         else:
             propcapital = "0"
-        # try:
-        if not sol_info["data"]:
-            return "服务器忙碌,请稍后重试"
+
         if res["status"] and sol_info["status"] and tdm_info["status"]:
             user_name: str = res["data"]["player"]["charac_name"]
             money = Util.trans_num_easy_for_read(res["data"]["money"])
@@ -720,6 +721,7 @@ class MsgInfo:
         res = await deltaapi.get_player_info(
             access_token=access_token, openid=openid
         )
+
         if res["status"] and "charac_name" in res["data"]["player"]:
             user_name = res["data"]["player"]["charac_name"]
         else:
@@ -729,6 +731,7 @@ class MsgInfo:
             res = await deltaapi.get_weekly_report(
                 access_token=access_token, openid=openid, statDate=statDate
             )
+            logger.info(res)
             if res["status"] and res["data"]:
                 # 解析总带出
                 Gained_Price = int(res["data"].get("Gained_Price", 0))
@@ -944,12 +947,11 @@ class MsgInfo:
                 msgs.append(message)
                 message = "--- 队友协作情况 ---\n注：KD为好友KD，带出和带入为本人的数据"
                 for friend in friend_list:
-                    message += "\n[{friend['charac_name']}]"
+                    message += f"\n[{friend['charac_name']}]"
                     message += f"\n  总览：{friend['sol_num']}场 | {friend['escape_num']}撤离/{friend['fail_num']}失败 | {friend['kill_num']}杀/{friend['death_num']}死"
                     message += f"\n  带出：{friend['gained_str']} | 战损：{friend['consume_str']} | 利润：{friend['profit_str']}"
                 msgs.append(message)
-                # try:
-                #     renderer = await get_renderer()
+
                 img_data = {
                     "user_name": user_name,
                     "statDate_str": statDate_str,
@@ -970,7 +972,7 @@ class MsgInfo:
                     "GainedPrice_overmillion_num": GainedPrice_overmillion_num,
                     "price_list": price_list,
                 }
-                print(img_data)
+                logger.debug(img_data)
 
                 #     "user_name",
                 #     statDate_str,
@@ -992,8 +994,8 @@ class MsgInfo:
                 # )
 
                 #     await Image(image=img_data).finish()
-
                 return msgs
+                # return img_data
 
             else:
                 continue
