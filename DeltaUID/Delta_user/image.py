@@ -115,12 +115,13 @@ async def draw_df_info_img(
     sol_bg = Image.open(TEXTURE / "banner2.png")
     tdm_bg: ImageFile = Image.open(TEXTURE / "banner3.png")
     day_bg = Image.open(TEXTURE / "banner4.png")
+    tqc_bg = Image.open(TEXTURE / "banner6.png")
     # history_bg = Image.open(TEXTURE / "banner5.png")
 
     # 特勤处
     tqc_tap = 300
     tqc_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
-    img.paste(day_bg, (0, tqc_tap), day_bg)
+    img.paste(tqc_bg, (0, tqc_tap), tqc_bg)
 
     for i in range(4):
         tqc_sth = deepcopy(tqc_bar)
@@ -200,7 +201,7 @@ async def draw_df_info_img(
     easy_paste(img, prop_bar_2, (500, prop_tap), "lt")
 
     # 烽火
-    sol_tap = 1050
+    sol_tap = 1020
     sol_indent = 160
     sol_base = 120
     img.paste(sol_bg, (0, sol_tap - 100), sol_bg)
@@ -263,7 +264,7 @@ async def draw_df_info_img(
 
     # 全面战场
 
-    tdm_tap = 1420
+    tdm_tap = 1370
     tdm_indent = 160
     tdm_base = 120
     img.paste(tdm_bg, (0, tdm_tap - 100), tdm_bg)
@@ -327,7 +328,7 @@ async def draw_df_info_img(
     )
 
     # 日报
-    day_tap = 1640
+    day_tap = 1600
     day_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
     img.paste(day_bg, (0, day_tap), day_bg)
 
@@ -342,7 +343,7 @@ async def draw_df_info_img(
     )
     easy_paste(day_money, money_1.resize((120, 120)), (90, 170), "lt")
 
-    easy_paste(img, day_money, (30, day_tap + 20), "lt")
+    easy_paste(img, day_money, (30, day_tap + 50), "lt")
 
     for i in range(3):
         day_sth = deepcopy(day_bar)
@@ -361,7 +362,7 @@ async def draw_df_info_img(
             )
             easy_paste(day_sth, st1, (90, 170), "mm")
 
-        easy_paste(img, day_sth, (i * 220 + 240, day_tap + 20), "lt")
+        easy_paste(img, day_sth, (i * 220 + 240, day_tap + 50), "lt")
 
     img.paste(header, (0, 0), header)
 

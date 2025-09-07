@@ -51,7 +51,7 @@ class MsgInfo:
         )
         if not sol_info["data"]:
             return "服务器忙碌,请稍后重试"
-        if sol_info["data"]["ret"] == 101:
+        if sol_info["data"].get("rat") == 101:
             return "登录信息已过期，请重新登录"
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
