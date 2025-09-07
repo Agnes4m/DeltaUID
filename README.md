@@ -1,5 +1,3 @@
-# RatGrinder
-
 <p align="center">
   <a href="https://github.com/Agnes4m/DeltaUID"><img src="./icon.png" width="256" height="256" alt="DeltaUID"></a>
 </p>
@@ -21,9 +19,9 @@
 
 <img src="./doc/test.jpg" alt="图片" width="50%" height="auto">
 
-## 丨安装方式(未支持,可使用文档 git 方式)
+## 丨安装方式
 
-1. ~~发送`core安装插件DeltaUID`~~
+1. 发送`core安装插件DeltaUID`
 2. 发送`gs重启`应用插件
 
 ---

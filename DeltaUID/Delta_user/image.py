@@ -133,7 +133,6 @@ async def draw_df_info_img(
             df_font(25),
             "mm",
         )
-        print(tqc)
         if tqc[i] == "producing":
             tqc_sth_draw.text(
                 (150, 170),
@@ -264,7 +263,7 @@ async def draw_df_info_img(
 
     # 全面战场
 
-    tdm_tap = 1370
+    tdm_tap = 1380
     tdm_indent = 160
     tdm_base = 120
     img.paste(tdm_bg, (0, tdm_tap - 100), tdm_bg)
@@ -328,7 +327,7 @@ async def draw_df_info_img(
     )
 
     # 日报
-    day_tap = 1600
+    day_tap = 1640
     day_bar = Image.open(TEXTURE / "物品栏.png").convert("RGBA")
     img.paste(day_bg, (0, day_tap), day_bg)
 

@@ -49,10 +49,11 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="sol",
         )
-        if not sol_info["data"]:
-            return "服务器忙碌,请稍后重试"
         if sol_info["data"].get("rat") == 101:
             return "登录信息已过期，请重新登录"
+        if not sol_info["data"]:
+            return "服务器忙碌,请稍后重试"
+
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
             openid=self.user_data.uid,
@@ -722,10 +723,10 @@ class MsgInfo:
             access_token=access_token, openid=openid
         )
 
-        if res["status"] and "charac_name" in res["data"]["player"]:
-            user_name = res["data"]["player"]["charac_name"]
-        else:
+        if not (res["status"] and "charac_name" in res["data"]["player"]):
             return "获取角色信息失败，可能需要重新登录"
+
+        user_name = res["data"]["player"]["charac_name"]
         for i in range(1, 3):
             statDate, statDate_str = Util.get_Sunday_date(i)
             res = await deltaapi.get_weekly_report(
