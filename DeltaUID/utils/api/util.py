@@ -1,4 +1,5 @@
 import datetime
+from urllib.parse import unquote
 
 
 class Util:
@@ -255,6 +256,15 @@ class Util:
         delta_peak_score = score - 6000
         stars = delta_peak_score // 50
         return f"统帅⭐{stars}"
+
+    @staticmethod
+    def avatar_trans(avatar: str) -> str:
+        """头像url转换"""
+        encoded_url = avatar
+
+        decoded_url = unquote(encoded_url)
+        print(decoded_url)
+        return decoded_url
 
 
 if __name__ == "__main__":

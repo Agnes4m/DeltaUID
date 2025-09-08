@@ -31,12 +31,18 @@ avatar_path = TEXTURE / "avatar"
 green = (28, 241, 161)
 
 
-async def draw_title(data: InfoData, ev: Event, mode: int = 0):
+async def draw_title(
+    data: InfoData, avatar: Image.Image | None, mode: int = 0
+):
     title = Image.open(TEXTURE / "header.png")
 
     header_center = Image.open(TEXTURE / "头像背景.png").convert("RGBA")
+    if avatar is None:
+        avatar_url = data["avatar"]
+        avatar = await get_pic(avatar_url)
+
     avatar = await draw_pic_with_ring(
-        (await get_event_avatar(ev)).convert("RGBA").resize((150, 150)), 200
+        avatar.convert("RGBA").resize((150, 150)), 200
     )
 
     easy_paste(header_center, avatar, (150, 150), "cc")
@@ -129,7 +135,7 @@ async def draw_df_info_img(
 ):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
 
-    header = await draw_title(data, ev)
+    header = await draw_title(data, await get_event_avatar(ev))
 
     prop_bg = Image.open(TEXTURE / "banner1.png")
     sol_bg = Image.open(TEXTURE / "banner2.png")
@@ -391,7 +397,9 @@ async def draw_df_info_img(
     return await convert_img(img)
 
 
-async def draw_record_sol(ev: Event, data: list[RecordSolData], msg: InfoData):
+async def draw_record_sol(
+    avatar: Image.Image | None, data: list[RecordSolData], msg: InfoData
+):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
     print(data)
     data_one = cast(
@@ -401,7 +409,7 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData], msg: InfoData):
             "rankpoint": msg["rankpoint"],
         },
     )
-    header = await draw_title(data_one, ev, 2)
+    header = await draw_title(data_one, avatar, 2)
     img.paste(header, (0, 0), header)
     img_draw = ImageDraw.Draw(img)
 
@@ -490,7 +498,9 @@ async def draw_record_sol(ev: Event, data: list[RecordSolData], msg: InfoData):
     return await convert_img(img)
 
 
-async def draw_record_tdm(ev: Event, data: list[RecordTdmData], msg: InfoData):
+async def draw_record_tdm(
+    avatar: Image.Image | None, data: list[RecordTdmData], msg: InfoData
+):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
     data_one = cast(
         InfoData,
@@ -500,7 +510,7 @@ async def draw_record_tdm(ev: Event, data: list[RecordTdmData], msg: InfoData):
         },
     )
 
-    header = await draw_title(data_one, ev, 1)
+    header = await draw_title(data_one, avatar, 1)
     img.paste(header, (0, 0), header)
     # history_bg = Image.open(TEXTURE / "banner5.png")
     # img.paste(history_bg, (0, 1600), history_bg)

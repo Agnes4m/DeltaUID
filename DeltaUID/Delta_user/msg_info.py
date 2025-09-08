@@ -97,6 +97,9 @@ class MsgInfo:
                 totalGainedPrice = "未知"
                 totalGameTime = "未知"
 
+            avatar_url = res["data"]["player"]["avatar"]
+            avatar = Util.avatar_trans(avatar_url)
+
             tdmrankpoint = res["data"]["game"]["tdmrankpoint"]
             avgkillperminute = (
                 f"{int(res['data']['game']['avgkillperminute']) / 100:.2f}"
@@ -139,6 +142,7 @@ class MsgInfo:
                 InfoData,
                 {
                     "user_name": user_name,
+                    "avatar": avatar,
                     "money": money,
                     "propcapital": propcapital,
                     "rankpoint": rankpoint,

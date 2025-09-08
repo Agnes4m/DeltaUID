@@ -9,7 +9,7 @@ import httpx
 
 from gsuid_core.logger import logger
 
-from ..models import LoginStatus, Sign, SignMsg
+from ..models import LoginStatus, Sign, SignMsg, UserInfo
 from .util import Util
 
 CONSTANTS = {
@@ -600,6 +600,7 @@ class DeltaApi:
                     game_data[key] = int(
                         data["jData"]["data"][0].get("totalMoney", 0)
                     )
+            cast(UserInfo, game_data)
             logger.info(
                 {"status": True, "message": "获取成功", "data": game_data}
             )

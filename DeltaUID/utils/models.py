@@ -10,6 +10,37 @@ class UserData(TypedDict):
     platform: str  # 平台名称qq/wx
 
 
+class UserPlayer(TypedDict):
+    picurl: str
+    charac_name: str
+
+
+class UserGame(TypedDict):
+    result: int
+    error_info: int
+    rankpoint: str
+    tdmrankpoint: str
+    soltotalfght: str
+    solttotalescape: str
+    solduration: str
+    soltotalkill: str
+    solescaperatio: str
+    avgkillperminute: str
+    tdmduration: str
+    tdmsuccessratio: str
+    tdmtotalfight: str
+    totalwin: str
+    tdmtotalkill: str
+
+
+class UserInfo(TypedDict):
+    player: UserPlayer
+    game: UserGame
+    coin: int
+    tickets: int
+    money: int
+
+
 class LatestRecord(TypedDict):
     """用户最新战绩记录"""
 
@@ -52,7 +83,8 @@ class LoginStatus(TypedDict):
 class InfoData(TypedDict):
     user_name: str
     """用户名"""
-
+    avatar: str
+    """头像url"""
     money: str
     """现金"""
     propcapital: str

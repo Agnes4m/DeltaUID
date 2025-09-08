@@ -1,12 +1,17 @@
-# from gsuid_core.aps import scheduler
+import asyncio
+import random
 import time
 from typing import cast
 
+from gsuid_core.aps import scheduler
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
 from gsuid_core.sv import SV
+from gsuid_core.utils.image.image_tools import (
+    get_event_avatar,
+)
 
 from ..utils.models import RecordSolData, RecordTdmData
 from .image import draw_df_info_img, draw_record_sol, draw_record_tdm
@@ -21,6 +26,7 @@ df_info = SV("三角洲信息")
 df_tqc = SV("三角洲特勤处")
 df_day = SV("三角洲日报/周报")
 df_record = SV("三角洲战绩查询")
+df_watch_record = SV("三角洲战绩订阅")
 
 
 @df_day.on_command(("日报"), block=True)
@@ -78,7 +84,8 @@ async def get_record(
         record_sol = cast(list[RecordSolData], record)
 
         await bot.send(
-            await draw_record_sol(ev, record_sol, msg), at_sender=True
+            await draw_record_sol(await get_event_avatar(ev), record_sol, msg),
+            at_sender=True,
         )
         return
     if index == 2:
@@ -131,16 +138,6 @@ async def get_tqc(
         await bot.send(str(a), at_sender=True)
 
 
-# @df_day.on_command(("日报"), block=True)
-# async def get_day(
-#     bot: Bot,
-#     ev: Event,
-# ):
-#     logger.info("[ss]正在执行三角洲日报功能")
-#     data = MsgInfo(ev.user_id, bot.bot_id)
-#     await bot.send(await data.get_daily(), at_sender=True)
-
-
 @df_day.on_command(("周报"), block=True)
 async def get_week(
     bot: Bot,
@@ -154,3 +151,48 @@ async def get_week(
         return
     # to do 周报图
     await bot.send("\n".join(week_data), at_sender=True)
+
+
+@df_watch_record.on_command(("订阅"), block=True)
+async def watch_record(
+    bot: Bot,
+    ev: Event,
+):
+    logger.info("[ss]正在执行三角洲战绩订阅功能")
+    raw_text = ev.text.strip() if ev.text else ""
+    user_id = ev.user_id
+    data = MsgInfo(user_id, bot.bot_id)
+    msg = await data.get_msg_info()
+    if isinstance(msg, str):
+        await bot.send(msg, at_sender=True)
+        return
+
+    raw_text = ev.text.strip() if ev.text else ""
+    index, record = await data.get_record(raw_text)
+
+    if raw_text == "开启" or raw_text == "":
+        await gs_subscribe.add_subscribe(
+            "single",
+            "三角洲战绩订阅",
+            ev,
+            extra_message=user_id,
+        )
+        return await bot.send("[ss] 三角洲战绩订阅成功！")
+
+    elif raw_text == "关闭":
+        await gs_subscribe.delete_subscribe("single", "订阅测试", ev)
+
+
+@scheduler.scheduled_job("cron", minute="*/2")
+async def majsoul_notify_rank():
+    await asyncio.sleep(random.randint(0, 1))
+    datas = await gs_subscribe.get_subscribe("三角洲战绩订阅")
+    if not datas:
+        return
+    for subscribe in datas:
+        user_id = subscribe.user_id
+        data = MsgInfo(user_id, subscribe.bot_id)
+        # msg = await data.get_msg_info()
+        for raw_text in ["烽火", "战场"]:
+            index, record = await data.get_record(raw_text)
+            ## to do
