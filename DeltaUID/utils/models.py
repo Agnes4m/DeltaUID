@@ -219,3 +219,69 @@ class TQCData(TypedDict):
     """剩余时间"""
     finish_time: str
     """完成时间"""
+
+
+class ArmedForceData(TypedDict):
+    ArmedForceId: int
+    inum: int
+
+
+class MapData(TypedDict):
+    MapId: int
+    inum: int
+
+
+class FriendData(TypedDict):
+    charac_name: str
+    sol_num: str
+    kill_num: str
+    death_num: str
+    escape_num: str
+    """总撤离"""
+    fail_num: str
+    """撤离失败"""
+    gained_str: str
+    """总收入"""
+    consume_str: str
+    """总损失"""
+    profit_str: str
+    """总盈利"""
+
+
+class WeeklyData(TypedDict):
+    """周报数据"""
+
+    user_name: str
+    """用户名"""
+    statDate_str: str
+    """日期"""
+    Gained_Price_Str: str
+    """总收入"""
+    consume_Price_Str: str
+    """总损失"""
+    rise_Price_Str: str
+    """总盈利"""
+    total_ArmedForceId_num_list: list[ArmedForceData]
+    """总干员次数"""
+    total_mapid_num_list: list[MapData]
+    """总地图次数"""
+    friend_list: list[FriendData]
+    """队友列表"""
+    profit: int
+    """总收入"""
+    rise_Price: int
+    """总盈利"""
+    total_sol_num: str
+    """总游戏场次"""
+    total_Online_Time_str: str
+    """总游戏时间"""
+    total_Kill_Player: str
+    """总击杀"""
+    total_Death_Count: str
+    """总死亡"""
+    total_exacuation_num: str
+    """总撤离"""
+    GainedPrice_overmillion_num: str
+    """不知道是啥，是0"""
+    price_list: list[str]
+    """资产变化7天"""

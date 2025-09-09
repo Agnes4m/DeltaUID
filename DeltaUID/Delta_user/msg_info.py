@@ -14,6 +14,7 @@ from ..utils.models import (
     InfoData,
     RecordSolData,
     RecordTdmData,
+    WeeklyData,
 )
 
 SAFEHOUSE_CHECK_INTERVAL = 600
@@ -97,7 +98,7 @@ class MsgInfo:
                 totalGainedPrice = "未知"
                 totalGameTime = "未知"
 
-            avatar_url = res["data"]["player"]["avatar"]
+            avatar_url = res["data"]["player"]["picurl"]
             avatar = Util.avatar_trans(avatar_url)
 
             tdmrankpoint = res["data"]["game"]["tdmrankpoint"]
@@ -957,26 +958,29 @@ class MsgInfo:
                     message += f"\n  带出：{friend['gained_str']} | 战损：{friend['consume_str']} | 利润：{friend['profit_str']}"
                 msgs.append(message)
 
-                img_data = {
-                    "user_name": user_name,
-                    "statDate_str": statDate_str,
-                    "Gained_Price_Str": Gained_Price_Str,
-                    "consume_Price_Str": consume_Price_Str,
-                    "rise_Price_Str": rise_Price_Str,
-                    # "profit_str": profit_str,
-                    "total_ArmedForceId_num_list": total_ArmedForceId_num_list,
-                    "total_mapid_num_list": total_mapid_num_list,
-                    "friend_list": friend_list,
-                    "profit": profit,
-                    "rise_Price": rise_Price,
-                    "total_sol_num": total_sol_num,
-                    "total_Online_Time_str": total_Online_Time_str,
-                    "total_Kill_Player": total_Kill_Player,
-                    "total_Death_Count": total_Death_Count,
-                    "total_exacuation_num": total_exacuation_num,
-                    "GainedPrice_overmillion_num": GainedPrice_overmillion_num,
-                    "price_list": price_list,
-                }
+                img_data = cast(
+                    WeeklyData,
+                    {
+                        "user_name": user_name,
+                        "statDate_str": statDate_str,
+                        "Gained_Price_Str": Gained_Price_Str,
+                        "consume_Price_Str": consume_Price_Str,
+                        "rise_Price_Str": rise_Price_Str,
+                        # "profit_str": profit_str,
+                        "total_ArmedForceId_num_list": total_ArmedForceId_num_list,
+                        "total_mapid_num_list": total_mapid_num_list,
+                        "friend_list": friend_list,
+                        "profit": profit,
+                        "rise_Price": rise_Price,
+                        "total_sol_num": total_sol_num,
+                        "total_Online_Time_str": total_Online_Time_str,
+                        "total_Kill_Player": total_Kill_Player,
+                        "total_Death_Count": total_Death_Count,
+                        "total_exacuation_num": total_exacuation_num,
+                        "GainedPrice_overmillion_num": GainedPrice_overmillion_num,
+                        "price_list": price_list,
+                    },
+                )
                 logger.debug(img_data)
 
                 #     "user_name",
@@ -999,8 +1003,8 @@ class MsgInfo:
                 # )
 
                 #     await Image(image=img_data).finish()
-                return msgs
-                # return img_data
+                # return msgs
+                return img_data
 
             else:
                 continue

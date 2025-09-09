@@ -25,9 +25,11 @@ from ..utils.models import (
     RecordSolData,
     RecordTdmData,
     TQCData,
+    WeeklyData,
 )
 
 avatar_path = TEXTURE / "avatar"
+week_path = TEXTURE / "week"
 green = (28, 241, 161)
 
 
@@ -398,10 +400,13 @@ async def draw_df_info_img(
 
 
 async def draw_record_sol(
-    avatar: Image.Image | None, data: list[RecordSolData], msg: InfoData
+    avatar: Image.Image | None,
+    data: list[RecordSolData],
+    week_data: WeeklyData,
+    msg: InfoData,
 ):
-    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
-    print(data)
+    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((2000, 2300))
+
     data_one = cast(
         InfoData,
         {
@@ -413,18 +418,43 @@ async def draw_record_sol(
     img.paste(header, (0, 0), header)
     img_draw = ImageDraw.Draw(img)
 
-    history_bg = Image.open(TEXTURE / "banner5.png")
-    easy_paste(img, history_bg, (0, 400), "lt")
+    money_banner = Image.open(week_path / "banner1.png")
+    fight_banner = Image.open(week_path / "banner2.png")
+    friend_banner = Image.open(week_path / "banner3.png")
+    history_bg = Image.open(week_path / "banner4.png")
+    money_bg = Image.open(week_path / "bar1.png")
 
+    friend_bg = Image.open(week_path / "friend.png")
+    hero_bg = Image.open(week_path / "hero.png").resize((258, 506))
+
+    # 左侧
+    easy_paste(img, money_banner, (0, 330), "lt")
+    easy_paste(img, money_bg, (60, 450), "lt")
+    easy_paste(img, money_bg, (360, 450), "lt")
+    easy_paste(img, money_bg, (660, 450), "lt")
+    easy_paste(img, fight_banner, (0, 600), "lt")
+    easy_paste(img, hero_bg, (50, 844), "lt")
+    easy_paste(img, hero_bg, (355, 844), "lt")
+    easy_paste(img, hero_bg, (660, 844), "lt")
+
+    easy_paste(img, friend_banner, (0, 1340), "lt")
+    easy_paste(img, friend_bg, (60, 1444), "lt")
+    easy_paste(img, friend_bg, (510, 1444), "lt")
+    easy_paste(img, friend_bg, (60, 1806), "lt")
+    easy_paste(img, friend_bg, (510, 1806), "lt")
+
+    # 右侧
     # 战绩
+
+    easy_paste(img, history_bg, (1000, 90), "lt")
     record_win = Image.open(TEXTURE / "frame_win.png")
     record_fail = Image.open(TEXTURE / "frame_fail.png")
 
-    for i in range(min(len(data), 10)):
-        xy = (0, 550 + i * 200)
+    for i in range(min(len(data), 15)):
+        xy = (1000, 220 + i * 200)
         # 时间
         img_draw.text(
-            (650, 720 + i * 200),
+            (1650, 380 + i * 200),
             data[i]["time"],
             green,
             df_font(25),
@@ -494,7 +524,7 @@ async def draw_record_sol(
         )
         img.paste(img_base, xy, img_base)
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
-    img.paste(footer, (0, 2000), footer)
+    img.paste(footer, (500, 2200), footer)
     return await convert_img(img)
 
 
