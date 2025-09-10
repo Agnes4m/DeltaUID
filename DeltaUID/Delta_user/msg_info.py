@@ -50,10 +50,13 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="sol",
         )
-        if sol_info["data"].get("rat") == 101:
-            return "登录信息已过期，请重新登录"
-        if not sol_info["data"]:
-            return "服务器忙碌,请稍后重试"
+        try:
+            if sol_info["data"].get("rat") == 101:
+                return "登录信息已过期，请重新登录"
+            if not sol_info["data"]:
+                return "服务器忙碌,请稍后重试"
+        except Exception as _:
+            ...
 
         tdm_info = await deltaapi.get_person_center_info(
             access_token=self.user_data.cookie,
@@ -169,10 +172,6 @@ class MsgInfo:
                     "totalVehicleKill": totalVehicleKill,
                 },
             )
-            # print(player_data)
-
-            # img = await draw_df_info_img(player_data, ev)
-
             return player_data
         return '未绑定三角洲账号，请先用"鼠鼠登录"命令登录'
 
@@ -262,7 +261,7 @@ class MsgInfo:
                 return 0, "最近7天没有战绩"
 
             index = 1
-            msgs = f"{user_name}烽火战绩 第{page}页"
+            # msgs = f"{user_name}烽火战绩 第{page}页"
 
             for record in res["data"]["gun"]:
                 # 捕获当前循环变量至局部，避免闭包引用问题
@@ -310,14 +309,14 @@ class MsgInfo:
                 ArmedForceId = record.get("ArmedForceId", "")
                 ArmedForce = Util.get_armed_force_name(ArmedForceId)
 
-                fallback_message = (
-                    f"#{cur_index} {event_time}\n"
-                    f"🗺️ 地图: {map_name} | 干员: {ArmedForce}\n"
-                    f"📊 结果: {result_str} | 存活时长: {duration_str}\n"
-                    f"💀 击杀干员: {kill_count}\n"
-                    f"💰 带出: {price_str}\n"
-                    f"💸 利润: {flow_cal_gained_price_str}"
-                )
+                # fallback_message = (
+                #     f"#{cur_index} {event_time}\n"
+                #     f"🗺️ 地图: {map_name} | 干员: {ArmedForce}\n"
+                #     f"📊 结果: {result_str} | 存活时长: {duration_str}\n"
+                #     f"💀 击杀干员: {kill_count}\n"
+                #     f"💰 带出: {price_str}\n"
+                #     f"💸 利润: {flow_cal_gained_price_str}"
+                # )
 
                 card_data_sol: RecordSolData = {
                     "user_name": user_name,
@@ -333,14 +332,14 @@ class MsgInfo:
                 }
                 card_list.append(card_data_sol)
 
-                msgs += "/n" + fallback_message
+                # msgs += "/n" + fallback_message
             return 1, card_list
         elif type_id == 5:
             if not res["data"]["operator"]:
                 return 0, "最近7天没有战绩"
 
             index = 1
-            msgs = f"{user_name}战场战绩 第{page}页"
+            # msgs = f"{user_name}战场战绩 第{page}页"
 
             for record in res["data"]["operator"]:
                 cur_index = index
@@ -401,13 +400,13 @@ class MsgInfo:
                 ArmedForceId = record.get("ArmedForceId", "")
                 ArmedForce = Util.get_armed_force_name(ArmedForceId)
 
-                fallback_message = (
-                    f"#{cur_index} {event_time}\n"
-                    f"🗺️ 地图: {map_name} | 干员: {ArmedForce}\n"
-                    f"📊 结果: {result_str} | 时长: {duration_str}\n"
-                    f"💀 K/D/A: {KillNum}/{Death}/{Assist} | 救援: {RescueTeammateCount}\n"
-                    f"🥇 总得分: {TotalScore} | 分均得分: {avgScorePerMinute}"
-                )
+                # fallback_message = (
+                #     f"#{cur_index} {event_time}\n"
+                #     f"🗺️ 地图: {map_name} | 干员: {ArmedForce}\n"
+                #     f"📊 结果: {result_str} | 时长: {duration_str}\n"
+                #     f"💀 K/D/A: {KillNum}/{Death}/{Assist} | 救援: {RescueTeammateCount}\n"
+                #     f"🥇 总得分: {TotalScore} | 分均得分: {avgScorePerMinute}"
+                # )
 
                 card_data: RecordTdmData = {
                     "title": f"#{cur_index}",
@@ -425,7 +424,7 @@ class MsgInfo:
                     "avg_score_per_minute": avgScorePerMinute,
                 }
                 card_list.append(card_data)
-                msgs += "/n" + fallback_message
+                # msgs += "/n" + fallback_message
             return 2, card_list
         return 0, "请求超时，请稍后重试"
 

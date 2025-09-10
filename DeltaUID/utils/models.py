@@ -282,6 +282,6 @@ class WeeklyData(TypedDict):
     total_exacuation_num: str
     """总撤离"""
     GainedPrice_overmillion_num: str
-    """不知道是啥，是0"""
+    """百万撤离次数"""
     price_list: list[str]
     """资产变化7天"""

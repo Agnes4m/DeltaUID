@@ -77,6 +77,8 @@ async def get_record(
     msg = await data.get_msg_info()
     week_data = await data.get_weekly()
 
+    # current_time2 = time.time()
+    # print("apip请求耗时", current_time2 - current_time)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
     if (
@@ -96,6 +98,8 @@ async def get_record(
             ),
             at_sender=True,
         )
+        # current_time3 = time.time()
+        # print("图片生成耗时", current_time3 - current_time2)
         return
     if index == 2:
         await bot.send("to do")

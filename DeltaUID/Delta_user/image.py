@@ -425,19 +425,115 @@ async def draw_record_sol(
     money_bg = Image.open(week_path / "bar1.png")
 
     friend_bg = Image.open(week_path / "friend.png")
-    hero_bg = Image.open(week_path / "hero.png").resize((258, 506))
+    hero_bg = Image.open(week_path / "hero.png").resize((315, 460))
 
     # 左侧
+    # 收益
     easy_paste(img, money_banner, (0, 330), "lt")
-    easy_paste(img, money_bg, (60, 450), "lt")
-    easy_paste(img, money_bg, (360, 450), "lt")
-    easy_paste(img, money_bg, (660, 450), "lt")
-    easy_paste(img, fight_banner, (0, 600), "lt")
-    easy_paste(img, hero_bg, (50, 844), "lt")
-    easy_paste(img, hero_bg, (355, 844), "lt")
-    easy_paste(img, hero_bg, (660, 844), "lt")
 
-    easy_paste(img, friend_banner, (0, 1340), "lt")
+    def money_draw(text, value, x, y):
+        money_img = deepcopy(money_bg)
+        money_draw = ImageDraw.Draw(money_img)
+        money_draw.text(
+            (100, 20),
+            text,
+            "white",
+            df_font(25),
+            "lt",
+        )
+        money_draw.text(
+            (100, 45),
+            value,
+            "yellow",
+            df_font(30),
+            "lt",
+        )
+        easy_paste(img, money_img, (x, y), "lt")
+
+    money_draw("总收入", f"{week_data['Gained_Price_Str']}", 60, 460)
+    money_draw("总损失", f"{week_data['consume_Price_Str']}", 360, 460)
+    money_draw("总盈利", f"{week_data['rise_Price_Str']}", 660, 460)
+
+    # 战斗统计
+    fight_x_indent = 180
+    fight_x = 120
+    fight_y = 700
+    easy_paste(img, fight_banner, (0, fight_y - 110), "lt")
+    await draw_one_msg(
+        img_draw,
+        "在线时长",
+        week_data["total_Online_Time_str"],
+        (fight_x, fight_y),
+    )
+    await draw_one_msg(
+        img_draw,
+        "总场数",
+        week_data["total_sol_num"],
+        (fight_x + fight_x_indent, fight_y),
+    )
+    await draw_one_msg(
+        img_draw,
+        "撤离数",
+        week_data["total_exacuation_num"],
+        (fight_x + fight_x_indent * 2, fight_y),
+    )
+    await draw_one_msg(
+        img_draw,
+        "K/D",
+        f"{week_data['total_Kill_Player']}/{week_data['total_Death_Count']}",
+        (fight_x + fight_x_indent * 3, fight_y),
+    )
+    await draw_one_msg(
+        img_draw,
+        "百万撤离",
+        week_data["GainedPrice_overmillion_num"] + "次",
+        (fight_x + fight_x_indent * 4, fight_y),
+    )
+
+    # 战斗干员
+    def draw_hero(hero: str, times: int, x: int, y: int):
+        hero_img = deepcopy(hero_bg)
+        hero_avatar = Image.open(avatar_path / f"{hero}.png").resize(
+            (245, 255)
+        )
+        easy_paste(hero_img, hero_avatar, (35, 50), "lt")
+        hero_draw = ImageDraw.Draw(hero_img)
+        hero_draw.text(
+            (154, 360),
+            hero,
+            "white",
+            df_font(40),
+            "mm",
+        )
+        hero_draw.text(
+            (154, 400),
+            f"{times}次",
+            "yellow",
+            df_font(30),
+            "mm",
+        )
+        easy_paste(img, hero_img, (x, y), "lt")
+
+    for i in range(3):
+        hero_name = Util.get_armed_force_name(
+            week_data["total_ArmedForceId_num_list"][i]["ArmedForceId"]
+        )
+        draw_hero(
+            hero_name,
+            week_data["total_ArmedForceId_num_list"][i]["inum"],
+            50 + i * 305,
+            804,
+        )
+
+    # easy_paste(img, hero_bg, (50, 844), "lt")
+    # easy_paste(img, hero_bg, (355, 844), "lt")
+    # easy_paste(img, hero_bg, (660, 844), "lt")
+
+    # 队友协作
+    easy_paste(img, friend_banner, (0, 1300), "lt")
+
+    # def draw_friend(friend: str, times: int, x: int, y: int): ...
+
     easy_paste(img, friend_bg, (60, 1444), "lt")
     easy_paste(img, friend_bg, (510, 1444), "lt")
     easy_paste(img, friend_bg, (60, 1806), "lt")
