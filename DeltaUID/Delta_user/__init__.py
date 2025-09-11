@@ -48,13 +48,13 @@ async def login(bot: Bot, ev: Event):
     if isinstance(tqc, str):
         await bot.send(tqc, at_sender=True)
         return
-    print(day)
     logger.success("成功获取,正在生成图片")
     info = await draw_df_info_img(msg, day, tqc, ev)
 
     await bot.send(info, at_sender=True)
 
 
+@df_day.on_command(("周报"), block=True)
 @df_record.on_command(("战绩"), block=True)
 async def get_record(
     bot: Bot,
@@ -147,23 +147,7 @@ async def get_tqc(
         logger.info("[ss]正在执行三角洲特勤处功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
         a = await data.get_tqc()
-        print(a)
         await bot.send(str(a), at_sender=True)
-
-
-@df_day.on_command(("周报"), block=True)
-async def get_week(
-    bot: Bot,
-    ev: Event,
-):
-    logger.info("[ss]正在执行三角洲周报功能")
-    data = MsgInfo(ev.user_id, bot.bot_id)
-    week_data = await data.get_weekly()
-    if isinstance(week_data, str):
-        await bot.send(week_data, at_sender=True)
-        return
-    # to do 周报图
-    await bot.send("\n".join(week_data), at_sender=True)
 
 
 @df_watch_record.on_command(("订阅"), block=True)

@@ -21,6 +21,7 @@ from ..utils.api.util import Util
 from ..utils.image import TEXT_PATH as TEXTURE
 from ..utils.models import (
     DayInfoData,
+    FriendData,
     InfoData,
     RecordSolData,
     RecordTdmData,
@@ -58,7 +59,6 @@ async def draw_title(
         df_font(40),
         "lt",
     )
-    print(data)
     if mode == 1:
         rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
         title_draw.text(
@@ -442,10 +442,10 @@ async def draw_record_sol(
             "lt",
         )
         money_draw.text(
-            (100, 45),
+            (100, 50),
             value,
             "yellow",
-            df_font(30),
+            df_font(33),
             "lt",
         )
         easy_paste(img, money_img, (x, y), "lt")
@@ -496,7 +496,7 @@ async def draw_record_sol(
         hero_avatar = Image.open(avatar_path / f"{hero}.png").resize(
             (245, 255)
         )
-        easy_paste(hero_img, hero_avatar, (35, 50), "lt")
+        easy_paste(hero_img, hero_avatar, (35, 60), "lt")
         hero_draw = ImageDraw.Draw(hero_img)
         hero_draw.text(
             (154, 360),
@@ -525,19 +525,66 @@ async def draw_record_sol(
             804,
         )
 
-    # easy_paste(img, hero_bg, (50, 844), "lt")
-    # easy_paste(img, hero_bg, (355, 844), "lt")
-    # easy_paste(img, hero_bg, (660, 844), "lt")
-
     # 队友协作
     easy_paste(img, friend_banner, (0, 1300), "lt")
 
-    # def draw_friend(friend: str, times: int, x: int, y: int): ...
+    async def draw_friend(friend: FriendData, x: int, y: int):
+        friend_img = deepcopy(friend_bg)
 
-    easy_paste(img, friend_bg, (60, 1444), "lt")
-    easy_paste(img, friend_bg, (510, 1444), "lt")
-    easy_paste(img, friend_bg, (60, 1806), "lt")
-    easy_paste(img, friend_bg, (510, 1806), "lt")
+        friend_draw = ImageDraw.Draw(friend_img)
+        friend_draw.text(
+            (225, 80),
+            friend["charac_name"],
+            "black",
+            df_font(35),
+            "mm",
+        )
+        await draw_one_msg(
+            friend_draw,
+            "撤离",
+            f"{friend['escape_num']}",
+            (50, 110),
+        )
+        await draw_one_msg(
+            friend_draw,
+            "失败",
+            f"{friend['fail_num']}",
+            (175, 110),
+        )
+        await draw_one_msg(
+            friend_draw,
+            "K/D",
+            f"{friend['kill_num']}/{friend['death_num']}",
+            (300, 110),
+        )
+        await draw_one_msg(
+            friend_draw,
+            "带出",
+            f"{friend['gained_str']}",
+            (50, 210),
+        )
+        await draw_one_msg(
+            friend_draw,
+            "战损",
+            f"{friend['consume_str']}",
+            (175, 210),
+        )
+        await draw_one_msg(
+            friend_draw,
+            "利润",
+            f"{friend['profit_str']}",
+            (300, 210),
+        )
+        easy_paste(img, friend_img, (x, y), "lt")
+
+    for i in range(4):
+        if len(week_data["friend_list"]) < i + 1:
+            break
+        await draw_friend(
+            week_data["friend_list"][i],
+            60 + i % 2 * 450,
+            1444 + i // 2 * 450,
+        )
 
     # 右侧
     # 战绩
@@ -546,7 +593,7 @@ async def draw_record_sol(
     record_win = Image.open(TEXTURE / "frame_win.png")
     record_fail = Image.open(TEXTURE / "frame_fail.png")
 
-    for i in range(min(len(data), 15)):
+    for i in range(min(len(data), 10)):
         xy = (1000, 220 + i * 200)
         # 时间
         img_draw.text(
@@ -620,7 +667,7 @@ async def draw_record_sol(
         )
         img.paste(img_base, xy, img_base)
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
-    img.paste(footer, (500, 2200), footer)
+    img.paste(footer, (500, 2130), footer)
     return await convert_img(img)
 
 
@@ -638,6 +685,4 @@ async def draw_record_tdm(
 
     header = await draw_title(data_one, avatar, 1)
     img.paste(header, (0, 0), header)
-    # history_bg = Image.open(TEXTURE / "banner5.png")
-    # img.paste(history_bg, (0, 1600), history_bg)
     return await convert_img(img)

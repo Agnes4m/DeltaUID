@@ -251,7 +251,6 @@ class MsgInfo:
         res = await deltaapi.get_record(
             self.user_data.cookie, self.user_data.uid, type_id, page
         )
-        # print(res)
         if not res["status"]:
             return 0, res["message"]
         card_list: list[RecordTdmData | RecordSolData] = []

@@ -13,11 +13,9 @@
 >
 > 支持 NoneBot2 & HoshinoBot & ZeroBot & YunzaiBot & Koishi 的三角洲查询插件
 
-> 🚧 暂时未完成，等待施工中...🚧
-
 ## 功能展示
 
-<img src="./doc/test.jpg" alt="图片" width="50%" height="auto">
+<img src="./doc/test.png" alt="查询" width="26.2%" height="auto"></img> <img src="./doc/test1.png" alt="战绩" width="50%" height="auto"></img>
 
 ## 丨安装方式
 
@@ -37,7 +35,9 @@
 
 使用`鼠鼠帮助`或者`ss帮助`查看帮助指令
 
-- 鼠鼠登录
+- `ss登录`
+- `ss查询/日报`
+- `ss战绩/周报`
 
 ### 丨其他
 
