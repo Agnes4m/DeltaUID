@@ -81,16 +81,13 @@ async def get_record(
     # print("apip请求耗时", current_time2 - current_time)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
-    if (
-        index == 0
-        or isinstance(record, str)
-        or isinstance(msg, str)
-        or isinstance(week_data, str)
-    ):
+    if index == 0:
+        record_sol = []
+    if isinstance(week_data, str) or isinstance(msg, str):
         await bot.send(str(record), at_sender=True)
         return
     if index == 1:
-        record_sol = cast(list[RecordSolData], record)
+        record_sol = cast(list[RecordSolData], [])
 
         await bot.send(
             await draw_record_sol(

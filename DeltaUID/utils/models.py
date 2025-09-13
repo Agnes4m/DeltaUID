@@ -248,9 +248,23 @@ class FriendData(TypedDict):
     """总盈利"""
 
 
+class ItemData(TypedDict):
+    itemid: int
+    """物品id"""
+    inum: int
+    """物品数量"""
+    auctontype: int
+    """物品类型"""
+    quality: float
+    """物品质量"""
+    iPrice: float
+    """物品价格"""
+
+
 class WeeklyData(TypedDict):
     """周报数据"""
 
+    # CarryOut_highprice_list: list[DayInfoData]
     user_name: str
     """用户名"""
     statDate_str: str

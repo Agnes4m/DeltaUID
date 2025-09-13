@@ -257,7 +257,7 @@ class MsgInfo:
 
         if type_id == 4:
             if not res["data"]["gun"]:
-                return 0, "最近7天没有战绩"
+                return 1, "最近7天没有战绩"
 
             index = 1
             # msgs = f"{user_name}烽火战绩 第{page}页"
@@ -335,7 +335,7 @@ class MsgInfo:
             return 1, card_list
         elif type_id == 5:
             if not res["data"]["operator"]:
-                return 0, "最近7天没有战绩"
+                return 2, "最近7天没有战绩"
 
             index = 1
             # msgs = f"{user_name}战场战绩 第{page}页"
@@ -735,7 +735,7 @@ class MsgInfo:
             res = await deltaapi.get_weekly_report(
                 access_token=access_token, openid=openid, statDate=statDate
             )
-            logger.info(res)
+            # logger.info(res)
             if res["status"] and res["data"]:
                 # 解析总带出
                 Gained_Price = int(res["data"].get("Gained_Price", 0))
@@ -979,7 +979,7 @@ class MsgInfo:
                         "price_list": price_list,
                     },
                 )
-                logger.debug(img_data)
+                # logger.debug(img_data)
 
                 #     "user_name",
                 #     statDate_str,

@@ -405,7 +405,14 @@ async def draw_record_sol(
     week_data: WeeklyData,
     msg: InfoData,
 ):
-    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((2000, 2300))
+    if len(data) == 0:
+        img = (
+            Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((1000, 2300))
+        )
+    else:
+        img = (
+            Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((2000, 2300))
+        )
 
     data_one = cast(
         InfoData,
@@ -588,86 +595,89 @@ async def draw_record_sol(
 
     # 右侧
     # 战绩
-
-    easy_paste(img, history_bg, (1000, 90), "lt")
-    record_win = Image.open(TEXTURE / "frame_win.png")
-    record_fail = Image.open(TEXTURE / "frame_fail.png")
-
-    for i in range(min(len(data), 10)):
-        xy = (1000, 220 + i * 200)
-        # 时间
-        img_draw.text(
-            (1650, 380 + i * 200),
-            data[i]["time"],
-            green,
-            df_font(25),
-            "lt",
-        )
-
-        # 地图
-        img_base = Image.new("RGBA", (1000, 164), (255, 255, 255, 0))
-        map_path = TEXTURE / "mapsol" / f"{data[i]['map_name']}.png"
-        bg_map = Image.open(map_path).convert("RGBA").resize((844, 120))
-        easy_paste(img_base, bg_map, (78, 22), "lt")
-
-        # 头像
-        avatar = Image.open(
-            avatar_path / f"{data[i]['armed_force']}.png"
-        ).resize((120, 120))
-        easy_paste(img_base, avatar, (140, 20), "lt")
-
-        # 内容
-
-        if data[i]["result"] == "撤离成功":
-            bg = deepcopy(record_win)
-
-        elif data[i]["result"] == "撤离失败":
-            bg = deepcopy(record_fail)
-
-        else:
-            continue
-        easy_paste(img_base, bg, (0, 0), "lt")
-
-        # 文字
-        draw_bg = ImageDraw.Draw(im=img_base)
-        draw_bg.text(
-            (122, 33),
-            data[i]["result"][2:],
-            "black",
-            df_font(30),
-            "mm",
-        )
-        draw_bg.text(
-            (195, 125),
-            f"击杀{data[i]['kill_count']}",
-            "black",
-            df_font(25),
-            "mm",
-        )
-        draw_bg.text(
-            (900, 45),
-            f"{data[i]['map_name']}",
-            "white",
-            df_font(40),
-            "rm",
-        )
-        draw_bg.text(
-            (900, 90),
-            f"利润{data[i]['price']}/损失{data[i]['profit']}",
-            green,
-            df_font(30),
-            "rm",
-        )
-        draw_bg.text(
-            (900, 126),
-            f"存活:{data[i]['duration']}",
-            "white",
-            df_font(25),
-            "rm",
-        )
-        img.paste(img_base, xy, img_base)
     footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
-    img.paste(footer, (500, 2130), footer)
+    if len(data) == 0:
+        img.paste(footer, (0, 2130), footer)
+    else:
+        easy_paste(img, history_bg, (1000, 90), "lt")
+        record_win = Image.open(TEXTURE / "frame_win.png")
+        record_fail = Image.open(TEXTURE / "frame_fail.png")
+
+        for i in range(min(len(data), 10)):
+            xy = (1000, 220 + i * 200)
+            # 时间
+            img_draw.text(
+                (1650, 380 + i * 200),
+                data[i]["time"],
+                green,
+                df_font(25),
+                "lt",
+            )
+
+            # 地图
+            img_base = Image.new("RGBA", (1000, 164), (255, 255, 255, 0))
+            map_path = TEXTURE / "mapsol" / f"{data[i]['map_name']}.png"
+            bg_map = Image.open(map_path).convert("RGBA").resize((844, 120))
+            easy_paste(img_base, bg_map, (78, 22), "lt")
+
+            # 头像
+            avatar = Image.open(
+                avatar_path / f"{data[i]['armed_force']}.png"
+            ).resize((120, 120))
+            easy_paste(img_base, avatar, (140, 20), "lt")
+
+            # 内容
+
+            if data[i]["result"] == "撤离成功":
+                bg = deepcopy(record_win)
+
+            elif data[i]["result"] == "撤离失败":
+                bg = deepcopy(record_fail)
+
+            else:
+                continue
+            easy_paste(img_base, bg, (0, 0), "lt")
+
+            # 文字
+            draw_bg = ImageDraw.Draw(im=img_base)
+            draw_bg.text(
+                (122, 33),
+                data[i]["result"][2:],
+                "black",
+                df_font(30),
+                "mm",
+            )
+            draw_bg.text(
+                (195, 125),
+                f"击杀{data[i]['kill_count']}",
+                "black",
+                df_font(25),
+                "mm",
+            )
+            draw_bg.text(
+                (900, 45),
+                f"{data[i]['map_name']}",
+                "white",
+                df_font(40),
+                "rm",
+            )
+            draw_bg.text(
+                (900, 90),
+                f"利润{data[i]['price']}/损失{data[i]['profit']}",
+                green,
+                df_font(30),
+                "rm",
+            )
+            draw_bg.text(
+                (900, 126),
+                f"存活:{data[i]['duration']}",
+                "white",
+                df_font(25),
+                "rm",
+            )
+            img.paste(img_base, xy, img_base)
+
+        img.paste(footer, (500, 2130), footer)
     return await convert_img(img)
 
 
