@@ -81,13 +81,15 @@ async def get_record(
     # print("apip请求耗时", current_time2 - current_time)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
-    if index == 0:
-        record_sol = []
+    logger.debug("战绩")
+    logger.debug(record)
+    if index == 0 or isinstance(record, str):
+        record_sol = cast(list[RecordSolData], [])
     if isinstance(week_data, str) or isinstance(msg, str):
         await bot.send(str(record), at_sender=True)
         return
     if index == 1:
-        record_sol = cast(list[RecordSolData], [])
+        record_sol = cast(list[RecordSolData], record)
 
         await bot.send(
             await draw_record_sol(
@@ -171,10 +173,21 @@ async def watch_record(
             ev,
             extra_message=user_id,
         )
-        return await bot.send("[ss] 三角洲战绩订阅成功！")
+        await bot.send("[ss] 三角洲战绩订阅成功！")
+        # return await bot.send("[ss] 三角洲战绩订阅成功！")
 
     elif raw_text == "关闭":
         await gs_subscribe.delete_subscribe("single", "订阅测试", ev)
+
+    # 测试输出
+    logger.debug("测试输出")
+
+    record_sol = await data.watch_record_sol(msg["user_name"], "sol")
+    # record_tdm = await data.watch_record_tdm(msg["user_name"], user_id)
+    await bot.send(str(record_sol)) if record_sol else None
+    # await data.watch_record_tdm(record, user_id)
+
+    ## to do
 
 
 @scheduler.scheduled_job("cron", minute="*/2")

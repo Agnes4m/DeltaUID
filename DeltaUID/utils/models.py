@@ -1,4 +1,4 @@
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 
 class UserData(TypedDict):
@@ -299,3 +299,42 @@ class WeeklyData(TypedDict):
     """百万撤离次数"""
     price_list: list[str]
     """资产变化7天"""
+
+
+class RecordSol(TypedDict):
+    """战绩数据"""
+
+    user_name: str
+    title: Literal["百万撤离", "百万战损"]
+    time: str
+    map_name: str
+    result: Literal["撤离成功", "撤离失败"]
+    duration: str
+    kill_count: int
+    """击杀数量"""
+    price: str
+    loss: str
+    is_gain: bool
+    main_value: str
+
+
+class RecordTdm(TypedDict):
+    """战绩数据"""
+
+    user_name: str
+    title: Literal["战场高光！", "战场失败！"]
+    time: str
+    map_name: str
+    result: Literal["胜利", "失败"]
+    gametime: str
+    armed_force: str
+    """地图"""
+    kill_count: int
+    death_count: int
+    assist_count: int
+    total_score: int
+    avg_score_per_minute: int
+    is_good: bool
+    main_label: Literal["捞薯大师", "刷分大王"]
+    main_value: str
+    badge_text: Literal["1000+分均得分", "1000+击杀"]

@@ -1,7 +1,7 @@
 import datetime
 import json
 import urllib.parse
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from gsuid_core.logger import logger
 
@@ -12,12 +12,16 @@ from ..utils.models import (
     DayInfoData,
     DayListData,
     InfoData,
+    RecordSol,
     RecordSolData,
+    RecordTdm,
     RecordTdmData,
     WeeklyData,
 )
 
-SAFEHOUSE_CHECK_INTERVAL = 600
+interval = 120
+BROADCAST_EXPIRED_MINUTES = 7
+SAFEHOUSE_CHECK_INTERVAL = 600  # 特勤处检查间隔（秒）
 
 
 class MsgInfo:
@@ -1008,3 +1012,359 @@ class MsgInfo:
                 continue
 
         return "获取三角洲周报失败，可能需要重新登录或上周对局次数过少"
+
+    async def watch_record_sol(
+        self, user_name: str, mode: Literal["sol", "tdm"]
+    ):
+        self.user_data = await self._fetch_user_data()
+        if not self.user_data:
+            return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
+
+        deltaapi = DeltaApi(self.user_data.platform)
+        # logger.debug(f"开始获取玩家{user_name}的战绩")
+        res = await deltaapi.get_record(
+            self.user_data.cookie, self.user_data.uid, 5, 1
+        )
+        logger.debug(f"玩家{user_name}的战绩：{res['data']}")
+
+        # 获取之前的最新战绩ID
+        latest_record_data = await DFUser.select_data(
+            user_id=self.user_data.user_id,
+            bot_id=self.user_data.bot_id,
+        )
+        msg = None
+        if res["status"]:
+            if mode == "sol":
+                # sol
+                # logger.debug(f"玩家{user_name}的战绩：{res['data']}")
+
+                # 处理gun模式战绩
+                gun_records = res["data"].get("gun", [])
+                if not gun_records:
+                    # logger.debug(f"玩家{user_name}没有gun模式战绩")
+                    return
+
+                # 获取最新战绩
+                if gun_records:
+                    latest_record = gun_records[0]  # 第一条是最新的
+                    logger.debug(f"最新战绩：{latest_record}")
+
+                    # 检查时间限制
+                    if not Util.is_record_within_time_limit(latest_record):
+                        logger.debug(
+                            f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
+                        )
+                        return
+
+                    # 生成战绩ID
+                    record_id = Util.generate_record_id(latest_record)
+
+                    # 如果是新战绩（ID不同）
+                    if (
+                        not latest_record_data
+                        or latest_record_data.latest_record != record_id
+                    ):
+                        RoomId = latest_record.get("RoomId", "")
+                        res = await deltaapi.get_tdm_detail(
+                            self.user_data.cookie, self.user_data.uid, RoomId
+                        )
+                        if res["status"] and res["data"]:
+                            mpDetailList = res["data"].get("mpDetailList", [])
+                            for mpDetail in mpDetailList:
+                                if mpDetail.get("isCurrentUser", False):
+                                    rescueTeammateCount = mpDetail.get(
+                                        "rescueTeammateCount", 0
+                                    )
+                                    if rescueTeammateCount > 0:
+                                        latest_record[
+                                            "RescueTeammateCount"
+                                        ] = rescueTeammateCount
+                                        break
+                        else:
+                            logger.error(f"获取战绩详情失败: {res['message']}")
+                            return
+                    else:
+                        logger.debug(f"没有新战绩需要播报: {user_name}")
+                        return
+                    msg = await self.format_record_message(
+                        latest_record, user_name
+                    )
+                else:
+                    return
+            elif mode == "tdm":
+                if res["status"]:
+                    # logger.debug(f"玩家{user_name}的战绩：{res['data']}")
+
+                    # 处理operator模式战绩
+                    operator_records = res["data"].get("operator", [])
+                    if not operator_records:
+                        # logger.debug(f"玩家{user_name}没有operator模式战绩")
+                        return
+
+                    # 获取最新战绩
+                    if operator_records:
+                        latest_record = operator_records[0]  # 第一条是最新的
+
+                    # 生成战绩ID
+                    record_id_tdm = Util.generate_record_id(latest_record)
+
+                    # 检查时间限制
+                    if not record_id_tdm:
+                        logger.debug(
+                            f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
+                        )
+                        return
+
+                    # 获取之前的最新战绩ID
+                    # 如果是新战绩（ID不同）
+                    if (
+                        not latest_record_data
+                        or latest_record_data.latest_tdm_record
+                        != record_id_tdm
+                    ):
+                        # 格式化播报消息
+                        result_tdm = await self.format_tdm_record_message(
+                            latest_record, user_name
+                        )
+                        return result_tdm
+
+                    else:
+                        logger.debug(f"没有新战绩需要播报: {user_name}")
+
+            # 更新最新战绩记录
+            await self.update_record_sol(
+                record_id,
+                record_id_tdm,
+                user_name,
+                self.user_data.user_id,
+                record_id,
+            )
+            return msg
+
+    async def update_record_sol(
+        self,
+        latest_record_sol: str,
+        latest_record_tdm: str,
+        user_name: str,
+        qq_id: str,
+        record_id: str,
+    ):
+        if not self.user_data:
+            return '未绑定三角洲账号，请先用"三角洲登录"命令登录'
+
+        if await self.user_data.update_record(
+            bot_id=self.bot_id,
+            user_id=self.user_id,
+            latest_record=record_id,
+            latest_tdm_record=latest_record_tdm,
+        ):
+            logger.debug(f"更新最新战绩记录成功: {user_name} - {record_id}")
+        else:
+            logger.error(f"更新最新战绩记录失败: {user_name} - {record_id}")
+        logger.debug(f"没有新战绩需要播报: {user_name}")
+
+    @staticmethod
+    async def format_record_message(
+        record_data: dict, user_name: str
+    ) -> RecordSol | str | None:
+        """格式化战绩播报消息"""
+        try:
+            # 解析时间
+            event_time = record_data.get("dtEventTime", "")
+            # 解析地图ID
+            map_id = record_data.get("MapId", "")
+            # 解析结果
+            escape_fail_reason = record_data.get("EscapeFailReason", 0)
+            # 解析时长（秒）
+            duration_seconds = record_data.get("DurationS", 0)
+            if not duration_seconds:
+                return None
+            # 解析击杀数
+            kill_count = record_data.get("KillCount", 0)
+            # 解析收益
+            final_price = record_data.get("FinalPrice", "0")
+            # 解析纯利润
+            flow_cal_gained_price = record_data.get("flowCalGainedPrice", 0)
+
+            # 格式化时长
+            minutes = duration_seconds // 60
+            seconds = duration_seconds % 60
+            duration_str = f"{minutes}分{seconds}秒"
+
+            # 格式化结果
+            if escape_fail_reason == 1:
+                result_str = "撤离成功"
+            else:
+                result_str = "撤离失败"
+
+            # 格式化收益
+            price_int = int(final_price)
+            try:
+                price_str = Util.trans_num_easy_for_read(price_int)
+            except Exception:
+                price_str = final_price
+
+            # 计算战损
+            loss_int = int(final_price) - int(flow_cal_gained_price)
+            loss_str = Util.trans_num_easy_for_read(loss_int)
+
+            # logger.debug(f"获取到玩家{user_name}的战绩：时间：{event_time}，地图：{get_map_name(map_id)}，结果：{result_str}，存活时长：{duration_str}，击杀干员：{kill_count}，带出：{price_str}，战损：{loss_str}")
+
+            if price_int > 1000000:
+                # 构建消息
+                message = f"🎯 {user_name} 百万撤离！\n"
+                message += f"⏰ 时间: {event_time}\n"
+                message += f"🗺️ 地图: {Util.get_map_name(map_id)}\n"
+                message += f"📊 结果: {result_str}\n"
+                message += f"⏱️ 存活时长: {duration_str}\n"
+                message += f"💀 击杀干员: {kill_count}\n"
+                message += f"💰 带出: {price_str}\n"
+                message += f"💸 战损: {loss_str}"
+                try:
+                    img_data = cast(
+                        RecordSol,
+                        {
+                            "user_name": user_name,
+                            "title": "百万撤离！",
+                            "time": event_time,
+                            "map_name": Util.get_map_name(map_id),
+                            "result": result_str,
+                            "duration": duration_str,
+                            "kill_count": kill_count,
+                            "price": price_str,
+                            "loss": loss_str,
+                            "is_gain": True,
+                            "main_value": price_str,
+                        },
+                    )
+                    return img_data
+                except Exception as e:
+                    logger.exception(f"渲染战绩卡片失败: {e}")
+                    # 降级到文本模式
+                return message
+            elif loss_int > 1000000:
+                message = f"🎯 {user_name} 百万战损！\n"
+                message += f"⏰ 时间: {event_time}\n"
+                message += f"🗺️ 地图: {Util.get_map_name(map_id)}\n"
+                message += f"📊 结果: {result_str}\n"
+                message += f"⏱️ 存活时长: {duration_str}\n"
+                message += f"💀 击杀干员: {kill_count}\n"
+                message += f"💰 带出: {price_str}\n"
+                message += f"💸 战损: {loss_str}"
+                try:
+                    img_data = cast(
+                        RecordSol,
+                        {
+                            "user_name": user_name,
+                            "title": "百万战损！",
+                            "time": event_time,
+                            "map_name": Util.get_map_name(map_id),
+                            "result": result_str,
+                            "duration": duration_str,
+                            "kill_count": kill_count,
+                            "price": price_str,
+                            "loss": loss_str,
+                            "is_gain": False,
+                            "main_value": loss_str,
+                        },
+                    )
+                    return img_data
+                except Exception as e:
+                    logger.exception(f"渲染战绩卡片失败: {e}")
+                    # 降级到文本模式
+                return message
+            else:
+                return None
+
+        except Exception as e:
+            logger.exception(f"格式化战绩消息失败: {e}")
+            return None
+
+    @staticmethod
+    async def format_tdm_record_message(
+        record_data: dict, user_name: str
+    ) -> RecordTdm | str | None:
+        """格式化战场战绩播报消息"""
+        try:
+            # 解析时间
+            event_time = record_data.get("dtEventTime", "")
+            # 解析地图
+            map_id = record_data.get("MapID", "")
+            map_name = Util.get_map_name(map_id)
+            # 解析结果
+            match_result = Util.get_tdm_match_result(
+                record_data.get("MatchResult", 0)
+            )
+            # 解析KDA
+            kill_num: int = record_data.get("KillNum", 0)
+            death_num: int = record_data.get("Death", 0)
+            assist_num: int = record_data.get("Assist", 0)
+            # 分数与时长
+            total_score: int = record_data.get("TotalScore", 0)
+            game_time: int = record_data.get("gametime", 0)  # 秒
+            game_time_str = Util.seconds_to_duration(game_time)
+            # 分均得分（避免除零）
+            avg_score_per_minute: int = (
+                int(total_score * 60 / game_time)
+                if game_time and game_time > 0
+                else 0
+            )
+
+            # 触发条件
+            trigger_kill = kill_num >= 100
+            trigger_avg = avg_score_per_minute >= 1000
+            if not (trigger_kill or trigger_avg):
+                return None
+
+            # 文本播报（回退或同时使用）
+            if trigger_kill:
+                message = f"🎯 {user_name} 捞薯大师！\n"
+            else:
+                message = f"🎯 {user_name} 刷分大王！\n"
+            message += f"⏰ 时间: {event_time}\n"
+            message += f"👤 干员: {Util.get_armed_force_name(record_data.get('ArmedForceId', 0))}\n"
+            message += f"🗺️ 地图: {map_name}\n"
+            message += f"📊 结果: {match_result}\n"
+            message += f"⏱️ 时长: {game_time_str}\n"
+            message += f"💀 KDA: {kill_num}/{death_num}/{assist_num}\n"
+            message += f"💰 总得分: {total_score}\n"
+            message += f"🎖️ 分均得分: {avg_score_per_minute}"
+
+            # 构建卡片数据
+            if trigger_kill:
+                main_label = "捞薯大师"
+                main_value = str(kill_num)
+                badge_text = "100+杀"
+            else:
+                main_label = "刷分大王"
+                main_value = str(avg_score_per_minute)
+                badge_text = "1000+分均得分"
+
+            card_data = cast(
+                RecordTdm,
+                {
+                    "user_name": user_name,
+                    "title": "战场高光！",
+                    "time": event_time,
+                    "map_name": map_name,
+                    "result": match_result,
+                    "gametime": game_time_str,
+                    "armed_force": Util.get_armed_force_name(
+                        record_data.get("ArmedForceId", 0)
+                    ),
+                    "kill_count": kill_num,
+                    "death_count": death_num,
+                    "assist_count": assist_num,
+                    "total_score": total_score,
+                    "avg_score_per_minute": avg_score_per_minute,
+                    "is_good": True,
+                    "main_label": main_label,
+                    "main_value": main_value,
+                    "badge_text": badge_text,
+                },
+            )
+            return card_data
+
+        except Exception as e:
+            logger.exception(f"格式化战场战绩消息失败: {e}")
+            return None

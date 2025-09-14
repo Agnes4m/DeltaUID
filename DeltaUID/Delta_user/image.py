@@ -419,6 +419,7 @@ async def draw_record_sol(
         {
             "user_name": msg["user_name"],
             "rankpoint": msg["rankpoint"],
+            "time": week_data["statDate_str"],
         },
     )
     header = await draw_title(data_one, avatar, 2)
@@ -590,7 +591,7 @@ async def draw_record_sol(
         await draw_friend(
             week_data["friend_list"][i],
             60 + i % 2 * 450,
-            1444 + i // 2 * 450,
+            1444 + i // 2 * 400,
         )
 
     # 右侧
@@ -693,6 +694,20 @@ async def draw_record_tdm(
         },
     )
 
+    header = await draw_title(data_one, avatar, 1)
+    img.paste(header, (0, 0), header)
+    return await convert_img(img)
+
+
+async def draw_scb(avatar: Image.Image | None, msg: InfoData):
+    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
+    data_one = cast(
+        InfoData,
+        {
+            "user_name": msg["user_name"],
+            "tdmrankpoint": msg["tdmrankpoint"],
+        },
+    )
     header = await draw_title(data_one, avatar, 1)
     img.paste(header, (0, 0), header)
     return await convert_img(img)

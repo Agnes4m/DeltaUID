@@ -1,5 +1,10 @@
 import datetime
+from typing import Literal
 from urllib.parse import unquote
+
+from gsuid_core.logger import logger
+
+BROADCAST_EXPIRED_MINUTES = 7
 
 
 class Util:
@@ -263,8 +268,51 @@ class Util:
         encoded_url = avatar
 
         decoded_url = unquote(encoded_url)
-        print(decoded_url)
         return decoded_url
+
+    @staticmethod
+    def is_record_within_time_limit(
+        record_data: dict,
+        max_age_minutes: int = BROADCAST_EXPIRED_MINUTES,
+        mode: Literal["sol", "tdm"] = "sol",
+    ) -> bool:
+        """检查战绩是否在时间限制内"""
+        try:
+            event_time_str = record_data.get("dtEventTime", "")
+            if not event_time_str:
+                return False
+
+            # 解析时间字符串 "2025-07-20 20: 04: 29"
+            # 注意时间格式中有空格，需要处理
+            event_time_str = event_time_str.replace(" : ", ":")
+
+            # 解析时间
+            if mode == "sol":
+                event_time = datetime.datetime.strptime(
+                    event_time_str, "%Y-%m-%d %H:%M:%S"
+                )
+            elif mode == "tdm":
+                gametime = record_data.get("GameTime", 0)
+                event_time = datetime.datetime.strptime(
+                    event_time_str, "%Y-%m-%d %H:%M:%S"
+                ) + datetime.timedelta(seconds=gametime)
+            current_time = datetime.datetime.now()
+
+            # 计算时间差
+            time_diff = current_time - event_time
+            time_diff_minutes = time_diff.total_seconds() / 60
+
+            return time_diff_minutes <= max_age_minutes
+        except Exception as e:
+            logger.error(f"检查战绩时间限制失败: {e}")
+            return False
+
+    @staticmethod
+    def generate_record_id(record_data: dict) -> str:
+        """生成战绩唯一标识"""
+        # 使用时间戳作为唯一标识
+        event_time = record_data.get("dtEventTime", "")
+        return event_time
 
 
 if __name__ == "__main__":

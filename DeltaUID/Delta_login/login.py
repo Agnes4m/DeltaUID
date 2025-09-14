@@ -92,8 +92,8 @@ async def login_in(bot: Bot, ev: Event):
                                 "platform": platform,
                             },
                         )
-                        await DFUser.insert_user(bot, user_data)
-                        await DFBind.insert_user(ev, bot, user_data)
+                        await DFUser.insert_user(bot.bot_id, user_data)
+                        await DFBind.insert_user(ev, bot.bot_id, user_data)
 
                         user_name = res["data"]["player"]["charac_name"]
 
@@ -180,8 +180,8 @@ async def login_in(bot: Bot, ev: Event):
                                 "platform": platform,
                             },
                         )
-                        await DFUser.insert_user(bot, user_data)
-                        await DFBind.insert_user(ev, bot, user_data)
+                        await DFUser.insert_user(bot.bot_id, user_data)
+                        await DFBind.insert_user(ev, bot.bot_id, user_data)
 
                         user_name = res["data"]["player"]["charac_name"]
 
