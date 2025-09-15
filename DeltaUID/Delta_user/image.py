@@ -372,22 +372,21 @@ async def draw_df_info_img(
 
     easy_paste(img, day_money, (30, day_tap + 50), "lt")
 
-    for i in range(3):
+    for i in range(min(3, len(day["top_collections"]["details"]))):
         day_sth = deepcopy(day_bar)
-        if i < len(day["top_collections"]["details"]):
-            day_sth_draw = ImageDraw.Draw(day_sth)
-            day_sth_draw.text(
-                (150, 100),
-                f"{day['top_collections']['details'][i]['objectName']}",
-                green,
-                df_font(25),
-                "mm",
-            )
+        day_sth_draw = ImageDraw.Draw(day_sth)
+        day_sth_draw.text(
+            (150, 100),
+            f"{day['top_collections']['details'][i]['objectName']}",
+            green,
+            df_font(25),
+            "mm",
+        )
 
-            st1 = await get_pic(
-                day["top_collections"]["details"][i]["pic"], size=(120, 120)
-            )
-            easy_paste(day_sth, st1, (90, 170), "mm")
+        st1 = await get_pic(
+            day["top_collections"]["details"][i]["pic"], size=(120, 120)
+        )
+        easy_paste(day_sth, st1, (90, 170), "mm")
 
         easy_paste(img, day_sth, (i * 220 + 240, day_tap + 50), "lt")
 
@@ -522,7 +521,7 @@ async def draw_record_sol(
         )
         easy_paste(img, hero_img, (x, y), "lt")
 
-    for i in range(3):
+    for i in range(min(3, len(week_data["total_ArmedForceId_num_list"]))):
         hero_name = Util.get_armed_force_name(
             week_data["total_ArmedForceId_num_list"][i]["ArmedForceId"]
         )

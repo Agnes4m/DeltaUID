@@ -3,7 +3,7 @@ import random
 import time
 from typing import cast
 
-from gsuid_core.aps import scheduler
+# from gsuid_core.aps import scheduler
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
@@ -190,7 +190,7 @@ async def watch_record(
     ## to do
 
 
-@scheduler.scheduled_job("cron", minute="*/2")
+# @scheduler.scheduled_job("cron", minute="*/2")
 async def majsoul_notify_rank():
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe("三角洲战绩订阅")
