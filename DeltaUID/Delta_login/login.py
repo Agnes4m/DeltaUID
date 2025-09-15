@@ -23,8 +23,12 @@ async def _process_login_result(
 ) -> Optional[UserData]:
     """处理登录结果的通用逻辑"""
     if not res.get("status"):
-        await bot.logger.info(f"[DF] 登录失败: {res.get('message', '未知错误')}")
-        await bot.send(f"登录失败：{res.get('message', '未知错误')}", at_sender=True)
+        await bot.logger.info(
+            f"[DF] 登录失败: {res.get('message', '未知错误')}"
+        )
+        await bot.send(
+            f"登录失败：{res.get('message', '未知错误')}", at_sender=True
+        )
         return None
 
     access_token = res["data"]["access_token"]
@@ -36,7 +40,9 @@ async def _process_login_result(
     deltaapi = DeltaApi(platform)
     bind_res = await deltaapi.bind(access_token=access_token, openid=openid)
     if not bind_res["status"]:
-        await bot.logger.info(f"[DF] 绑定失败: {bind_res.get('message', '未知错误')}")
+        await bot.logger.info(
+            f"[DF] 绑定失败: {bind_res.get('message', '未知错误')}"
+        )
         await bot.send(
             f"绑定失败：{bind_res.get('message', '未知错误')}", at_sender=True
         )
@@ -123,7 +129,9 @@ async def _login_with_qq(bot: Bot, ev: Event) -> Optional[UserData]:
             token_res = await deltaapi.get_access_token(cookie)
             return await _process_login_result(bot, ev, token_res, "qq")
         elif res["code"] in (-4, -2, -3):
-            await bot.logger.info(f"[DF] QQ登录失败: {res.get('message', '未知错误')}")
+            await bot.logger.info(
+                f"[DF] QQ登录失败: {res.get('message', '未知错误')}"
+            )
             await bot.send(
                 f"登录失败：{res.get('message', '未知错误')}", at_sender=True
             )

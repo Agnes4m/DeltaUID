@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
@@ -8,11 +8,10 @@ from gsuid_core.sv import SV
 from ..utils.api.api import DeltaApi
 from ..utils.database.models import DFUser
 
-# 创建服务实例
 DF_PASSWORD_SV = SV("三角洲密码")
-
-# 定义常量
-NO_VALID_ACCOUNT_MSG = '所有已绑定账号已过期，请先用"三角洲登录"命令登录至少一个账号'
+NO_VALID_ACCOUNT_MSG = (
+    '所有已绑定账号已过期，请先用"三角洲登录"命令登录至少一个账号'
+)
 
 
 async def _get_password_for_user(user_data: Any) -> Optional[str]:
@@ -28,7 +27,9 @@ async def _get_password_for_user(user_data: Any) -> Optional[str]:
 
         # 检查响应状态和数据
         if not res.get("status"):
-            logger.warning(f"[DF] 获取密码失败: {res.get('message', '未知错误')}")
+            logger.warning(
+                f"[DF] 获取密码失败: {res.get('message', '未知错误')}"
+            )
             return None
 
         password_list = res.get("data", {}).get("list", [])
