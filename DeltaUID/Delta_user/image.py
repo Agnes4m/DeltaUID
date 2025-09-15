@@ -34,9 +34,7 @@ week_path = TEXTURE / "week"
 green = (28, 241, 161)
 
 
-async def draw_title(
-    data: InfoData, avatar: Image.Image | None, mode: int = 0
-):
+async def draw_title(data: InfoData, avatar: Image.Image | None, mode: int = 0):
     title = Image.open(TEXTURE / "header.png")
 
     header_center = Image.open(TEXTURE / "头像背景.png").convert("RGBA")
@@ -44,9 +42,7 @@ async def draw_title(
         avatar_url = data["avatar"]
         avatar = await get_pic(avatar_url)
 
-    avatar = await draw_pic_with_ring(
-        avatar.convert("RGBA").resize((150, 150)), 200
-    )
+    avatar = await draw_pic_with_ring(avatar.convert("RGBA").resize((150, 150)), 200)
 
     easy_paste(header_center, avatar, (150, 150), "cc")
     easy_paste(title, header_center, (150, 160), "cc")
@@ -196,13 +192,9 @@ async def draw_df_info_img(
 
     prop_bar_1 = Image.open(TEXTURE / "仓库bar.png").convert("RGBA")
     prop_bar_2 = deepcopy(prop_bar_1)
-    money_1 = (
-        Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
-    )
+    money_1 = Image.open(TEXTURE / "money1.png").convert("RGBA").resize((50, 50))
 
-    money_2 = (
-        Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
-    )
+    money_2 = Image.open(TEXTURE / "money2.png").convert("RGBA").resize((50, 50))
 
     prop_draw_1 = ImageDraw.Draw(prop_bar_1)
     prop_draw_1.text(
@@ -234,9 +226,7 @@ async def draw_df_info_img(
     img.paste(sol_bg, (0, sol_tap - 100), sol_bg)
 
     img_draw = ImageDraw.Draw(img)
-    await draw_one_msg(
-        img_draw, "撤离率", data["solescaperatio"], (sol_base, sol_tap)
-    )
+    await draw_one_msg(img_draw, "撤离率", data["solescaperatio"], (sol_base, sol_tap))
     await draw_one_msg(
         img_draw,
         "总场数",
@@ -295,9 +285,7 @@ async def draw_df_info_img(
     tdm_indent = 160
     tdm_base = 120
     img.paste(tdm_bg, (0, tdm_tap - 100), tdm_bg)
-    await draw_one_msg(
-        img_draw, "胜率", data["tdmsuccessratio"], (tdm_base, tdm_tap)
-    )
+    await draw_one_msg(img_draw, "胜率", data["tdmsuccessratio"], (tdm_base, tdm_tap))
     await draw_one_msg(
         img_draw,
         "总场数",
@@ -405,13 +393,9 @@ async def draw_record_sol(
     msg: InfoData,
 ):
     if len(data) == 0:
-        img = (
-            Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((1000, 2300))
-        )
+        img = Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((1000, 2300))
     else:
-        img = (
-            Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((2000, 2300))
-        )
+        img = Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((2000, 2300))
 
     data_one = cast(
         InfoData,
@@ -500,9 +484,7 @@ async def draw_record_sol(
     # 战斗干员
     def draw_hero(hero: str, times: int, x: int, y: int):
         hero_img = deepcopy(hero_bg)
-        hero_avatar = Image.open(avatar_path / f"{hero}.png").resize(
-            (245, 255)
-        )
+        hero_avatar = Image.open(avatar_path / f"{hero}.png").resize((245, 255))
         easy_paste(hero_img, hero_avatar, (35, 60), "lt")
         hero_draw = ImageDraw.Draw(hero_img)
         hero_draw.text(
@@ -621,9 +603,9 @@ async def draw_record_sol(
             easy_paste(img_base, bg_map, (78, 22), "lt")
 
             # 头像
-            avatar = Image.open(
-                avatar_path / f"{data[i]['armed_force']}.png"
-            ).resize((120, 120))
+            avatar = Image.open(avatar_path / f"{data[i]['armed_force']}.png").resize(
+                (120, 120)
+            )
             easy_paste(img_base, avatar, (140, 20), "lt")
 
             # 内容
@@ -677,7 +659,7 @@ async def draw_record_sol(
             )
             img.paste(img_base, xy, img_base)
 
-        img.paste(footer, (500, 2130), footer)
+        img.paste(footer, (500, 2170), footer)
     return await convert_img(img)
 
 

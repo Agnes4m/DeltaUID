@@ -30,9 +30,7 @@ class Util:
         hash_val = 0
         for i in range(length):
             # 对应PHP: $hash += (($hash << 5) & 2147483647) + ord($qrSig[$i]) & 2147483647;
-            hash_val += ((hash_val << 5) & 2147483647) + ord(
-                qrsig[i]
-            ) & 2147483647
+            hash_val += ((hash_val << 5) & 2147483647) + ord(qrsig[i]) & 2147483647
             # 对应PHP: $hash &= 2147483647;
             hash_val &= 2147483647
 
@@ -212,9 +210,7 @@ class Util:
             if score < max_score:
                 sub_rank = sub_ranks - int((score - start_score) // interval)
                 sub_rank = max(sub_rank, 1)
-                score_in_sub = score - (
-                    start_score + (sub_ranks - sub_rank) * interval
-                )
+                score_in_sub = score - (start_score + (sub_ranks - sub_rank) * interval)
                 stars = (score_in_sub // 50) + 1
                 return f"{rank_name}{sub_rank}★{stars}"
             start_score = max_score
@@ -250,9 +246,7 @@ class Util:
             if score < max_score:
                 sub_rank = sub_ranks - int((score - start_score) // interval)
                 sub_rank = max(sub_rank, 1)
-                score_in_sub = score - (
-                    start_score + (sub_ranks - sub_rank) * interval
-                )
+                score_in_sub = score - (start_score + (sub_ranks - sub_rank) * interval)
                 stars = score_in_sub // 50 + 1
                 return f"{rank_name}{sub_rank}★{stars}"
             start_score = max_score
@@ -271,6 +265,19 @@ class Util:
         return decoded_url
 
     @staticmethod
+    def parse_event_time(
+        event_time_str: str, game_time: int = 0, mode: Literal["sol", "tdm"] = "sol"
+    ) -> datetime.datetime:
+        """解析事件时间字符串，并根据游戏时间调整"""
+        cleaned_time_str = event_time_str.replace(" : ", ":")  # 清理空格
+        event_time = datetime.datetime.strptime(cleaned_time_str, "%Y-%m-%d %H:%M:%S")
+
+        if mode == "tdm":
+            event_time += datetime.timedelta(seconds=game_time)
+
+        return event_time
+
+    @staticmethod
     def is_record_within_time_limit(
         record_data: dict,
         max_age_minutes: int = BROADCAST_EXPIRED_MINUTES,
@@ -282,27 +289,13 @@ class Util:
             if not event_time_str:
                 return False
 
-            # 解析时间字符串 "2025-07-20 20: 04: 29"
-            # 注意时间格式中有空格，需要处理
-            event_time_str = event_time_str.replace(" : ", ":")
-
-            # 解析时间
-            if mode == "sol":
-                event_time = datetime.datetime.strptime(
-                    event_time_str, "%Y-%m-%d %H:%M:%S"
-                )
-            elif mode == "tdm":
-                gametime = record_data.get("GameTime", 0)
-                event_time = datetime.datetime.strptime(
-                    event_time_str, "%Y-%m-%d %H:%M:%S"
-                ) + datetime.timedelta(seconds=gametime)
+            game_time = record_data.get("GameTime", 0)
+            event_time = Util.parse_event_time(event_time_str, game_time, mode)
             current_time = datetime.datetime.now()
-
-            # 计算时间差
-            time_diff = current_time - event_time
-            time_diff_minutes = time_diff.total_seconds() / 60
+            time_diff_minutes = (current_time - event_time).total_seconds() / 60
 
             return time_diff_minutes <= max_age_minutes
+
         except Exception as e:
             logger.error(f"检查战绩时间限制失败: {e}")
             return False
@@ -310,9 +303,7 @@ class Util:
     @staticmethod
     def generate_record_id(record_data: dict) -> str:
         """生成战绩唯一标识"""
-        # 使用时间戳作为唯一标识
-        event_time = record_data.get("dtEventTime", "")
-        return event_time
+        return record_data.get("dtEventTime", "")
 
 
 if __name__ == "__main__":
