@@ -145,7 +145,7 @@ async def get_tqc(
     else:
         logger.info("[ss]正在执行三角洲特勤处功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
-        a = await data.get_tqc()
+        a = await data.get_tqc_text()
         await bot.send(str(a), at_sender=True)
 
 

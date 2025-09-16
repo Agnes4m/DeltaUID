@@ -40,18 +40,23 @@
         "need_admin": false
       },
       {
-        "name": "日报",
-        "desc": "查询今日日报，与信息合并",
-        "eg": "日报",
+        "name": "特勤处",
+        "desc": "查询特勤处战绩",
+        "eg": "特勤处",
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
-      },
+      }
+    ]
+  },
+  "数据服务": {
+    "desc": "数据操作",
+    "data": [
       {
-        "name": "周报",
-        "desc": "查询本周周报,仅限烽火",
-        "eg": "周报",
-        "need_ck": true,
+        "name": "导出(仅限私聊)",
+        "desc": "导出uid和ck",
+        "eg": "导出",
+        "need_ck": false,
         "need_sk": false,
         "need_admin": false
       }
