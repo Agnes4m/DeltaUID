@@ -1,7 +1,7 @@
 import asyncio
 import base64
 import json
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from gsuid_core.bot import Bot
 from gsuid_core.models import Event, Message
@@ -264,3 +264,24 @@ async def out_login(bot: Bot, ev: Event) -> Optional[Dict[str, str]]:
         "token": login_info.cookie,
         "platform": login_info.platform,
     }
+
+
+async def exist_uid(qid: str, bot_id: str, uid: str) -> Optional[DFBind]:
+    """检查UID是否已绑定
+    参数:
+        qid: 用户的QQ ID
+        bot_id: 机器人的ID
+        uid: 要检查的UID
+    返回:
+        bool: 如果UID已绑定则返回True，否则返回False
+    """
+    bind_info_list: List[DFBind] | None = await DFBind.select_data_list(
+        qid, bot_id
+    )  # pyright: ignore[reportAssignmentType]
+    if not bind_info_list:
+        return None
+
+    for bind_info in bind_info_list:
+        if bind_info.uid == uid:
+            return bind_info
+    return None
