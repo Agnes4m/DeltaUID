@@ -7,7 +7,7 @@ from gsuid_core.sv import SV
 from gsuid_core.utils.message import send_diff_msg
 
 from ..utils.database.models import DFBind
-from .login import exist_uid, login_in, out_login
+from .login import login_in, out_login
 
 # from gsuid_core.utils.database.api import get_uid
 MSG_PREFIX = "[DF]"
@@ -26,6 +26,7 @@ def get_response_message(retcode: int) -> str:
 @df_login.on_command(
     keyword=(
         "登录",
+        "绑定",
         "切换",
         "删除",
     ),
@@ -34,6 +35,7 @@ def get_response_message(retcode: int) -> str:
 async def login(bot: Bot, ev: Event):
     logger.info(f"{MSG_PREFIX} 开始执行[登录用户信息]")
     qid = ev.user_id
+    uid = ev.text.strip()
     logger.info(f"{MSG_PREFIX} [绑定/解绑]UserID: {qid}")
 
     if "登录" in ev.command:
@@ -45,24 +47,31 @@ async def login(bot: Bot, ev: Event):
             return
 
         uid = login_info["openid"]
-        # 判断账号是否存在
-        exist = await exist_uid(qid, ev.bot_id, uid)
-        if exist:
-            logger.info(f"{MSG_PREFIX} 该UID已绑定，替换ck")
-            data = await DFBind.update_data(
-                user_id=qid,
-                bot_id=ev.bot_id,
-                uid=uid,
-                cookie=login_info["access_token"],
-                platform=login_info["platform"],
-            )
-        else:
-            data = await DFBind.insert_uid(qid, ev.bot_id, uid, ev.group_id)
-            if data == 0:
-                logger.info(f"{MSG_PREFIX} 绑定成功！")
-
+        data = await DFBind.insert_uid(qid, ev.bot_id, uid, is_digit=False)
+        return await send_diff_msg(
+            bot,
+            data,
+            {
+                0: f"{MSG_PREFIX} 绑定UID{uid}成功！",
+                -1: f"{MSG_PREFIX} UID{uid}的位数不正确！",
+                -2: f"{MSG_PREFIX} UID{uid}已经绑定过了！",
+                -3: f"{MSG_PREFIX} 你输入了错误的格式!",
+            },
+        )
+    elif "绑定" in ev.command:
+        data = await DFBind.insert_uid(qid, ev.bot_id, uid, is_digit=False)
+        return await send_diff_msg(
+            bot,
+            data,
+            {
+                0: f"{MSG_PREFIX} 绑定UID{uid}成功！",
+                -1: f"{MSG_PREFIX} UID{uid}的位数不正确！",
+                -2: f"{MSG_PREFIX} UID{uid}已经绑定过了！",
+                -3: f"{MSG_PREFIX} 你输入了错误的格式!",
+            },
+        )
     elif "切换" in ev.command:
-        retcode = await DFBind.switch_uid_by_game(qid, ev.bot_id)
+        retcode = await DFBind.switch_uid_by_game(qid, ev.bot_id, uid)
         if retcode == 0:
             await bot.send(f"{MSG_PREFIX} 切换UID成功！")
         elif retcode == -3:
@@ -112,6 +121,6 @@ async def out_l(bot: Bot, ev: Event):
 
     # 确保返回的信息是字符串
     if login_info is None:
-        await bot.send(f"{MSG_PREFIX} 导出失败，未获取到信息")
+        ...
     else:
         await bot.send(str(login_info))

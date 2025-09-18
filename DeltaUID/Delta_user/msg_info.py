@@ -7,7 +7,7 @@ from gsuid_core.logger import logger
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
-from ..utils.database.models import DFUser
+from ..utils.database.models import DFBind, DFUser
 from ..utils.models import (
     DayInfoData,
     DayListData,
@@ -31,7 +31,16 @@ class MsgInfo:
 
     async def _fetch_user_data(self):
         """获取用户数据"""
-        self.user_data = await DFUser.select_data(self.user_id, self.bot_id)
+        uid = await DFBind.get_uid_by_game(self.user_id, self.bot_id)
+        if uid is None:
+            return None
+        user_ck = await DFUser.get_user_cookie_by_uid(uid)
+        user_platform = await DFUser.get_user_attr_by_uid(uid, "platform")
+        self.user_data = DFUser(bot_id=self.bot_id, user_id=self.user_id)
+        self.user_data.uid = uid
+        self.user_data.platform = user_platform if user_platform else "qq"
+        self.user_data.cookie = user_ck if user_ck else ""
+
         return self.user_data
 
     async def _get_delta_api(self):
@@ -50,7 +59,8 @@ class MsgInfo:
                 openid=self.user_data.uid,
             )
             if not res["status"] or not res["data"].get("player"):
-                raise ValueError("获取玩家信息失败，可能需要重新登录")
+                logger.warning("获取玩家信息失败，可能需要重新登录")
+                return None
             return res
 
     async def _validate_user(self) -> bool:
@@ -189,6 +199,8 @@ class MsgInfo:
 
         deltaapi = DeltaApi(self.user_data.platform)
         player_info_res = await self._get_player_info(deltaapi)
+        if player_info_res is None:
+            return "过期的登陆信息，请重新登录"
 
         basic_info = await deltaapi.get_role_basic_info(
             access_token=self.user_data.cookie, openid=self.user_data.uid
@@ -198,6 +210,9 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="sol",
         )
+        if not sol_info["data"]:
+            return "服务器忙碌,请稍后重试"
+
         try:
             if sol_info["data"].get("rat") == 101:
                 return "登录信息已过期，请重新登录"
@@ -211,6 +226,8 @@ class MsgInfo:
             openid=self.user_data.uid,
             resource_type="mp",
         )
+        if not tdm_info["data"]:
+            return "服务器忙碌,请稍后重试"
         # 处理基本数据
         propcapital = (
             Util.trans_num_easy_for_read(basic_info["data"]["propcapital"])

@@ -44,8 +44,6 @@ class DFUser(User, table=True):
             uid=data["openid"],
             platform=data["platform"],
             cookie=data["access_token"],
-            # latest_record="",
-            # latest_tdm_record="",
         )
 
     @classmethod

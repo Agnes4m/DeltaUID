@@ -590,7 +590,7 @@ async def draw_record_sol(
         await draw_friend(
             week_data["friend_list"][i],
             60 + i % 2 * 450,
-            1444 + i // 2 * 400,
+            1404 + i // 2 * 400,
         )
 
     # 右侧

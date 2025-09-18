@@ -4,6 +4,7 @@ import json
 from typing import Any, Dict, List, Optional, cast
 
 from gsuid_core.bot import Bot
+from gsuid_core.logger import logger
 from gsuid_core.models import Event, Message
 from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import get_pic
@@ -76,7 +77,6 @@ async def _process_login_result(
 
     # 保存用户数据
     await DFUser.insert_user(bot.bot_id, user_data)
-    await DFBind.insert_user(ev, bot.bot_id, user_data)
 
     # 发送登录成功消息
     user_name = player_info_res["data"]["player"]["charac_name"]
@@ -252,17 +252,23 @@ async def out_login(bot: Bot, ev: Event) -> Optional[Dict[str, str]]:
     qid = ev.user_id
     await bot.logger.info(f"[DF] [导出用户信息]UserID: {qid}")
 
-    login_info = await DFUser.select_data(ev.user_id, ev.bot_id)
-    if login_info is None:
-        await bot.logger.warning(f"[DF] 用户 {qid} 导出失败: 未登录")
+    uid = await DFBind.get_uid_by_game(qid, ev.bot_id)
+    if uid is None:
+        logger.warning(f"[DF] 用户 {qid} 导出失败: 未绑定")
+        await bot.send("[DF] 导出失败! 请先绑定!")
+        return None
+    login_data = cast(DFUser, await DFUser.select_data_by_uid(uid))
+    print(uid, login_data)
+    if login_data is None:
+        logger.warning(f"[DF] 用户 {qid} 导出失败: 未登录")
         await bot.send("[DF] 导出失败! 请先登录!")
         return None
 
     await bot.logger.info(f"[DF] 用户 {qid} 导出成功")
     return {
-        "openid": login_info.uid,
-        "token": login_info.cookie,
-        "platform": login_info.platform,
+        "openid": login_data.uid,
+        "token": login_data.cookie,
+        "platform": login_data.platform,
     }
 
 
