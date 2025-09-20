@@ -33,8 +33,8 @@ class DFBind(Bind, table=True):
 class DFUser(User, table=True):
     uid: str = Field(default="", title="三角洲uid")
     platform: str = Field(default="qq", title="平台")
-    latest_record: str = Field(default="", title="最新烽火战绩id")
-    latest_tdm_record: str = Field(default="", title="最新战场战绩id")
+    latest_record: str | None = Field(default="", title="最新烽火战绩id")
+    latest_tdm_record: str | None = Field(default="", title="最新战场战绩id")
 
     @classmethod
     async def insert_user(cls, bot_id: str, data: UserData):
@@ -51,13 +51,16 @@ class DFUser(User, table=True):
         cls,
         bot_id: str,
         user_id: str,
-        latest_record: str,
-        latest_tdm_record: str,
+        latest_record: Optional[str] = None,
+        latest_tdm_record: Optional[str] = None,
     ):
         data = await cls.select_data(user_id)
         if data is None:
             raise ValueError(f"未找到用户 {user_id}")
-
+        if latest_record is None:
+            latest_record = data.latest_record
+        if latest_tdm_record is None:
+            latest_tdm_record = data.latest_tdm_record
         await cls.update_data(
             user_id=user_id,
             bot_id=bot_id,

@@ -1,9 +1,12 @@
 import datetime
 import json
 import urllib.parse
-from typing import Literal, Optional, Union, cast
+from typing import Optional, Union, cast
 
+from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
+from gsuid_core.models import Event
+from gsuid_core.subscribe import gs_subscribe
 
 from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
@@ -62,6 +65,11 @@ class MsgInfo:
                 logger.warning("获取玩家信息失败，可能需要重新登录")
                 return None
             return res
+
+    async def _get_lastest_id(self, uid: str):
+        """获取最新战绩id"""
+        data = await DFUser.select_data_by_uid(uid)
+        return cast(DFUser, data) if data else None
 
     async def _validate_user(self) -> bool:
         """验证用户是否已绑定账号
@@ -517,7 +525,7 @@ class MsgInfo:
                                 RescueTeammateCount = rescueTeammateCount
                                 break
                 else:
-                    logger.error(f"获取战绩详情失败: {res_detail['message']}")
+                    logger.error(f"获取战绩详情失败: {res_detail}")
 
                 TotalScore = record.get("TotalScore", 0)
                 avgScorePerMinute = (
@@ -1012,29 +1020,6 @@ class MsgInfo:
                         "price_list": price_list,
                     },
                 )
-                # logger.debug(img_data)
-
-                #     "user_name",
-                #     statDate_str,
-                #     Gained_Price_Str,
-                #     consume_Price_Str,
-                #     rise_Price_Str,
-                #     total_ArmedForceId_num_list,
-                #     total_mapid_num_list,
-                #     friend_list,
-                #     profit,
-                #     rise_Price,
-                #     total_sol_num,
-                #     total_Online_Time_str,
-                #     total_Kill_Player,
-                #     total_Death_Count,
-                #     total_exacuation_num,
-                #     GainedPrice_overmillion_num,
-                #     price_list,
-                # )
-
-                #     await Image(image=img_data).finish()
-                # return msgs
                 return img_data
 
             else:
@@ -1042,93 +1027,102 @@ class MsgInfo:
 
         return "获取三角洲周报失败，可能需要重新登录或上周对局次数过少"
 
-    async def watch_record_sol(
-        self, user_name: str, mode: Literal["sol", "tdm"]
-    ):
-        self.user_data = await self._fetch_user_data()
+    async def watch_record(self, user_name: str, uid: str):
+        self.cookie = await DFUser.get_user_cookie_by_uid(uid)
+        if not self.cookie:
+            logger.warning(f"获取三角洲账号{uid}的cookie失败")
+            return '未绑定三角洲账号，请先用"ss登录"命令登录'
         if not self.user_data:
             return '未绑定三角洲账号，请先用"ss登录"命令登录'
 
         deltaapi = DeltaApi(self.user_data.platform)
-        # logger.debug(f"开始获取玩家{user_name}的战绩")
-        res = await deltaapi.get_record(
-            self.user_data.cookie, self.user_data.uid, 5, 1
-        )
-        logger.debug(f"玩家{user_name}的战绩：{res['data']}")
+        logger.debug(f"开始获取玩家{user_name}的战绩")
 
+        msg_info = []
         # 获取之前的最新战绩ID
-        latest_record_data = await DFUser.select_data(
-            user_id=self.user_data.user_id,
-            bot_id=self.user_data.bot_id,
-        )
-        msg = None
-        if res["status"]:
+        latest_record_data = await self._get_lastest_id(uid)
+        for mode in ["sol", "tdm"]:
             if mode == "sol":
-                # sol
-                # logger.debug(f"玩家{user_name}的战绩：{res['data']}")
-
-                # 处理gun模式战绩
-                gun_records = res["data"].get("gun", [])
-                if not gun_records:
-                    # logger.debug(f"玩家{user_name}没有gun模式战绩")
-                    return
-
-                # 获取最新战绩
-                if gun_records:
-                    latest_record = gun_records[0]  # 第一条是最新的
-                    logger.debug(f"最新战绩：{latest_record}")
-
-                    # 检查时间限制
-                    if not Util.is_record_within_time_limit(latest_record):
-                        logger.debug(
-                            f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
-                        )
-                        return
-
-                    # 生成战绩ID
-                    record_id = Util.generate_record_id(latest_record)
-
-                    # 如果是新战绩（ID不同）
-                    if (
-                        not latest_record_data
-                        or latest_record_data.latest_record != record_id
-                    ):
-                        RoomId = latest_record.get("RoomId", "")
-                        res = await deltaapi.get_tdm_detail(
-                            self.user_data.cookie, self.user_data.uid, RoomId
-                        )
-                        if res["status"] and res["data"]:
-                            mpDetailList = res["data"].get("mpDetailList", [])
-                            for mpDetail in mpDetailList:
-                                if mpDetail.get("isCurrentUser", False):
-                                    rescueTeammateCount = mpDetail.get(
-                                        "rescueTeammateCount", 0
-                                    )
-                                    if rescueTeammateCount > 0:
-                                        latest_record[
-                                            "RescueTeammateCount"
-                                        ] = rescueTeammateCount
-                                        break
-                        else:
-                            logger.error(f"获取战绩详情失败: {res['message']}")
-                            return
-                    else:
-                        logger.debug(f"没有新战绩需要播报: {user_name}")
-                        return
-                    msg = await self.format_record_message(
-                        latest_record, user_name
-                    )
-                else:
-                    return
+                type_id = 4
             elif mode == "tdm":
-                if res["status"]:
+                type_id = 5
+            else:
+                type_id = 4
+            res = await deltaapi.get_record(
+                self.user_data.cookie, uid, type_id, 1
+            )
+            record_id = record_id_tdm = None
+            if res["status"]:
+                # sol模式
+                if mode == "sol":
+                    # 处理gun模式战绩
+                    gun_records = res["data"].get("gun", [])
+                    if not gun_records:
+                        # logger.debug(f"玩家{user_name}没有gun模式战绩")
+                        continue
+
+                    # 获取最新战绩
+                    if gun_records:
+                        latest_record = gun_records[0]  # 第一条是最新的
+                        logger.debug(f"最新战绩：{latest_record}")
+
+                        # 检查时间限制
+                        if not Util.is_record_within_time_limit(latest_record):
+                            logger.debug(
+                                f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
+                            )
+                            continue
+
+                        # 生成战绩ID
+                        record_id = Util.generate_record_id(latest_record)
+                        logger.debug(f"最新战绩ID：{record_id}")
+
+                        # 如果是新战绩（ID不同）
+                        if (
+                            not latest_record_data
+                            or latest_record_data.latest_record != record_id
+                        ):
+                            RoomId = latest_record.get("RoomId", "")
+                            res = await deltaapi.get_tdm_detail(
+                                self.user_data.cookie,
+                                self.user_data.uid,
+                                RoomId,
+                            )
+                            if res["status"] and res["data"]:
+                                mpDetailList = res["data"].get(
+                                    "mpDetailList", []
+                                )
+                                for mpDetail in mpDetailList:
+                                    if mpDetail.get("isCurrentUser", False):
+                                        rescueTeammateCount = mpDetail.get(
+                                            "rescueTeammateCount", 0
+                                        )
+                                        if rescueTeammateCount > 0:
+                                            latest_record[
+                                                "RescueTeammateCount"
+                                            ] = rescueTeammateCount
+                                            break
+                            else:
+                                logger.error(f"获取战绩详情失败: {res}")
+                                continue
+                        else:
+                            logger.debug(f"没有新战绩需要播报: {user_name}")
+                            continue
+                        msg = await self.format_record_message(
+                            latest_record, user_name
+                        )
+                        msg_info.append(msg)
+                    else:
+                        continue
+                # tdm模式
+                elif mode == "tdm":
                     # logger.debug(f"玩家{user_name}的战绩：{res['data']}")
 
                     # 处理operator模式战绩
                     operator_records = res["data"].get("operator", [])
                     if not operator_records:
                         # logger.debug(f"玩家{user_name}没有operator模式战绩")
-                        return
+                        continue
 
                     # 获取最新战绩
                     if operator_records:
@@ -1142,7 +1136,7 @@ class MsgInfo:
                         logger.debug(
                             f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
                         )
-                        return
+                        continue
 
                     # 获取之前的最新战绩ID
                     # 如果是新战绩（ID不同）
@@ -1155,28 +1149,28 @@ class MsgInfo:
                         result_tdm = await self.format_tdm_record_message(
                             latest_record, user_name
                         )
-                        return result_tdm
+                        msg_info.append(result_tdm)
 
                     else:
                         logger.debug(f"没有新战绩需要播报: {user_name}")
 
             # 更新最新战绩记录
-            await self.update_record_sol(
+            logger.info(f"最新战绩：{latest_record}")
+
+            await self.update_record(
                 record_id,
                 record_id_tdm,
                 user_name,
                 self.user_data.user_id,
-                record_id,
             )
-            return msg
+            return msg_info
 
-    async def update_record_sol(
+    async def update_record(
         self,
-        latest_record_sol: str,
-        latest_record_tdm: str,
+        latest_record_sol: str | None,
+        latest_record_tdm: str | None,
         user_name: str,
         qq_id: str,
-        record_id: str,
     ):
         if not self.user_data:
             return '未绑定三角洲账号，请先用"ss登录"命令登录'
@@ -1184,12 +1178,16 @@ class MsgInfo:
         if await self.user_data.update_record(
             bot_id=self.bot_id,
             user_id=self.user_id,
-            latest_record=record_id,
+            latest_record=latest_record_sol,
             latest_tdm_record=latest_record_tdm,
         ):
-            logger.debug(f"更新最新战绩记录成功: {user_name} - {record_id}")
+            logger.debug(
+                f"更新最新战绩记录成功: {user_name} - {latest_record_sol}"
+            )
         else:
-            logger.error(f"更新最新战绩记录失败: {user_name} - {record_id}")
+            logger.error(
+                f"更新最新战绩记录失败: {user_name} - {latest_record_sol}"
+            )
         logger.debug(f"没有新战绩需要播报: {user_name}")
 
     @staticmethod
@@ -1397,3 +1395,28 @@ class MsgInfo:
         except Exception as e:
             logger.exception(f"格式化战场战绩消息失败: {e}")
             return None
+
+    async def scheduler_record(self, ev: Event, bot: Bot):
+        uid = await DFBind.get_uid_by_game(self.user_id, self.bot_id)
+        raw_text = ev.text.strip() if ev.text else ""
+        msg = await self.get_msg_info()
+        if isinstance(msg, str):
+            await bot.send(msg, at_sender=True)
+            return
+
+        index, record = await self.get_record(raw_text)
+
+        if raw_text == "开启" or raw_text == "":
+            await gs_subscribe.add_subscribe(
+                "single",
+                "三角洲战绩订阅",
+                ev,
+                extra_message=uid,
+            )
+            await bot.send("[ss] 三角洲战绩订阅成功！")
+            # return await bot.send("[ss] 三角洲战绩订阅成功！")
+
+        elif raw_text == "关闭":
+            await gs_subscribe.delete_subscribe("single", "三角洲战绩订阅", ev)
+            await bot.send("[ss] 三角洲战绩订阅已关闭！")
+        return msg

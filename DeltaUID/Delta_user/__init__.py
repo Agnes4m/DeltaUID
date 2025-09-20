@@ -3,7 +3,8 @@ import random
 import time
 from typing import cast
 
-# from gsuid_core.aps import scheduler
+# from plugins.DeltaUID.DeltaUID.utils.database.models import DFBind
+from gsuid_core.aps import scheduler
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
@@ -155,51 +156,41 @@ async def watch_record(
     ev: Event,
 ):
     logger.info("[ss]正在执行三角洲战绩订阅功能")
-    raw_text = ev.text.strip() if ev.text else ""
+
     user_id = ev.user_id
     data = MsgInfo(user_id, bot.bot_id)
-    msg = await data.get_msg_info()
-    if isinstance(msg, str):
-        await bot.send(msg, at_sender=True)
-        return
+    await data.scheduler_record(ev, bot)
 
-    raw_text = ev.text.strip() if ev.text else ""
-    index, record = await data.get_record(raw_text)
-
-    if raw_text == "开启" or raw_text == "":
-        await gs_subscribe.add_subscribe(
-            "single",
-            "三角洲战绩订阅",
-            ev,
-            extra_message=user_id,
-        )
-        await bot.send("[ss] 三角洲战绩订阅成功！")
-        # return await bot.send("[ss] 三角洲战绩订阅成功！")
-
-    elif raw_text == "关闭":
-        await gs_subscribe.delete_subscribe("single", "订阅测试", ev)
-
+    # msg = await data.scheduler_record(ev, bot)
     # 测试输出
-    logger.debug("测试输出")
-
-    record_sol = await data.watch_record_sol(msg["user_name"], "sol")
-    # record_tdm = await data.watch_record_tdm(msg["user_name"], user_id)
-    await bot.send(str(record_sol)) if record_sol else None
-    # await data.watch_record_tdm(record, user_id)
-
-    ## to do
+    # logger.debug("测试输出")
+    # uid = await DFBind.get_uid_by_game(user_id, bot.bot_id)
+    # if msg and uid:
+    #     record = await data.watch_record(msg["user_name"], uid)
+    #     await bot.send(str(record[0])) if record else None
 
 
-# @scheduler.scheduled_job("cron", minute="*/2")
-async def majsoul_notify_rank():
+@scheduler.scheduled_job("cron", minute="*/2")
+async def df_notify_rank():
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe("三角洲战绩订阅")
     if not datas:
         return
     for subscribe in datas:
+        logger.debug(f"[DF]正在为订阅用户 {subscribe} 推送战绩")
+        uid = subscribe.extra_message
+        if uid is None:
+            logger.debug(
+                f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过"
+            )
+            continue
         user_id = subscribe.user_id
         data = MsgInfo(user_id, subscribe.bot_id)
         # msg = await data.get_msg_info()
-        for raw_text in ["烽火", "战场"]:
-            index, record = await data.get_record(raw_text)
-            ## to do
+        msg = await data.get_msg_info()
+        if isinstance(msg, str):
+            logger.debug(f"[DF]{user_id}账号: {msg}")
+            continue
+
+        record_sol = await data.watch_record(msg["user_name"], uid)
+        await subscribe.send(str(record_sol)) if record_sol else None
