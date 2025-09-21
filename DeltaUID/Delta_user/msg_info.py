@@ -30,6 +30,7 @@ class MsgInfo:
     def __init__(self, user_id: str, bot_id: str):
         self.user_id = user_id
         self.bot_id = bot_id
+
         self.user_data = None
 
     async def _fetch_user_data(self):
@@ -37,14 +38,7 @@ class MsgInfo:
         uid = await DFBind.get_uid_by_game(self.user_id, self.bot_id)
         if uid is None:
             return None
-        user_ck = await DFUser.get_user_cookie_by_uid(uid)
-        user_platform = await DFUser.get_user_attr_by_uid(uid, "platform")
-        self.user_data = DFUser(bot_id=self.bot_id, user_id=self.user_id)
-        self.user_data.uid = uid
-        self.user_data.platform = user_platform if user_platform else "qq"
-        self.user_data.cookie = user_ck if user_ck else ""
-
-        return self.user_data
+        return cast(DFUser, await DFUser.select_data_by_uid(uid))
 
     async def _get_delta_api(self):
         """初始化并返回DeltaApi实例"""
@@ -776,7 +770,6 @@ class MsgInfo:
             res = await deltaapi.get_weekly_report(
                 access_token=access_token, openid=openid, statDate=statDate
             )
-            # logger.info(res)
             if res["status"] and res["data"]:
                 # 解析总带出
                 Gained_Price = int(res["data"].get("Gained_Price", 0))
@@ -1155,13 +1148,13 @@ class MsgInfo:
                         logger.debug(f"没有新战绩需要播报: {user_name}")
 
             # 更新最新战绩记录
-            logger.info(f"最新战绩：{latest_record}")
+            logger.debug(f"最新战绩：{latest_record}")
 
             await self.update_record(
                 record_id,
                 record_id_tdm,
                 user_name,
-                self.user_data.user_id,
+                uid=uid,
             )
             return msg_info
 
@@ -1170,24 +1163,34 @@ class MsgInfo:
         latest_record_sol: str | None,
         latest_record_tdm: str | None,
         user_name: str,
-        qq_id: str,
+        uid: str,
     ):
+        self.user_data = await self._fetch_user_data()
         if not self.user_data:
             return '未绑定三角洲账号，请先用"ss登录"命令登录'
+        if latest_record_sol is None:
+            logger.debug(f"玩家{user_name}没有sol模式战绩")
+            latest_record_sol = self.user_data.latest_record
 
-        if await self.user_data.update_record(
-            bot_id=self.bot_id,
-            user_id=self.user_id,
-            latest_record=latest_record_sol,
-            latest_tdm_record=latest_record_tdm,
-        ):
+        if latest_record_tdm is None:
+            logger.debug(f"玩家{user_name}没有tdm模式战绩")
+            latest_record_tdm = self.user_data.latest_tdm_record
+        try:
+            await self.user_data.update_record(
+                uid=uid,
+                bot_id=self.bot_id,
+                latest_record=latest_record_sol,
+                latest_tdm_record=latest_record_tdm,
+            )
             logger.debug(
                 f"更新最新战绩记录成功: {user_name} - {latest_record_sol}"
             )
-        else:
+        except Exception as e:
             logger.error(
                 f"更新最新战绩记录失败: {user_name} - {latest_record_sol}"
             )
+            logger.warning(e)
+            return f"更新最新战绩记录失败: {user_name} - {latest_record_sol}"
         logger.debug(f"没有新战绩需要播报: {user_name}")
 
     @staticmethod
@@ -1397,26 +1400,28 @@ class MsgInfo:
             return None
 
     async def scheduler_record(self, ev: Event, bot: Bot):
-        uid = await DFBind.get_uid_by_game(self.user_id, self.bot_id)
+        self.user_data = await self._fetch_user_data()
+        if not self.user_data:
+            return '未绑定三角洲账号，请先用"ss登录"命令登录'
         raw_text = ev.text.strip() if ev.text else ""
         msg = await self.get_msg_info()
         if isinstance(msg, str):
             await bot.send(msg, at_sender=True)
             return
 
-        index, record = await self.get_record(raw_text)
+        # index, record = await self.get_record(raw_text)
 
         if raw_text == "开启" or raw_text == "":
             await gs_subscribe.add_subscribe(
                 "single",
                 "三角洲战绩订阅",
                 ev,
-                extra_message=uid,
+                extra_message=self.user_data.uid,
             )
-            await bot.send("[ss] 三角洲战绩订阅成功！")
-            # return await bot.send("[ss] 三角洲战绩订阅成功！")
+            await bot.send("[DF] 三角洲战绩订阅成功！")
+            # return await bot.send("[DF] 三角洲战绩订阅成功！")
 
         elif raw_text == "关闭":
             await gs_subscribe.delete_subscribe("single", "三角洲战绩订阅", ev)
-            await bot.send("[ss] 三角洲战绩订阅已关闭！")
+            await bot.send("[DF] 三角洲战绩订阅已关闭！")
         return msg

@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import Optional, cast
 
 from fastapi_amis_admin.amis.components import PageSchema
 from sqlmodel import Field
 
 from gsuid_core.bot import Event
+from gsuid_core.logger import logger
 from gsuid_core.utils.database.base_models import Bind, User
 from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.webconsole import site
@@ -50,30 +51,31 @@ class DFUser(User, table=True):
     async def update_record(
         cls,
         bot_id: str,
-        user_id: str,
+        uid: str,
         latest_record: Optional[str] = None,
         latest_tdm_record: Optional[str] = None,
     ):
-        data = await cls.select_data(user_id)
+        data = await cls.select_data_by_uid(uid)
         if data is None:
-            raise ValueError(f"未找到用户 {user_id}")
+            logger.debug(f"未找到用户 {uid}，无法更新战绩")
+            return None
+        data = cast(DFUser, data)
+        if data is None:
+            raise ValueError(f"未找到用户 {uid}")
         if latest_record is None:
-            latest_record = data.latest_record
+            latest_record = latest_record
         if latest_tdm_record is None:
-            latest_tdm_record = data.latest_tdm_record
-        await cls.update_data(
-            user_id=user_id,
+            latest_tdm_record = latest_tdm_record
+        await cls.update_data_by_uid(
+            uid=uid,
             bot_id=bot_id,
-            uid=data.uid,
-            platform=data.platform,
-            cookie=data.cookie,
             latest_record=latest_record,
             latest_tdm_record=latest_tdm_record,
         )
 
 
 @site.register_admin
-class VABindadmin(GsAdminModel):
+class DFBindadmin(GsAdminModel):
     pk_name = "id"
     page_schema = PageSchema(
         label="三角洲绑定管理",
@@ -85,7 +87,7 @@ class VABindadmin(GsAdminModel):
 
 
 @site.register_admin
-class VAUseradmin(GsAdminModel):
+class DFUseradmin(GsAdminModel):
     pk_name = "id"
     page_schema = PageSchema(
         label="三角洲用户管理",

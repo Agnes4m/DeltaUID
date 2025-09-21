@@ -601,9 +601,9 @@ class DeltaApi:
                         data["jData"]["data"][0].get("totalMoney", 0)
                     )
             cast(UserInfo, game_data)
-            logger.info(
-                {"status": True, "message": "获取成功", "data": game_data}
-            )
+            # logger.info(
+            #     {"status": True, "message": "获取成功", "data": game_data}
+            # )
             return {"status": True, "message": "获取成功", "data": game_data}
 
         except Exception as e:

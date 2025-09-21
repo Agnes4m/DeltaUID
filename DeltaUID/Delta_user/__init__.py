@@ -33,7 +33,7 @@ df_watch_record = SV("三角洲战绩订阅")
 @df_day.on_command(("日报"), block=True)
 @df_info.on_command(("信息", "查询"), block=True)
 async def login(bot: Bot, ev: Event):
-    logger.info("[ss]正在执行三角洲信息功能")
+    logger.info("[DF]正在执行三角洲信息功能")
     user_id = await get_user_id(ev)
     data = MsgInfo(user_id, bot.bot_id)
     msg = await data.get_msg_info()
@@ -61,7 +61,7 @@ async def get_record(
     bot: Bot,
     ev: Event,
 ):
-    logger.info("[ss]正在执行三角洲战绩查询功能")
+    logger.info("[DF]正在执行三角洲战绩查询功能")
     await bot.send("正在请求，时间较长请耐心等待")
     user_id = await get_user_id(ev)
 
@@ -123,7 +123,7 @@ async def get_tqc(
 ):
     raw_text = ev.text.strip() if ev.text else ""
     if raw_text and "开启" in raw_text:
-        logger.info("[ss]正在执行三角洲特勤处推送功能")
+        logger.info("[DF]正在执行三角洲特勤处推送功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
         await gs_subscribe.add_subscribe(
             "single",
@@ -132,10 +132,9 @@ async def get_tqc(
             extra_message=ev.group_id,
         )
         data = await gs_subscribe.get_subscribe("ss订阅")
-        logger.info(data)
         await bot.send("订阅成功！")
     elif raw_text and "关闭" in raw_text:
-        logger.info("[ss]正在执行关闭三角洲特勤处推送功能")
+        logger.info("[DF]正在执行关闭三角洲特勤处推送功能")
         await gs_subscribe.delete_subscribe(
             "single",
             "ss特勤处订阅",
@@ -144,7 +143,7 @@ async def get_tqc(
         await bot.send("取消订阅成功！")
 
     else:
-        logger.info("[ss]正在执行三角洲特勤处功能")
+        logger.info("[DF]正在执行三角洲特勤处功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
         a = await data.get_tqc_text()
         await bot.send(str(a), at_sender=True)
@@ -155,7 +154,7 @@ async def watch_record(
     bot: Bot,
     ev: Event,
 ):
-    logger.info("[ss]正在执行三角洲战绩订阅功能")
+    logger.info("[DF]正在执行三角洲战绩订阅功能")
 
     user_id = ev.user_id
     data = MsgInfo(user_id, bot.bot_id)
@@ -177,20 +176,27 @@ async def df_notify_rank():
     if not datas:
         return
     for subscribe in datas:
-        logger.debug(f"[DF]正在为订阅用户 {subscribe} 推送战绩")
+        logger.info(f"[DF]正在为订阅用户 {subscribe} 推送战绩")
         uid = subscribe.extra_message
         if uid is None:
-            logger.debug(
-                f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过"
-            )
+            logger.info(f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过")
             continue
         user_id = subscribe.user_id
         data = MsgInfo(user_id, subscribe.bot_id)
-        # msg = await data.get_msg_info()
+
         msg = await data.get_msg_info()
         if isinstance(msg, str):
-            logger.debug(f"[DF]{user_id}账号: {msg}")
+            logger.info(f"[DF]{user_id}账号: {msg}")
             continue
 
         record_sol = await data.watch_record(msg["user_name"], uid)
-        await subscribe.send(str(record_sol)) if record_sol else None
+        if not record_sol:
+            logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
+            continue
+        elif isinstance(record_sol, list):
+            await subscribe.send(str(record_sol[0]))
+        elif isinstance(record_sol, str):
+            await subscribe.send(str(record_sol))
+        else:
+            logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
+            continue
