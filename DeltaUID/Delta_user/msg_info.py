@@ -1032,6 +1032,7 @@ class MsgInfo:
         logger.debug(f"开始获取玩家{user_name}的战绩")
 
         msg_info = []
+        record_id = record_id_tdm = None
         # 获取之前的最新战绩ID
         latest_record_data = await self._get_lastest_id(uid)
         for mode in ["sol", "tdm"]:
@@ -1044,7 +1045,7 @@ class MsgInfo:
             res = await deltaapi.get_record(
                 self.user_data.cookie, uid, type_id, 1
             )
-            record_id = record_id_tdm = None
+
             if res["status"]:
                 # sol模式
                 if mode == "sol":
@@ -1057,7 +1058,7 @@ class MsgInfo:
                     # 获取最新战绩
                     if gun_records:
                         latest_record = gun_records[0]  # 第一条是最新的
-                        logger.debug(f"最新战绩：{latest_record}")
+                        # logger.debug(f"最新战绩：{latest_record}")
 
                         # 检查时间限制
                         if not Util.is_record_within_time_limit(latest_record):
@@ -1068,7 +1069,7 @@ class MsgInfo:
 
                         # 生成战绩ID
                         record_id = Util.generate_record_id(latest_record)
-                        logger.debug(f"最新战绩ID：{record_id}")
+                        logger.debug(f"[DF][sol]最新战绩ID：{record_id}")
 
                         # 如果是新战绩（ID不同）
                         if (
@@ -1081,25 +1082,26 @@ class MsgInfo:
                                 self.user_data.uid,
                                 RoomId,
                             )
-                            if res["status"] and res["data"]:
-                                mpDetailList = res["data"].get(
-                                    "mpDetailList", []
-                                )
-                                for mpDetail in mpDetailList:
-                                    if mpDetail.get("isCurrentUser", False):
-                                        rescueTeammateCount = mpDetail.get(
-                                            "rescueTeammateCount", 0
-                                        )
-                                        if rescueTeammateCount > 0:
-                                            latest_record[
-                                                "RescueTeammateCount"
-                                            ] = rescueTeammateCount
-                                            break
+                            logger.info(f"[DF][sol]获取战绩详情：{res}")
+                        if res["status"] and res["data"]:
+                            mpDetailList = res["data"].get("mpDetailList", [])
+                            for mpDetail in mpDetailList:
+                                if mpDetail.get("isCurrentUser", False):
+                                    rescueTeammateCount = mpDetail.get(
+                                        "rescueTeammateCount", 0
+                                    )
+                                    if rescueTeammateCount > 0:
+                                        latest_record[
+                                            "RescueTeammateCount"
+                                        ] = rescueTeammateCount
+                                        break
                             else:
                                 logger.error(f"获取战绩详情失败: {res}")
                                 continue
                         else:
-                            logger.debug(f"没有新战绩需要播报: {user_name}")
+                            logger.debug(
+                                f"[DF][sol]没有新战绩需要播报: {user_name}"
+                            )
                             continue
                         msg = await self.format_record_message(
                             latest_record, user_name
@@ -1120,43 +1122,43 @@ class MsgInfo:
                     # 获取最新战绩
                     if operator_records:
                         latest_record = operator_records[0]  # 第一条是最新的
+                        # logger.debug(f"最新战绩：{latest_record}")
+                        # 生成战绩ID
+                        record_id_tdm = Util.generate_record_id(latest_record)
 
-                    # 生成战绩ID
-                    record_id_tdm = Util.generate_record_id(latest_record)
+                        # 检查时间限制
+                        if not record_id_tdm:
+                            logger.debug(
+                                f"[DF][tdm]最新战绩ID：{record_id_tdm}最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
+                            )
+                            continue
 
-                    # 检查时间限制
-                    if not record_id_tdm:
-                        logger.debug(
-                            f"最新战绩时间超过{BROADCAST_EXPIRED_MINUTES}分钟，跳过播报"
-                        )
-                        continue
+                        # 如果是新战绩（ID不同）
+                        if (
+                            not latest_record_data
+                            or latest_record_data.latest_tdm_record
+                            != record_id_tdm
+                        ):
+                            # 格式化播报消息
+                            result_tdm = await self.format_tdm_record_message(
+                                latest_record, user_name
+                            )
+                            msg_info.append(result_tdm)
 
-                    # 获取之前的最新战绩ID
-                    # 如果是新战绩（ID不同）
-                    if (
-                        not latest_record_data
-                        or latest_record_data.latest_tdm_record
-                        != record_id_tdm
-                    ):
-                        # 格式化播报消息
-                        result_tdm = await self.format_tdm_record_message(
-                            latest_record, user_name
-                        )
-                        msg_info.append(result_tdm)
-
-                    else:
-                        logger.debug(f"没有新战绩需要播报: {user_name}")
+                        else:
+                            logger.debug(
+                                f"[DF][tdm]没有新战绩需要播报: {user_name}"
+                            )
 
             # 更新最新战绩记录
-            logger.debug(f"最新战绩：{latest_record}")
 
-            await self.update_record(
-                record_id,
-                record_id_tdm,
-                user_name,
-                uid=uid,
-            )
-            return msg_info
+        await self.update_record(
+            record_id,
+            record_id_tdm,
+            user_name,
+            uid=uid,
+        )
+        return msg_info
 
     async def update_record(
         self,

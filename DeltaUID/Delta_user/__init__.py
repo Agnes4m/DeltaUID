@@ -82,8 +82,8 @@ async def get_record(
     # print("apip请求耗时", current_time2 - current_time)
     raw_text = ev.text.strip() if ev.text else ""
     index, record = await data.get_record(raw_text)
-    logger.debug("战绩")
-    logger.debug(record)
+    # logger.debug("战绩")
+    # logger.debug(record)
     if index == 0 or isinstance(record, str):
         record_sol = cast(list[RecordSolData], [])
     if isinstance(week_data, str) or isinstance(msg, str):
@@ -176,7 +176,7 @@ async def df_notify_rank():
     if not datas:
         return
     for subscribe in datas:
-        logger.info(f"[DF]正在为订阅用户 {subscribe} 推送战绩")
+        logger.info(f"[DF]正在为订阅用户 {subscribe.user_id} 推送战绩")
         uid = subscribe.extra_message
         if uid is None:
             logger.info(f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过")
