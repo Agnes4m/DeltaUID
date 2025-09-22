@@ -3,6 +3,9 @@ import json
 import urllib.parse
 from typing import Optional, Union, cast
 
+from PIL import Image
+from plugins.DeltaUID.DeltaUID.Delta_user.image import draw_sol_record
+
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
@@ -218,8 +221,6 @@ class MsgInfo:
         try:
             if sol_info["data"].get("rat") == 101:
                 return "登录信息已过期，请重新登录"
-            if not sol_info["data"]:
-                return "服务器忙碌,请稍后重试"
         except Exception as _:
             ...
 
@@ -1020,7 +1021,9 @@ class MsgInfo:
 
         return "获取三角洲周报失败，可能需要重新登录或上周对局次数过少"
 
-    async def watch_record(self, user_name: str, uid: str):
+    async def watch_record(
+        self, user_name: str, uid: str, avatar: Image.Image
+    ):
         self.cookie = await DFUser.get_user_cookie_by_uid(uid)
         if not self.cookie:
             logger.warning(f"获取三角洲账号{uid}的cookie失败")
@@ -1057,7 +1060,7 @@ class MsgInfo:
 
                     # 获取最新战绩
                     if gun_records:
-                        latest_record = gun_records[0]  # 第一条是最新的
+                        latest_record: dict = gun_records[0]  # 第一条是最新的
                         # logger.debug(f"最新战绩：{latest_record}")
 
                         # 检查时间限制
@@ -1083,30 +1086,39 @@ class MsgInfo:
                                 RoomId,
                             )
                             logger.info(f"[DF][sol]获取战绩详情：{res}")
-                        if res["status"] and res["data"]:
-                            mpDetailList = res["data"].get("mpDetailList", [])
-                            for mpDetail in mpDetailList:
-                                if mpDetail.get("isCurrentUser", False):
-                                    rescueTeammateCount = mpDetail.get(
-                                        "rescueTeammateCount", 0
-                                    )
-                                    if rescueTeammateCount > 0:
-                                        latest_record[
-                                            "RescueTeammateCount"
-                                        ] = rescueTeammateCount
-                                        break
+                            if res["status"] and res["data"]:
+                                mpDetailList = res["data"].get(
+                                    "mpDetailList", []
+                                )
+                                for mpDetail in mpDetailList:
+                                    if mpDetail.get("isCurrentUser", False):
+                                        rescueTeammateCount = mpDetail.get(
+                                            "rescueTeammateCount", 0
+                                        )
+                                        if rescueTeammateCount > 0:
+                                            latest_record[
+                                                "RescueTeammateCount"
+                                            ] = rescueTeammateCount
+                                            break
                             else:
                                 logger.error(f"获取战绩详情失败: {res}")
-                                continue
+
                         else:
                             logger.debug(
                                 f"[DF][sol]没有新战绩需要播报: {user_name}"
                             )
                             continue
+                        # logger.info(f"[DF][sol]最近：{latest_record}")
                         msg = await self.format_record_message(
                             latest_record, user_name
                         )
-                        msg_info.append(msg)
+                        if isinstance(msg, str) or msg is None:
+                            return msg
+                        else:
+                            msg["user_name"] = user_name
+                            return await draw_sol_record(avatar, msg)
+                        # logger.info(f"[DF][sol]格式化战绩消息：{msg}")
+                        # msg_info.append(a)
                     else:
                         continue
                 # tdm模式
@@ -1215,6 +1227,7 @@ class MsgInfo:
             kill_count = record_data.get("KillCount", 0)
             # 解析收益
             final_price = record_data.get("FinalPrice", "0")
+            final_price = 0 if final_price is None else final_price
             # 解析纯利润
             flow_cal_gained_price = record_data.get("flowCalGainedPrice", 0)
 
@@ -1241,8 +1254,8 @@ class MsgInfo:
             loss_str = Util.trans_num_easy_for_read(loss_int)
 
             # logger.debug(f"获取到玩家{user_name}的战绩：时间：{event_time}，地图：{get_map_name(map_id)}，结果：{result_str}，存活时长：{duration_str}，击杀干员：{kill_count}，带出：{price_str}，战损：{loss_str}")
-
-            if price_int > 1000000:
+            if price_int > 100:
+                # if price_int > 1000000:
                 # 构建消息
                 message = f"🎯 {user_name} 百万撤离！\n"
                 message += f"⏰ 时间: {event_time}\n"

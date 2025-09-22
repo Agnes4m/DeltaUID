@@ -23,6 +23,7 @@ from ..utils.models import (
     DayInfoData,
     FriendData,
     InfoData,
+    RecordSol,
     RecordSolData,
     RecordTdmData,
     TQCData,
@@ -31,7 +32,9 @@ from ..utils.models import (
 
 avatar_path = TEXTURE / "avatar"
 week_path = TEXTURE / "week"
+record_path = TEXTURE / "record"
 green = (28, 241, 161)
+footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
 
 
 async def draw_title(
@@ -595,7 +598,7 @@ async def draw_record_sol(
 
     # 右侧
     # 战绩
-    footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
+
     if len(data) == 0:
         img.paste(footer, (0, 2130), footer)
     else:
@@ -709,4 +712,45 @@ async def draw_scb(avatar: Image.Image | None, msg: InfoData):
     )
     header = await draw_title(data_one, avatar, 1)
     img.paste(header, (0, 0), header)
+    return await convert_img(img)
+
+
+async def draw_sol_record(
+    avatar: Image.Image, data: RecordSol, win: bool = True
+):
+    img = Image.open(record_path / "bg.png").convert("RGBA")
+    line = Image.open(record_path / "line.png").convert("RGBA")
+    easy_paste(img, line, (0, 0), "lt")
+
+    header_center = Image.open(TEXTURE / "头像背景.png").convert("RGBA")
+
+    avatar = await draw_pic_with_ring(
+        avatar.convert("RGBA").resize((150, 150)), 200
+    )
+    easy_paste(header_center, avatar, (150, 150), "cc")
+    easy_paste(img, header_center, (30, 30), "lt")
+
+    # 文字部分
+    img_draw = ImageDraw.Draw(img)
+    img_draw.text((300, 60), data["user_name"], "white", font=df_font(40))
+
+    img_draw.text((117.6, 321.7), data["title"], green, font=df_font(84))
+
+    img_draw.text(
+        (145, 450), f"{data['map_name'][-2:]}行动", "grey", font=df_font(24)
+    )
+    img_draw.text((145, 490), data["result"], "white", font=df_font(44))
+    img_draw.text((385, 450), "时长", "grey", font=df_font(24))
+    img_draw.text((385, 490), data["duration"], "white", font=df_font(44))
+    img_draw.text((630, 450), "击杀", "grey", font=df_font(24))
+    img_draw.text(
+        (630, 490), f"{data['kill_count']}", "white", font=df_font(44)
+    )
+
+    img_draw.text((130, 575), "本局收获", "grey", font=df_font(24))
+    img_draw.text((130, 615), f"{data['price']}", "white", font=df_font(44))
+    img_draw.text((385, 575), "战损", "grey", font=df_font(24))
+    img_draw.text((385, 615), f"{data['loss']}", "white", font=df_font(44))
+
+    easy_paste(img, footer.resize((800, 104)), (0, 780), "lt")
     return await convert_img(img)

@@ -12,6 +12,7 @@ from gsuid_core.subscribe import gs_subscribe
 from gsuid_core.sv import SV
 from gsuid_core.utils.image.image_tools import (
     get_event_avatar,
+    get_pic,
 )
 
 from ..utils.models import RecordSolData, RecordTdmData
@@ -189,14 +190,16 @@ async def df_notify_rank():
             logger.info(f"[DF]{user_id}账号: {msg}")
             continue
 
-        record_sol = await data.watch_record(msg["user_name"], uid)
+        record_sol = await data.watch_record(
+            msg["user_name"], uid, await get_pic(msg["avatar"])
+        )
         if not record_sol:
             logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
         elif isinstance(record_sol, list):
             await subscribe.send(str(record_sol[0]))
-        elif isinstance(record_sol, str):
-            await subscribe.send(str(record_sol))
+        elif isinstance(record_sol, str | bytes):
+            await subscribe.send(record_sol)
         else:
             logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
