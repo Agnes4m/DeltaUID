@@ -1,10 +1,30 @@
 import datetime
+from pathlib import Path
 from typing import Literal
 from urllib.parse import unquote
+
+from PIL import Image
 
 from gsuid_core.logger import logger
 
 BROADCAST_EXPIRED_MINUTES = 7
+
+armed_dict = {
+    "深蓝": "Alexei",
+    "疾风": "Claire",
+    "乌鲁鲁": "David",
+    "无名": "Elio",
+    "红狼": "Kai",
+    "露娜": "Luna",
+    "骇爪": "Mai",
+    "蜂医": "Roy",
+    "牧羊人": "Terry",
+    "威龙": "Wang",
+    "蛊": "Zoya",
+}
+
+
+TEXT_PATH = Path(__file__).parent.parent / "texture2d/record/armed"
 
 
 class Util:
@@ -316,6 +336,17 @@ class Util:
     def generate_record_id(record_data: dict) -> str:
         """生成战绩唯一标识"""
         return record_data.get("dtEventTime", "")
+
+    @staticmethod
+    async def armed_to_img(armed: str) -> Image.Image:
+        name = armed_dict.get(armed, "Default")
+        if name != "Default":
+            name += "_Default_C"
+        else:
+            name += "_C"
+        name = f"Card_{name}"
+        img = Image.open(TEXT_PATH / f"{name}.png")
+        return img
 
 
 if __name__ == "__main__":

@@ -308,7 +308,7 @@ class RecordSol(TypedDict):
     title: Literal["百万撤离", "百万战损"]
     time: str
     map_name: str
-    result: Literal["撤离成功", "撤离失败"]
+    result: Literal["撤离成功！", "撤离失败！"]
     duration: str
     kill_count: int
     """击杀数量"""
@@ -316,6 +316,8 @@ class RecordSol(TypedDict):
     loss: str
     is_gain: bool
     main_value: str
+    armedforceid: str
+    """干员"""
 
 
 class RecordTdm(TypedDict):

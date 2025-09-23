@@ -4,7 +4,6 @@ import urllib.parse
 from typing import Optional, Union, cast
 
 from PIL import Image
-from plugins.DeltaUID.DeltaUID.Delta_user.image import draw_sol_record
 
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
@@ -23,6 +22,7 @@ from ..utils.models import (
     TQCData,
     WeeklyData,
 )
+from .image import draw_sol_record
 
 interval = 120
 BROADCAST_EXPIRED_MINUTES = 7
@@ -1108,7 +1108,7 @@ class MsgInfo:
                                 f"[DF][sol]没有新战绩需要播报: {user_name}"
                             )
                             continue
-                        # logger.info(f"[DF][sol]最近：{latest_record}")
+                        logger.info(f"[DF][sol]最近：{latest_record}")
                         msg = await self.format_record_message(
                             latest_record, user_name
                         )
@@ -1116,7 +1116,9 @@ class MsgInfo:
                             return msg
                         else:
                             msg["user_name"] = user_name
-                            return await draw_sol_record(avatar, msg)
+                            msg_info = await draw_sol_record(
+                                avatar.resize((150, 150)), msg
+                            )
                         # logger.info(f"[DF][sol]格式化战绩消息：{msg}")
                         # msg_info.append(a)
                     else:
@@ -1155,14 +1157,14 @@ class MsgInfo:
                             result_tdm = await self.format_tdm_record_message(
                                 latest_record, user_name
                             )
-                            msg_info.append(result_tdm)
+                            msg_info = result_tdm
 
                         else:
                             logger.debug(
                                 f"[DF][tdm]没有新战绩需要播报: {user_name}"
                             )
 
-            # 更新最新战绩记录
+        # 更新最新战绩记录
 
         await self.update_record(
             record_id,
@@ -1248,14 +1250,16 @@ class MsgInfo:
                 price_str = Util.trans_num_easy_for_read(price_int)
             except Exception:
                 price_str = final_price
-
+            # 解析干员
+            ArmedForceId = record_data.get("ArmedForceId", "")
+            ArmedForce = Util.get_armed_force_name(ArmedForceId)
             # 计算战损
             loss_int = int(final_price) - int(flow_cal_gained_price)
             loss_str = Util.trans_num_easy_for_read(loss_int)
 
             # logger.debug(f"获取到玩家{user_name}的战绩：时间：{event_time}，地图：{get_map_name(map_id)}，结果：{result_str}，存活时长：{duration_str}，击杀干员：{kill_count}，带出：{price_str}，战损：{loss_str}")
-            if price_int > 100:
-                # if price_int > 1000000:
+            # if price_int > 100:
+            if price_int > 1000000:
                 # 构建消息
                 message = f"🎯 {user_name} 百万撤离！\n"
                 message += f"⏰ 时间: {event_time}\n"
@@ -1280,6 +1284,7 @@ class MsgInfo:
                             "loss": loss_str,
                             "is_gain": True,
                             "main_value": price_str,
+                            "armedforceid": ArmedForce,
                         },
                     )
                     return img_data

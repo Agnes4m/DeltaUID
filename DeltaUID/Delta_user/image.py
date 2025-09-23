@@ -729,17 +729,26 @@ async def draw_sol_record(
     )
     easy_paste(header_center, avatar, (150, 150), "cc")
     easy_paste(img, header_center, (30, 30), "lt")
-
+    # 干员图标
+    armed_img = await Util.armed_to_img(data["armedforceid"])
+    armed_img = armed_img.resize((432, 692), Image.Resampling.LANCZOS)
+    armed_img = armed_img.rotate(-9.2, expand=True)
+    easy_paste(img, armed_img, (956, 81), "lt")
     # 文字部分
     img_draw = ImageDraw.Draw(img)
-    img_draw.text((300, 60), data["user_name"], "white", font=df_font(40))
+    img_draw.text((330, 60), data["user_name"], "white", font=df_font(40))
+    result_c = green if data["result"] == "撤离成功" else "red"
+    img_draw.text((330, 110), data["result"], result_c, font=df_font(44))
 
-    img_draw.text((117.6, 321.7), data["title"], green, font=df_font(84))
+    title_c = green if data["title"] == "百万撤离！" else "red"
+    img_draw.text((117.6, 321.7), data["title"], title_c, font=df_font(84))
 
     img_draw.text(
         (145, 450), f"{data['map_name'][-2:]}行动", "grey", font=df_font(24)
     )
-    img_draw.text((145, 490), data["result"], "white", font=df_font(44))
+    img_draw.text(
+        (145, 490), data["map_name"].split("-")[0], "white", font=df_font(44)
+    )
     img_draw.text((385, 450), "时长", "grey", font=df_font(24))
     img_draw.text((385, 490), data["duration"], "white", font=df_font(44))
     img_draw.text((630, 450), "击杀", "grey", font=df_font(24))

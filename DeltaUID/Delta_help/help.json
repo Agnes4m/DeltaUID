@@ -46,6 +46,14 @@
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "订阅",
+        "desc": "订阅战绩推送",
+        "eg": "订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   },
