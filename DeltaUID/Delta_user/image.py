@@ -97,6 +97,11 @@ async def draw_title(
             df_font(35),
             "lt",
         )
+    time = data.get("time")
+    time_y = 235 + (45 if mode == 0 else 0)  # 根据mode决定纵坐标
+
+    if time:
+        title_draw.text((290, time_y), time, "white", df_font(35), "lt")
     title_draw.text(
         (860, 250),
         data["rankpoint"],

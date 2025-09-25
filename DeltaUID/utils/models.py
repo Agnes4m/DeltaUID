@@ -141,6 +141,7 @@ class InfoData(TypedDict):
     """总载具摧毁数"""
     totalVehicleKill: str
     """总载具击杀数"""
+    time: str | None
 
 
 class DayMoneyData(TypedDict):

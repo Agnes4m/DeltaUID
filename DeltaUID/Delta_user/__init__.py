@@ -87,15 +87,23 @@ async def get_record(
     # logger.debug(record)
     if index == 0 or isinstance(record, str):
         record_sol = cast(list[RecordSolData], [])
-    if isinstance(week_data, str) or isinstance(msg, str):
-        await bot.send(str(record), at_sender=True)
+    if isinstance(week_data, str):
+        await bot.send(str(week_data), at_sender=True)
         return
+    if isinstance(msg, str):
+        await bot.send(msg, at_sender=True)
+        return
+    if isinstance(record, str):
+        record = []
     if index == 1:
         record_sol = cast(list[RecordSolData], record)
 
         await bot.send(
             await draw_record_sol(
-                await get_event_avatar(ev), record_sol, week_data, msg
+                await get_event_avatar(ev),
+                record_sol,
+                week_data,
+                msg,
             ),
             at_sender=True,
         )
