@@ -1,33 +1,32 @@
-from copy import deepcopy
 from typing import cast
+from copy import deepcopy
 
 from PIL import Image, ImageDraw
-from PIL.ImageDraw import ImageDraw as ID
 from PIL.ImageFile import ImageFile
-
 from gsuid_core.models import Event
+from PIL.ImageDraw import ImageDraw as ID
+from gsuid_core.utils.image.convert import convert_img
 
 # from gsuid_core.utils.cache import gs_cache
 from gsuid_core.utils.fonts.fonts import core_font as df_font
-from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import (
-    draw_pic_with_ring,
+    get_pic,
     easy_paste,
     get_event_avatar,
-    get_pic,
+    draw_pic_with_ring,
 )
 
 from ..utils.api.util import Util
 from ..utils.image import TEXT_PATH as TEXTURE
 from ..utils.models import (
-    DayInfoData,
-    FriendData,
+    TQCData,
     InfoData,
     RecordSol,
+    FriendData,
+    WeeklyData,
+    DayInfoData,
     RecordSolData,
     RecordTdmData,
-    TQCData,
-    WeeklyData,
 )
 
 avatar_path = TEXTURE / "avatar"
@@ -101,7 +100,9 @@ async def draw_title(
     time_y = 235 + (45 if mode == 0 else 0)  # 根据mode决定纵坐标
 
     if time:
-        title_draw.text((290, time_y), time, "white", df_font(35), "lt")
+        title_draw.text(
+            (290, time_y), f"截至时间: {time}", "white", df_font(35), "lt"
+        )
     title_draw.text(
         (860, 250),
         data["rankpoint"],

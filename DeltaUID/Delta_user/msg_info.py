@@ -1,28 +1,27 @@
-import datetime
 import json
+import datetime
 import urllib.parse
-from typing import Optional, Union, cast
+from typing import Union, Optional, cast
 
 from PIL import Image
-
 from gsuid_core.bot import Bot
-from gsuid_core.logger import logger
 from gsuid_core.models import Event
+from gsuid_core.logger import logger
 from gsuid_core.subscribe import gs_subscribe
 
-from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
+from .image import draw_sol_record
+from ..utils.api.api import DeltaApi
 from ..utils.database.models import DFBind, DFUser
 from ..utils.models import (
-    DayInfoData,
-    DayListData,
+    TQCData,
     InfoData,
     RecordSol,
     RecordTdm,
-    TQCData,
     WeeklyData,
+    DayInfoData,
+    DayListData,
 )
-from .image import draw_sol_record
 
 interval = 120
 BROADCAST_EXPIRED_MINUTES = 7
@@ -794,9 +793,16 @@ class MsgInfo:
                 total_ArmedForceId_num_list = list(
                     map(json.loads, total_ArmedForceId_num.split("#"))
                 )
-                total_ArmedForceId_num_list.sort(
-                    key=lambda x: x["inum"], reverse=True
-                )
+
+                if (
+                    total_ArmedForceId_num_list
+                    and total_ArmedForceId_num_list[0] != 0
+                ):
+                    total_ArmedForceId_num_list.sort(
+                        key=lambda x: x["inum"], reverse=True
+                    )
+                else:
+                    total_ArmedForceId_num_list = []
 
                 # 解析资产变化
                 Total_Price = res["data"].get("Total_Price", "")
@@ -845,9 +851,12 @@ class MsgInfo:
                 total_mapid_num_list = list(
                     map(json.loads, total_mapid_num.split("#"))
                 )
-                total_mapid_num_list.sort(
-                    key=lambda x: x["inum"], reverse=True
-                )
+                if total_mapid_num_list and total_mapid_num_list[0] != 0:
+                    total_mapid_num_list.sort(
+                        key=lambda x: x["inum"], reverse=True
+                    )
+                else:
+                    total_mapid_num_list = []
 
                 res = await deltaapi.get_weekly_friend_report(
                     access_token=access_token, openid=openid, statDate=statDate
@@ -954,42 +963,44 @@ class MsgInfo:
                             key=lambda x: x["sol_num"], reverse=True
                         )
 
-                msgs = []
-                message = f"【{user_name}烽火周报 - 日期：{statDate_str}】"
+                # msgs = []
+                # message = f"【{user_name}烽火周报 - 日期：{statDate_str}】"
 
-                msgs.append(message)
-                message = "--- 基本信息 ---\n"
-                message += f"总览：{total_sol_num}场 | {total_exacuation_num}成功撤离 | {GainedPrice_overmillion_num}百万撤离\n"
-                message += (
-                    f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
-                )
-                message += f"在线时间：{total_Online_Time_str}\n"
-                message += f"总带出：{Gained_Price_Str} | 总带入：{consume_Price_Str}\n"
-                message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"
-                msgs.append(message)
-                message = "--- 干员使用情况 ---\n"
-                message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"
-                msgs.append(message)
-                message = "--- 干员使用情况 ---"
-                for armed_force in total_ArmedForceId_num_list:
-                    armed_force_name = Util.get_armed_force_name(
-                        armed_force.get("ArmedForceId", 0)
-                    )
-                    armed_force_num = armed_force.get("inum", 0)
-                    message += f"\n{armed_force_name}：{armed_force_num}场"
-                msgs.append(message)
-                message = "--- 地图游玩情况 ---"
-                for map_info in total_mapid_num_list:
-                    map_name = Util.get_map_name(map_info.get("MapId", 0))
-                    map_num = map_info.get("inum", 0)
-                    message += f"\n{map_name}：{map_num}场"
-                msgs.append(message)
-                message = "--- 队友协作情况 ---\n注：KD为好友KD，带出和带入为本人的数据"
-                for friend in friend_list:
-                    message += f"\n[{friend['charac_name']}]"
-                    message += f"\n  总览：{friend['sol_num']}场 | {friend['escape_num']}撤离/{friend['fail_num']}失败 | {friend['kill_num']}杀/{friend['death_num']}死"
-                    message += f"\n  带出：{friend['gained_str']} | 战损：{friend['consume_str']} | 利润：{friend['profit_str']}"
-                msgs.append(message)
+                # msgs.append(message)
+                # message = "--- 基本信息 ---\n"
+                # message += f"总览：{total_sol_num}场 | {total_exacuation_num}成功撤离 | {GainedPrice_overmillion_num}百万撤离\n"
+                # message += (
+                #     f"KD： {total_Kill_Player}杀/{total_Death_Count}死\n"
+                # )
+                # message += f"在线时间：{total_Online_Time_str}\n"
+                # message += f"总带出：{Gained_Price_Str} | 总带入：{consume_Price_Str}\n"
+                # message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"
+                # msgs.append(message)
+                # message = "--- 干员使用情况 ---\n"
+                # message += f"资产变化：{Util.trans_num_easy_for_read(price_list[0])} -> {Util.trans_num_easy_for_read(price_list[-1])} | 资产净增：{rise_Price_Str}\n"
+                # msgs.append(message)
+                # message = "--- 干员使用情况 ---"
+                # for armed_force in total_ArmedForceId_num_list:
+                #     if armed_force == 0:
+                #         break
+                #     armed_force_name = Util.get_armed_force_name(
+                #         armed_force.get("ArmedForceId", 0)
+                #     )
+                #     armed_force_num = armed_force.get("inum", 0)
+                #     message += f"\n{armed_force_name}：{armed_force_num}场"
+                # msgs.append(message)
+                # message = "--- 地图游玩情况 ---"
+                # for map_info in total_mapid_num_list:
+                #     map_name = Util.get_map_name(map_info.get("MapId", 0))
+                #     map_num = map_info.get("inum", 0)
+                #     message += f"\n{map_name}：{map_num}场"
+                # msgs.append(message)
+                # message = "--- 队友协作情况 ---\n注：KD为好友KD，带出和带入为本人的数据"
+                # for friend in friend_list:
+                #     message += f"\n[{friend['charac_name']}]"
+                #     message += f"\n  总览：{friend['sol_num']}场 | {friend['escape_num']}撤离/{friend['fail_num']}失败 | {friend['kill_num']}杀/{friend['death_num']}死"
+                #     message += f"\n  带出：{friend['gained_str']} | 战损：{friend['consume_str']} | 利润：{friend['profit_str']}"
+                # msgs.append(message)
 
                 img_data = cast(
                     WeeklyData,

@@ -1,6 +1,6 @@
-import asyncio
-import base64
 import json
+import base64
+import asyncio
 from typing import Any, Dict, List, Optional, cast
 
 from gsuid_core.bot import Bot
@@ -9,10 +9,10 @@ from gsuid_core.models import Event, Message
 from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import get_pic
 
-from ..utils.api.api import DeltaApi
 from ..utils.api.util import Util
-from ..utils.database.models import DFBind, DFUser
 from ..utils.models import UserData
+from ..utils.api.api import DeltaApi
+from ..utils.database.models import DFBind, DFUser
 
 # 定义常量
 MAX_LOGIN_ATTEMPTS = 120
@@ -258,7 +258,7 @@ async def out_login(bot: Bot, ev: Event) -> Optional[Dict[str, str]]:
         await bot.send("[DF] 导出失败! 请先绑定!")
         return None
     login_data = cast(DFUser, await DFUser.select_data_by_uid(uid))
-    print(uid, login_data)
+    logger.info(f"[DF] 用户 {qid} 导出成功: {login_data}")
     if login_data is None:
         logger.warning(f"[DF] 用户 {qid} 导出失败: 未登录")
         await bot.send("[DF] 导出失败! 请先登录!")
