@@ -39,6 +39,7 @@ footer = Image.open(TEXTURE / "footer.png").convert("RGBA")
 async def draw_title(
     data: InfoData, avatar: Image.Image | None, mode: int = 0
 ):
+
     title = Image.open(TEXTURE / "header.png")
 
     header_center = Image.open(TEXTURE / "头像背景.png").convert("RGBA")
@@ -672,7 +673,7 @@ async def draw_record_sol(
             )
             draw_bg.text(
                 (900, 90),
-                f"利润{data[i]['price']}/损失{data[i]['profit']}",
+                f"利润{data[i]['profit']}/带出{data[i]['price']}",
                 green,
                 df_font(30),
                 "rm",
@@ -698,27 +699,27 @@ async def draw_record_tdm(
         InfoData,
         {
             "user_name": msg["user_name"],
-            "tdmrankpoint": msg["tdmrankpoint"],
-        },
-    )
-
-    header = await draw_title(data_one, avatar, 1)
-    img.paste(header, (0, 0), header)
-    return await convert_img(img)
-
-
-async def draw_scb(avatar: Image.Image | None, msg: InfoData):
-    img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
-    data_one = cast(
-        InfoData,
-        {
-            "user_name": msg["user_name"],
+            "rankpoint": msg["tdmrankpoint"],
             "tdmrankpoint": msg["tdmrankpoint"],
         },
     )
     header = await draw_title(data_one, avatar, 1)
     img.paste(header, (0, 0), header)
     return await convert_img(img)
+
+
+# async def draw_scb(avatar: Image.Image | None, msg: InfoData):
+#     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
+#     data_one = cast(
+#         InfoData,
+#         {
+#             "user_name": msg["user_name"],
+#             "tdmrankpoint": msg["tdmrankpoint"],
+#         },
+#     )
+#     header = await draw_title(data_one, avatar, 1)
+#     img.paste(header, (0, 0), header)
+#     return await convert_img(img)
 
 
 async def draw_sol_record(

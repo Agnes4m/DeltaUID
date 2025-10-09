@@ -1,24 +1,22 @@
-import asyncio
-import random
 import time
+import random
+import asyncio
 from typing import cast
+
+from gsuid_core.sv import SV
+from gsuid_core.bot import Bot
+from gsuid_core.models import Event
 
 # from plugins.DeltaUID.DeltaUID.utils.database.models import DFBind
 from gsuid_core.aps import scheduler
-from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
-from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
-from gsuid_core.sv import SV
-from gsuid_core.utils.image.image_tools import (
-    get_event_avatar,
-    get_pic,
-)
+from gsuid_core.utils.image.image_tools import get_pic, get_event_avatar
 
-from ..utils.models import RecordSolData, RecordTdmData
-from .image import draw_df_info_img, draw_record_sol, draw_record_tdm
 from .msg_info import MsgInfo
 from .utils import get_user_id
+from ..utils.models import RecordSolData, RecordTdmData
+from .image import draw_record_sol, draw_record_tdm, draw_df_info_img
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}
@@ -111,16 +109,15 @@ async def get_record(
         # print("图片生成耗时", current_time3 - current_time2)
         return
     if index == 2:
-        await bot.send("to do")
-        return
+        # return await bot.send("to do")
 
         record_tdm = cast(list[RecordTdmData], record)
 
-        await bot.send(
-            await draw_record_tdm(ev, record_tdm, msg), at_sender=True
+        return await bot.send(
+            await draw_record_tdm(await get_event_avatar(ev), record_tdm, msg),
+            at_sender=True,
         )
 
-        return
     last_call_times[user_id] = current_time
     return
 

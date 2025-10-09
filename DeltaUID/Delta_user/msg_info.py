@@ -427,7 +427,6 @@ class MsgInfo:
             return 0, res["message"]
 
         card_list = []
-
         # 处理烽火模式战绩
         if type_id == 4:
             if not res["data"]["gun"]:
@@ -436,7 +435,6 @@ class MsgInfo:
             for index, record in enumerate(res["data"]["gun"], start=1):
                 if index > line_limit:
                     break
-
                 # 解析战绩数据
                 event_time = record.get("dtEventTime", "")
                 map_id = record.get("MapId", "")
@@ -453,7 +451,7 @@ class MsgInfo:
                 price_str = (
                     Util.trans_num_easy_for_read(int(final_price))
                     if final_price is not None and final_price.isdigit()
-                    else final_price
+                    else "未知"
                 )
                 flow_cal_gained_price = record.get("flowCalGainedPrice", 0)
                 profit_str = f"{'' if flow_cal_gained_price >= 0 else '-'}{Util.trans_num_easy_for_read(abs(flow_cal_gained_price))}"
