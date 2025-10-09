@@ -1,13 +1,15 @@
-from gsuid_core.bot import Bot
-from gsuid_core.logger import logger
-from gsuid_core.models import Event
-
 # from gsuid_core.logger import logger
-from gsuid_core.sv import SV
-from gsuid_core.utils.message import send_diff_msg
+from typing import cast
 
-from ..utils.database.models import DFBind
+from gsuid_core.sv import SV
+from gsuid_core.bot import Bot
+from gsuid_core.models import Event
+from gsuid_core.logger import logger
+from gsuid_core.utils.message import send_diff_msg
+from plugins.DeltaUID.DeltaUID.utils.models import UserData
+
 from .login import login_in, out_login
+from ..utils.database.models import DFBind, DFUser
 
 # from gsuid_core.utils.database.api import get_uid
 MSG_PREFIX = "[DF]"
@@ -102,6 +104,42 @@ async def login(bot: Bot, ev: Event):
 
 
 @df_login.on_command(
+    keyword=("添加", "添加ck"),
+    block=True,
+)
+async def add_ck(bot: Bot, ev: Event):
+    logger.info(f"{MSG_PREFIX} 添加ck")
+    text = ev.text.strip()
+    text_list = text.split("\n")
+    if len(text_list) <= 2:
+        return await bot.send(f"{MSG_PREFIX} 请正确输入ck信息!")
+
+    openid = access_token = platform = ""
+    for i in text_list:
+        if i.startswith("openid:"):
+            openid = i.replace("openid:", "").strip()
+        elif i.startswith("token:"):
+            access_token = i.replace("token:", "").strip()
+        elif i.startswith("platform:"):
+            platform = i.replace("platform:", "").strip()
+    if not all([openid, access_token, platform]):
+        return await bot.send(f"{MSG_PREFIX} 请正确输入ck信息!")
+
+    user_data = cast(
+        UserData,
+        {
+            "qq_id": ev.user_id,
+            "group_id": ev.group_id,
+            "platform": platform,
+            "openid": openid,
+            "access_token": access_token,
+        },
+    )
+    await DFUser.insert_user(bot.bot_id, user_data)
+    await bot.send(f"{MSG_PREFIX} 添加ck成功!")
+
+
+@df_login.on_command(
     keyword=("导出"),
     block=True,
 )
@@ -121,6 +159,9 @@ async def out_l(bot: Bot, ev: Event):
 
     # 确保返回的信息是字符串
     if login_info is None:
-        ...
+        return
     else:
-        await bot.send(str(login_info))
+        msg = ""
+        for k, v in login_info.items():
+            msg += f"{k}: {v}\n"
+        return await bot.send(msg)

@@ -9,6 +9,14 @@
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "绑定",
+        "desc": "绑定uid",
+        "eg": "绑定",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   },
@@ -58,12 +66,20 @@
     ]
   },
   "数据服务": {
-    "desc": "数据操作",
+    "desc": "数据操作(仅限私聊)",
     "data": [
       {
-        "name": "导出(仅限私聊)",
+        "name": "导出",
         "desc": "导出uid和ck",
         "eg": "导出",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "添加",
+        "desc": "添加token",
+        "eg": "添加",
         "need_ck": false,
         "need_sk": false,
         "need_admin": false

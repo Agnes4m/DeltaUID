@@ -19,10 +19,12 @@
 
 ## 丨安装方式
 
+
+### | 方法一
 1. 发送`core安装插件DeltaUID`
 2. 发送`gs重启`应用插件
 
----
+### | 方法二
 
 1. 进入 plugins 目录，`git clone --depth 1 https://github.com/Agnes4m/DeltaUID.git`
 2. 发送`gs重启`应用插件
@@ -33,13 +35,22 @@
 
 ## 丨功能
 
-使用`鼠鼠帮助`或者`ss帮助`查看帮助指令
+> 使用`鼠鼠帮助`或者`ss帮助`查看帮助指令
 
 - `ss登录`
 - `ss查询/日报`
 - `ss战绩/周报`
 
-### 丨其他
+### 丨跨bot UID绑定
+
+> 由于登录二维码后之前的token失效，因此新增导出和添加功能
+> 导出/添加的部分只涉及token信息部分，若绑定则需要手动发额外指令绑定
+
+- `ss导出` 导出当前账号的信息
+- `ss添加` 增加账号的信息(并不会直接绑定，需要再使用绑定指令绑定)
+- `ss绑定` 绑定新的UID账号
+
+## 丨其他
 
 - 插件基于[早柚核心(gsuid_core)](https://github.com/Genshin-bots/gsuid_core)开发
 - 原代码来自[nonebot-plugin-delta-helper](https://github.com/BraveCowardp/nonebot-plugin-delta-helper)，在此基础上适配 core，并优化部分功能，为防止冲突本插件不适用`三角洲`关键词前缀，改用`ss`

@@ -1,14 +1,13 @@
 from typing import Optional, cast
 
-from fastapi_amis_admin.amis.components import PageSchema
 from sqlmodel import Field
-
 from gsuid_core.bot import Event
 from gsuid_core.logger import logger
-from gsuid_core.utils.database.base_models import Bind, User
-from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.webconsole import site
+from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.webconsole.mount_app import GsAdminModel
+from fastapi_amis_admin.amis.components import PageSchema
+from gsuid_core.utils.database.base_models import Bind, User
 
 from ..models import UserData
 
