@@ -11,7 +11,7 @@ from ..utils.database.models import DFUser
 
 
 @scheduler.scheduled_job('cron', minute='*/2')
-async def majsoul_notify_rank():
+async def df_notify_rank():
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe('ss特勤处订阅')
     if not datas:
