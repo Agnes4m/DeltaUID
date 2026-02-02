@@ -10,8 +10,11 @@ from ..utils.database.models import DFBind, DFUser
 
 ICON = Path(__file__).parent.parent.parent / "icon.png"
 
+
 def get_ICON():
     return Image.open(ICON)
+
+
 async def get_user_num():
     datas = await DFUser.get_all_cookie()
     return len(datas)
@@ -40,7 +43,7 @@ async def get_sign_num():
     #         return
     #     msg = MsgInfo(user_data.user_id, user_data.bot_id)
     #     tqc = await msg.get_tqc()
-    #     await subscribe.send(tqc)    
+    #     await subscribe.send(tqc)
     return len(datas) if datas else 0
 
 
