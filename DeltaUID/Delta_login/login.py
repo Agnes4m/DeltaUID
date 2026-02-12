@@ -9,9 +9,9 @@ from gsuid_core.models import Event, Message
 from gsuid_core.utils.image.convert import convert_img
 from gsuid_core.utils.image.image_tools import get_pic
 
-from ..utils.api.util import Util
 from ..utils.models import UserData
 from ..utils.api.api import DeltaApi
+from ..utils.api.util import Util
 from ..utils.database.models import DFBind, DFUser
 
 # 定义常量
@@ -19,17 +19,11 @@ MAX_LOGIN_ATTEMPTS = 120
 LOGIN_ATTEMPT_INTERVAL = 0.5
 
 
-async def _process_login_result(
-    bot: Bot, ev: Event, res: Dict[str, Any], platform: str
-) -> Optional[UserData]:
+async def _process_login_result(bot: Bot, ev: Event, res: Dict[str, Any], platform: str) -> Optional[UserData]:
     """处理登录结果的通用逻辑"""
     if not res.get("status"):
-        await bot.logger.info(
-            f"[DF] 登录失败: {res.get('message', '未知错误')}"
-        )
-        await bot.send(
-            f"登录失败：{res.get('message', '未知错误')}", at_sender=True
-        )
+        await bot.logger.info(f"[DF] 登录失败: {res.get('message', '未知错误')}")
+        await bot.send(f"登录失败：{res.get('message', '未知错误')}", at_sender=True)
         return None
 
     access_token = res["data"]["access_token"]
@@ -41,22 +35,14 @@ async def _process_login_result(
     deltaapi = DeltaApi(platform)
     bind_res = await deltaapi.bind(access_token=access_token, openid=openid)
     if not bind_res["status"]:
-        await bot.logger.info(
-            f"[DF] 绑定失败: {bind_res.get('message', '未知错误')}"
-        )
-        await bot.send(
-            f"绑定失败：{bind_res.get('message', '未知错误')}", at_sender=True
-        )
+        await bot.logger.info(f"[DF] 绑定失败: {bind_res.get('message', '未知错误')}")
+        await bot.send(f"绑定失败：{bind_res.get('message', '未知错误')}", at_sender=True)
         return None
 
     # 获取玩家信息
-    player_info_res = await deltaapi.get_player_info(
-        access_token=access_token, openid=openid
-    )
+    player_info_res = await deltaapi.get_player_info(access_token=access_token, openid=openid)
     if not player_info_res["status"]:
-        await bot.logger.info(
-            f"[DF] 查询角色信息失败: {player_info_res.get('message', '未知错误')}"
-        )
+        await bot.logger.info(f"[DF] 查询角色信息失败: {player_info_res.get('message', '未知错误')}")
         await bot.send(
             f"查询角色信息失败：{player_info_res.get('message', '未知错误')}",
             at_sender=True,
@@ -97,9 +83,7 @@ async def _login_with_qq(bot: Bot, ev: Event) -> Optional[UserData]:
     # 获取二维码
     res = await deltaapi.get_sig()
     if not res["status"] or isinstance(res["message"], str):
-        await bot.logger.info(
-            f"[DF] 获取QQ二维码失败: {res.get('message', '未知错误')}"
-        )
+        await bot.logger.info(f"[DF] 获取QQ二维码失败: {res.get('message', '未知错误')}")
         await bot.send(f"获取二维码失败：{res.get('message', '未知错误')}")
         return None
 
@@ -129,12 +113,8 @@ async def _login_with_qq(bot: Bot, ev: Event) -> Optional[UserData]:
             token_res = await deltaapi.get_access_token(cookie)
             return await _process_login_result(bot, ev, token_res, "qq")
         elif res["code"] in (-4, -2, -3):
-            await bot.logger.info(
-                f"[DF] QQ登录失败: {res.get('message', '未知错误')}"
-            )
-            await bot.send(
-                f"登录失败：{res.get('message', '未知错误')}", at_sender=True
-            )
+            await bot.logger.info(f"[DF] QQ登录失败: {res.get('message', '未知错误')}")
+            await bot.send(f"登录失败：{res.get('message', '未知错误')}", at_sender=True)
             return None
         elif res["code"] == -1:  # 假设-1表示超时
             await bot.logger.info("[DF] QQ登录超时")
@@ -156,9 +136,7 @@ async def _login_with_wechat(bot: Bot, ev: Event) -> Optional[UserData]:
     # 获取微信登录二维码
     res = await deltaapi.get_wechat_login_qr()
     if not res["status"]:
-        await bot.logger.info(
-            f"[DF] 获取微信二维码失败: {res.get('message', '未知错误')}"
-        )
+        await bot.logger.info(f"[DF] 获取微信二维码失败: {res.get('message', '未知错误')}")
         await bot.send(f"获取二维码失败：{res.get('message', '未知错误')}")
         return None
 
@@ -190,12 +168,8 @@ async def _login_with_wechat(bot: Bot, ev: Event) -> Optional[UserData]:
             token_res = await deltaapi.get_wechat_access_token(wx_code)
             return await _process_login_result(bot, ev, token_res, "wx")
         elif not res["status"]:
-            await bot.logger.info(
-                f"[DF] 微信登录失败: {res.get('message', '未知错误')}"
-            )
-            await bot.send(
-                f"登录失败：{res.get('message', '未知错误')}", at_sender=True
-            )
+            await bot.logger.info(f"[DF] 微信登录失败: {res.get('message', '未知错误')}")
+            await bot.send(f"登录失败：{res.get('message', '未知错误')}", at_sender=True)
             return None
 
         attempts += 1
@@ -281,9 +255,7 @@ async def exist_uid(qid: str, bot_id: str, uid: str) -> Optional[DFBind]:
     返回:
         bool: 如果UID已绑定则返回True，否则返回False
     """
-    bind_info_list: List[DFBind] | None = await DFBind.select_data_list(
-        qid, bot_id
-    )  # pyright: ignore[reportAssignmentType]
+    bind_info_list: List[DFBind] | None = await DFBind.select_data_list(qid, bot_id)  # pyright: ignore[reportAssignmentType]
     if not bind_info_list:
         return None
 

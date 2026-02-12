@@ -1,6 +1,6 @@
 import datetime
-from pathlib import Path
 from typing import Literal
+from pathlib import Path
 from urllib.parse import unquote
 
 from PIL import Image
@@ -50,9 +50,7 @@ class Util:
         hash_val = 0
         for i in range(length):
             # 对应PHP: $hash += (($hash << 5) & 2147483647) + ord($qrSig[$i]) & 2147483647;
-            hash_val += ((hash_val << 5) & 2147483647) + ord(
-                qrsig[i]
-            ) & 2147483647
+            hash_val += ((hash_val << 5) & 2147483647) + ord(qrsig[i]) & 2147483647
             # 对应PHP: $hash &= 2147483647;
             hash_val &= 2147483647
 
@@ -232,9 +230,7 @@ class Util:
             if score < max_score:
                 sub_rank = sub_ranks - int((score - start_score) // interval)
                 sub_rank = max(sub_rank, 1)
-                score_in_sub = score - (
-                    start_score + (sub_ranks - sub_rank) * interval
-                )
+                score_in_sub = score - (start_score + (sub_ranks - sub_rank) * interval)
                 stars = (score_in_sub // 50) + 1
                 return f"{rank_name}{sub_rank}★{stars}"
             start_score = max_score
@@ -270,9 +266,7 @@ class Util:
             if score < max_score:
                 sub_rank = sub_ranks - int((score - start_score) // interval)
                 sub_rank = max(sub_rank, 1)
-                score_in_sub = score - (
-                    start_score + (sub_ranks - sub_rank) * interval
-                )
+                score_in_sub = score - (start_score + (sub_ranks - sub_rank) * interval)
                 stars = score_in_sub // 50 + 1
                 return f"{rank_name}{sub_rank}★{stars}"
             start_score = max_score
@@ -298,9 +292,7 @@ class Util:
     ) -> datetime.datetime:
         """解析事件时间字符串，并根据游戏时间调整"""
         cleaned_time_str = event_time_str.replace(" : ", ":")  # 清理空格
-        event_time = datetime.datetime.strptime(
-            cleaned_time_str, "%Y-%m-%d %H:%M:%S"
-        )
+        event_time = datetime.datetime.strptime(cleaned_time_str, "%Y-%m-%d %H:%M:%S")
 
         if mode == "tdm":
             event_time += datetime.timedelta(seconds=game_time)
@@ -322,9 +314,7 @@ class Util:
             game_time = record_data.get("GameTime", 0)
             event_time = Util.parse_event_time(event_time_str, game_time, mode)
             current_time = datetime.datetime.now()
-            time_diff_minutes = (
-                current_time - event_time
-            ).total_seconds() / 60
+            time_diff_minutes = (current_time - event_time).total_seconds() / 60
 
             return time_diff_minutes <= max_age_minutes
 

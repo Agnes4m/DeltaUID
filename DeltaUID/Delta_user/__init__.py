@@ -1,7 +1,9 @@
-import asyncio
-import random
 import time
+import random
+import asyncio
 from typing import cast
+
+from gsuid_core.sv import SV
 
 # from plugins.DeltaUID.DeltaUID.utils.database.models import DFBind
 from gsuid_core.aps import scheduler
@@ -9,13 +11,12 @@ from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
-from gsuid_core.sv import SV
-from gsuid_core.utils.image.image_tools import get_event_avatar, get_pic
+from gsuid_core.utils.image.image_tools import get_pic, get_event_avatar
 
-from ..utils.models import RecordSolData, RecordTdmData
-from .image import draw_df_info_img, draw_record_sol, draw_record_tdm
-from .msg_info import MsgInfo
+from .image import draw_record_sol, draw_record_tdm, draw_df_info_img
 from .utils import get_user_id
+from .msg_info import MsgInfo
+from ..utils.models import RecordSolData, RecordTdmData
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}
@@ -65,10 +66,7 @@ async def get_record(
 
     # 60s内最多一次
     current_time = time.time()
-    if (
-        user_id in last_call_times
-        and current_time - last_call_times[user_id] < 60
-    ):
+    if user_id in last_call_times and current_time - last_call_times[user_id] < 60:
         await bot.send("操作过于频繁，请一分钟后再试", at_sender=True)
         return
 
@@ -194,9 +192,7 @@ async def df_notify_rank():
             logger.info(f"[DF]{user_id}账号: {msg}")
             continue
 
-        record_sol = await data.watch_record(
-            msg["user_name"], uid, await get_pic(msg["avatar"])
-        )
+        record_sol = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
         if not record_sol:
             logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue

@@ -2,16 +2,18 @@ from pathlib import Path
 
 from PIL import Image
 
-from gsuid_core.status.plugin_status import register_status
 from gsuid_core.subscribe import gs_subscribe
+from gsuid_core.status.plugin_status import register_status
 
-from ..Delta_user.msg_info import MsgInfo
 from ..utils.database.models import DFBind, DFUser
 
 ICON = Path(__file__).parent.parent.parent / "icon.png"
 
+
 def get_ICON():
     return Image.open(ICON)
+
+
 async def get_user_num():
     datas = await DFUser.get_all_cookie()
     return len(datas)
@@ -27,7 +29,7 @@ async def get_add_num():
 
 
 async def get_sign_num():
-    datas = await gs_subscribe.get_subscribe('ss特勤处订阅')
+    datas = await gs_subscribe.get_subscribe("ss特勤处订阅")
     # if not datas:
     #     return 0
 
@@ -40,7 +42,7 @@ async def get_sign_num():
     #         return
     #     msg = MsgInfo(user_data.user_id, user_data.bot_id)
     #     tqc = await msg.get_tqc()
-    #     await subscribe.send(tqc)    
+    #     await subscribe.send(tqc)
     return len(datas) if datas else 0
 
 

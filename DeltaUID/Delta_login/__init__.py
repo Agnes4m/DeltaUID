@@ -1,15 +1,15 @@
 # from gsuid_core.logger import logger
 from typing import cast
 
+from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
-from gsuid_core.sv import SV
 from gsuid_core.utils.message import send_diff_msg
 
-from ..utils.database.models import DFBind, DFUser
-from ..utils.models import UserData
 from .login import login_in, out_login
+from ..utils.models import UserData
+from ..utils.database.models import DFBind, DFUser
 
 # from gsuid_core.utils.database.api import get_uid
 MSG_PREFIX = "[DF]"
@@ -79,9 +79,7 @@ async def login(bot: Bot, ev: Event):
         elif retcode == -3:
             now_uid = await DFBind.get_uid_by_game(qid, ev.bot_id)
             if now_uid:
-                await bot.send(
-                    f"{MSG_PREFIX} 你目前只绑定了一个UID{now_uid}, 无法切换!"
-                )
+                await bot.send(f"{MSG_PREFIX} 你目前只绑定了一个UID{now_uid}, 无法切换!")
             else:
                 await bot.send(f"{MSG_PREFIX} 你尚未绑定任何UID, 无法切换!")
         else:
