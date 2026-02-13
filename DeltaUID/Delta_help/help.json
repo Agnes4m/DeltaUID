@@ -65,6 +65,43 @@
       }
     ]
   },
+  "订阅服务": {
+    "desc": "持续监控输出",
+    "data": [
+      {
+        "name": "订阅",
+        "desc": "订阅战绩推送",
+        "eg": "订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "取消订阅",
+        "desc": "取消订阅战绩推送",
+        "eg": "取消订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "特勤处订阅",
+        "desc": "订阅特勤处战绩推送",
+        "eg": "特勤处订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      },
+      {
+        "name": "特勤处取消订阅",
+        "desc": "取消订阅特勤处战绩推送",
+        "eg": "特勤处取消订阅",
+        "need_ck": true,
+        "need_sk": false,
+        "need_admin": false
+      }
+    ]
+  },
   "数据服务": {
     "desc": "数据操作(仅限私聊)",
     "data": [

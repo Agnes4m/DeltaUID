@@ -1,5 +1,7 @@
+import json
+import time
 import datetime
-from typing import Literal
+from typing import Any, Dict, Literal
 from pathlib import Path
 from functools import lru_cache
 from urllib.parse import unquote
@@ -9,6 +11,20 @@ from PIL import Image
 from gsuid_core.logger import logger
 
 BROADCAST_EXPIRED_MINUTES = 7
+
+API_CONSTANTS: Dict[str, Any] = {
+    "SIG": "https://xui.ptlogin2.qq.com/ssl/ptqrshow",
+    "GETLOGINTICKET": "https://xui.ptlogin2.qq.com/cgi-bin/xlogin",
+    "GETLOGINSTATUS": "https://ssl.ptlogin2.qq.com/ptqrlogin",
+    "GAMEBASEURL": "https://comm.ams.game.qq.com/ide/",
+    "REQUEST_HEADERS_BASE": {
+        "platform": "android",
+        "Content-Type": "application/x-www-form-urlencoded",
+    },
+}
+
+APP_ID = "101491592"
+LOGIN_APP_ID = "716027609"
 
 armed_dict = {
     "深蓝": "Alexei",
@@ -29,6 +45,59 @@ TEXT_PATH = Path(__file__).parent.parent / "texture2d/record/armed"
 
 
 class Util:
+    @staticmethod
+    def get_gtk(p_skey: str) -> int:
+        """计算g_tk值"""
+        h = 5381
+        for c in p_skey:
+            h += (h << 5) + ord(c)
+        return h & 0x7FFFFFFF
+
+    @staticmethod
+    def get_micro_time() -> int:
+        """获取微秒时间戳"""
+        return int(time.time() * 1000000)
+
+    @staticmethod
+    def create_cookie(openid: str, access_token: str, is_qq: bool = True) -> dict:
+        """创建API请求所需的cookie"""
+        return {
+            "openid": openid,
+            "access_token": access_token,
+            "acctype": "qc" if is_qq else "wx",
+            "appid": APP_ID,
+        }
+
+    @staticmethod
+    def parse_api_response(data: dict, success_key: str = "ret", data_key: str = "jData") -> Dict[str, Any]:
+        """解析API响应，返回标准化格式"""
+        ret = data.get(success_key, -1)
+        if ret == 0:
+            return {
+                "status": True,
+                "message": "获取成功",
+                "data": data.get(data_key, {}).get("data", {}),
+            }
+        else:
+            return {
+                "status": False,
+                "message": f"请求失败，错误码: {ret}",
+                "data": {},
+            }
+
+    @staticmethod
+    def build_game_params(chart_id: int, sub_chart_id: int, token: str, method: str = "", **extra) -> Dict[str, Any]:
+        """构建游戏API通用参数"""
+        params = {
+            "iChartId": chart_id,
+            "iSubChartId": sub_chart_id,
+            "sIdeToken": token,
+        }
+        if method:
+            params["method"] = method
+        params.update(extra)
+        return params
+
     @staticmethod
     def trans_num_easy_for_read(num: int | str) -> str:
         if isinstance(num, str):

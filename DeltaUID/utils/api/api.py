@@ -9,19 +9,10 @@ import httpx
 
 from gsuid_core.logger import logger
 
-from .util import Util
+from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
 from ..models import Sign, SignMsg, UserInfo, LoginStatus
 
-CONSTANTS = {
-    "SIG": "https://xui.ptlogin2.qq.com/ssl/ptqrshow",
-    "GETLOGINTICKET": "https://xui.ptlogin2.qq.com/cgi-bin/xlogin",
-    "GETLOGINSTATUS": "https://ssl.ptlogin2.qq.com/ptqrlogin",
-    "GAMEBASEURL": "https://comm.ams.game.qq.com/ide/",
-    "REQUEST_HEADERS_BASE": {
-        "platform": "android",
-        "Content-Type": "application/x-www-form-urlencoded",
-    },
-}
+CONSTANTS = API_CONSTANTS
 
 
 class DeltaApi:
@@ -33,27 +24,73 @@ class DeltaApi:
         await self.client.aclose()
 
     def get_gtk(self, p_skey: str) -> int:
-        """计算g_tk值"""
-        h = 5381
-        for c in p_skey:
-            h += (h << 5) + ord(c)
-        return h & 0x7FFFFFFF
+        return Util.get_gtk(p_skey)
 
     def get_micro_time(self) -> int:
-        """获取微秒时间戳"""
-        return int(time.time() * 1000000)
+        return Util.get_micro_time()
 
     def create_cookie(self, openid: str, access_token: str, is_qq: bool = True) -> dict:
-        return {
-            "openid": openid,
-            "access_token": access_token,
-            "acctype": "qc" if is_qq else "wx",
-            "appid": str(101491592),
-        }
+        return Util.create_cookie(openid, access_token, is_qq)
 
     def _get_cookies(self, openid: str, access_token: str) -> dict:
         is_qq = self.platform == "qq"
         return self.create_cookie(openid, access_token, is_qq)
+
+    # def _make_error_response(self, message: str, data: dict = None) -> dict:
+    #     return {
+    #         "status": False,
+    #         "message": message,
+    #         "data": data or {},
+    #     }
+
+    # def _make_success_response(self, data: dict) -> dict:
+    #     return {
+    #         "status": True,
+    #         "message": "获取成功",
+    #         "data": data,
+    #     }
+
+    async def _post_request(
+        self,
+        url: str,
+        form_data: dict | None = None,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict:
+        """发送POST请求并解析响应"""
+        try:
+            response = await self.client.post(
+                url,
+                data=form_data,
+                params=params,
+                cookies=cookies,
+                headers=headers or CONSTANTS["REQUEST_HEADERS_BASE"],
+            )
+            return response.json()
+        except Exception as e:
+            logger.exception(f"请求失败: {e}")
+            return {"ret": -1}
+
+    async def _get_request(
+        self,
+        url: str,
+        params: dict | None = None,
+        cookies: dict | None = None,
+        headers: dict | None = None,
+    ) -> dict:
+        """发送GET请求并解析响应"""
+        try:
+            response = await self.client.get(
+                url,
+                params=params,
+                cookies=cookies,
+                headers=headers or CONSTANTS["REQUEST_HEADERS_BASE"],
+            )
+            return response.json()
+        except Exception as e:
+            logger.exception(f"请求失败: {e}")
+            return {"ret": -1}
 
     async def get_login_token(self) -> bool:
         headers = CONSTANTS["REQUEST_HEADERS_BASE"]
@@ -97,7 +134,7 @@ class DeltaApi:
             "v": 4,
             "t": 0.6142752744667854,
             "daid": 383,
-            "pt_3rd_aid": 101491592,
+            "pt_3rd_aid": LOGIN_APP_ID,
             "u1": "https://graph.qq.com/oauth2.0/login_jump",
         }
         url = CONSTANTS["SIG"]
@@ -170,7 +207,7 @@ class DeltaApi:
                 "pt_uistyle": 40,
                 "aid": 716027609,
                 "daid": 383,
-                "pt_3rd_aid": 101491592,
+                "pt_3rd_aid": LOGIN_APP_ID,
                 "o1vId": "378b06c889d9113b39e814ca627809e3",
                 "pt_js_version": "530c3f68",
             }
@@ -275,7 +312,7 @@ class DeltaApi:
 
             form_data = {
                 "response_type": "code",
-                "client_id": "101491592",
+                "client_id": LOGIN_APP_ID,
                 "redirect_uri": "https://milo.qq.com/comm-htdocs/login/qc_redirect.html?parent_domain=https://df.qq.com&isMiloSDK=1&isPc=1",
                 "scope": "",
                 "state": "STATE",
@@ -315,7 +352,7 @@ class DeltaApi:
             params = {
                 "a": "qcCodeToOpenId",
                 "qc_code": qc_code,
-                "appid": 101491592,
+                "appid": LOGIN_APP_ID,
                 "redirect_uri": "https://milo.qq.com/comm-htdocs/login/qc_redirect.html",
                 "callback": "miloJsonpCb_86690",
                 "_": self.get_micro_time(),
@@ -410,7 +447,7 @@ class DeltaApi:
                     "sAMSAcctype": access_type,
                     "sAMSAccessToken": access_token,
                     "sAMSAppOpenId": openid,
-                    "sAMSSourceAppId": "101491592",
+                    "sAMSSourceAppId": LOGIN_APP_ID,
                     "game": "dfm",
                     "sCloudApiName": "ams.gameattr.role",
                     "area": 36,
@@ -1376,7 +1413,7 @@ class DeltaApi:
                 "sAMSAcctype": access_type,
                 "sAMSAccessToken": access_token,
                 "sAMSAppOpenId": openid,
-                "sAMSSourceAppId": "101491592",
+                "sAMSSourceAppId": LOGIN_APP_ID,
                 "game": "dfm",
                 "sCloudApiName": "ams.gameattr.role",
                 "area": 36,

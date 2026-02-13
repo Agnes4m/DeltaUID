@@ -4,7 +4,6 @@ import asyncio
 from gsuid_core.aps import scheduler
 
 # from gsuid_core.logger import logger
-from gsuid_core.bot import logger
 from gsuid_core.subscribe import gs_subscribe
 
 from ..Delta_user.msg_info import MsgInfo

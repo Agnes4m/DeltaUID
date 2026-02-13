@@ -97,7 +97,7 @@ async def get_tqc(
     ev: Event,
 ):
     raw_text = ev.text.strip() if ev.text else ""
-    if "订阅" or "开启" in raw_text:
+    if "订阅" in raw_text:
         logger.info("[DF]正在执行三角洲特勤处推送功能")
         data = MsgInfo(ev.user_id, bot.bot_id)
         await gs_subscribe.add_subscribe(
@@ -108,7 +108,7 @@ async def get_tqc(
         )
         data = await gs_subscribe.get_subscribe("ss订阅")
         await bot.send("订阅成功！")
-    elif raw_text and "关闭" in raw_text:
+    elif raw_text and "取消订阅" in raw_text:
         logger.info("[DF]正在执行关闭三角洲特勤处推送功能")
         await gs_subscribe.delete_subscribe(
             "single",
@@ -145,6 +145,20 @@ async def watch_record(
         logger.info("执行")
         record = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
         await bot.send(str(record[0])) if record else None
+
+
+@df_watch_record.on_command(("取消订阅"), block=True)
+async def cancel_watch_record(
+    bot: Bot,
+    ev: Event,
+):
+    logger.info("[DF]正在执行取消订阅功能")
+    await gs_subscribe.delete_subscribe(
+        "single",
+        "ss特勤处订阅",
+        ev,
+    )
+    await bot.send("取消订阅成功！")
 
 
 @scheduler.scheduled_job("cron", minute="*/2")

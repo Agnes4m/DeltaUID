@@ -29,7 +29,7 @@ from ..utils.models import (
     RecordSolData,
     RecordTdmData,
 )
-from ..utils.api.util import Util
+from ..utils.api.utils import Util
 
 # 路径常量
 avatar_path = TEXTURE / "avatar"

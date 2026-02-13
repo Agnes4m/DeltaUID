@@ -11,7 +11,7 @@ from gsuid_core.utils.image.image_tools import get_pic
 
 from ..utils.models import UserData
 from ..utils.api.api import DeltaApi
-from ..utils.api.util import Util
+from ..utils.api.utils import Util
 from ..utils.database.models import DFBind, DFUser
 
 # 定义常量

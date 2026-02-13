@@ -25,7 +25,7 @@ from ..utils.models import (
     DayListData,
 )
 from ..utils.api.api import DeltaApi
-from ..utils.api.util import Util
+from ..utils.api.utils import Util
 from ..utils.database.models import DFBind, DFUser
 
 # 常量定义
