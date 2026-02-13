@@ -220,6 +220,8 @@ class TQCData(TypedDict):
     """剩余时间"""
     finish_time: str
     """完成时间"""
+    object_id: str
+    """物品id"""
 
 
 class ArmedForceData(TypedDict):
@@ -341,3 +343,106 @@ class RecordTdm(TypedDict):
     main_label: Literal["捞薯大师", "刷分大王"]
     main_value: str
     badge_text: Literal["1000+分均得分", "1000+击杀"]
+
+
+class OwnUserData(TypedDict):
+    """资产数据"""
+
+    ItemId: int
+    """物品id"""
+    ItemName: str
+    """物品名称"""
+
+    ItemGid: str
+    """物品分组,全是0"""
+    ItemQuality: str
+    """物品质量"""
+
+
+class OwnWeaponData(TypedDict):
+    """武器数据"""
+
+    ItemId: int
+    """物品id"""
+    ItemName: str
+    """物品名称"""
+
+    ItemGid: str
+    """物品分组,全是0"""
+    ItemQuality: str
+    """物品质量"""
+    ItemNum: int
+    """物品数量"""
+    IsCollectibles: str
+    """是否是收藏品
+    - 0 不是
+    - 1 是
+    """
+    GainedTime: str
+    """获得时间"""
+
+
+class OwnDCData(TypedDict):
+    """载具数据(未测试)"""
+
+    PropID: str
+    """物品id"""
+    Rarity: str
+    """0"""
+    Wear: str
+    """可能是id"""
+    UniqueNo: str
+    """0"""
+    KillCnter: str
+    """0"""
+    CustomName: str
+    AppearanceId: str
+    """0"""
+    AppearanceSeed: str
+    """0"""
+    Name: str
+
+
+class OwnPriceData(TypedDict):
+    """仓库物品数据"""
+
+    iRet: str
+    sMsg: str
+    userData: list[OwnUserData]
+    weaponData: list[OwnWeaponData]
+    dCData: list[OwnDCData]
+
+
+class BigRedData(TypedDict):
+    """大红色物品数据"""
+
+    id: int
+    """物品id"""
+    objectID: int
+    """物品编号"""
+    objectName: str
+    """物品名称"""
+    length: int
+    """物品长度"""
+    width: int
+    """物品宽度"""
+    grade: int
+    """物品等级"""
+    weight: str
+    """物品重量"""
+    primaryClass: str
+    """物品主分类"""
+    secondClass: str
+    """物品次分类"""
+    secondClassCN: str
+    """物品次分类中文"""
+    desc: str
+    """物品描述"""
+    pic: str
+    """物品图片"""
+    prePic: str
+    """物品预览图片"""
+    avgPrice: int
+    """物品平均价格"""
+    propsDetail: dict[str, str]
+    """物品详细信息"""

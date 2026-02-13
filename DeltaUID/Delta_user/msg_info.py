@@ -3,7 +3,7 @@ import json
 import asyncio
 import datetime
 import urllib.parse
-from typing import Any, Dict, Tuple, Union, Optional, cast
+from typing import Any, Dict, List, Tuple, Union, Optional, cast
 from functools import lru_cache
 from dataclasses import dataclass
 
@@ -20,6 +20,7 @@ from ..utils.models import (
     InfoData,
     RecordSol,
     RecordTdm,
+    BigRedData,
     WeeklyData,
     DayInfoData,
     DayListData,
@@ -716,6 +717,7 @@ class MsgInfo:
                 devices.append(
                     {
                         "place_name": place_name,
+                        "object_id": object_id,
                         "status": "producing",
                         "object_name": object_name,
                         "left_time": Util.seconds_to_duration(left_time),
@@ -734,6 +736,7 @@ class MsgInfo:
 
     async def get_tqc_text(self) -> str:
         devices = await self.get_tqc()
+        logger.info(f"特勤处状态: {devices}")
         if isinstance(devices, str):
             return devices
 
@@ -954,6 +957,17 @@ class MsgInfo:
                 continue
 
         return "获取三角洲周报失败，可能需要重新登录或上周对局次数过少"
+
+    async def get_user_collections(self):
+        self.user_data = await self._fetch_user_data()
+        if not self.user_data:
+            return '未绑定三角洲账号，请先用"ss登录"命令登录'
+
+        deltaapi = DeltaApi(self.user_data.platform)
+        res = await self._get_user_collections(deltaapi, self.user_data.uid)
+        if res["status"]:
+            return res["data"].get("collections", [])
+        return []
 
     async def watch_record(self, user_name: str, uid: str, avatar: Image.Image):
         self.cookie = await DFUser.get_user_cookie_by_uid(uid)
@@ -1288,3 +1302,30 @@ class MsgInfo:
             await gs_subscribe.delete_subscribe("single", "三角洲战绩订阅", ev)
             await bot.send("[DF] 三角洲战绩订阅已关闭！")
         return msg
+
+    async def get_depot_text(self):
+        """获取仓库信息文本 - 修复版本
+
+        Returns:
+            Optional[List[Any]]: 仓库数据或None
+        """
+        if not await self._validate_user() or not self.user_data:
+            logger.warning(f"用户{self.user_id}未绑定账号")
+            return None
+
+        try:
+            deltaapi = await self._get_delta_api()
+            cookie = self.user_data.cookie
+            openid = self.user_data.uid
+            res = await deltaapi.get_object_info(cookie, openid)
+
+            if res["status"] and res["data"]:
+                data = cast(list[Any], res["data"]["list"])
+                return data
+            else:
+                logger.warning(f"获取仓库信息失败: {res.get('message', '未知错误')}")
+                return None
+
+        except Exception as e:
+            logger.error(f"获取仓库信息异常: {str(e)}")
+            return None

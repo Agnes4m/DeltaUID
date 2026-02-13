@@ -139,12 +139,12 @@ async def watch_record(
     if isinstance(msg, str):
         await bot.send(msg)
     # 测试输出
-    logger.info("测试输出")
-    uid = await DFBind.get_uid_by_game(user_id, bot.bot_id)
-    if msg and uid:
-        logger.info("执行")
-        record = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
-        await bot.send(str(record[0])) if record else None
+    # logger.info("测试输出")
+    # uid = await DFBind.get_uid_by_game(user_id, bot.bot_id)
+    # if msg and uid:
+    #     logger.info("执行")
+    #     record = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
+    #     await bot.send(str(record[0])) if record else None
 
 
 @df_watch_record.on_command(("取消订阅"), block=True)

@@ -7,6 +7,7 @@ from PIL.ImageDraw import ImageDraw as ID
 
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
+from gsuid_core.data_store import get_res_path
 
 # from gsuid_core.utils.cache import gs_cache
 from gsuid_core.utils.fonts.fonts import core_font as df_font
@@ -31,6 +32,7 @@ from ..utils.models import (
 )
 from ..utils.api.utils import Util
 
+MAIN_PATH = get_res_path() / "DeltaUID"
 # 路径常量
 avatar_path = TEXTURE / "avatar"
 week_path = TEXTURE / "week"
@@ -210,7 +212,8 @@ async def draw_tqc_section(img: Image.Image, tqc_data: list[TQCData], y_pos: int
     for i, tqc_item in enumerate(tqc_data[:4]):  # 最多显示4个
         tqc_sth = deepcopy(tqc_bar)
         tqc_sth_draw = ImageDraw.Draw(tqc_sth)
-
+        item_icon = Image.open(MAIN_PATH / f"res/{tqc_item['object_id']}.png").convert("RGBA").resize((250, 250))
+        easy_paste(tqc_sth, item_icon, (150, 250), "cc")
         # 绘制地点名称
         tqc_sth_draw.text(
             (150, 100),

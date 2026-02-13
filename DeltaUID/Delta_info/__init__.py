@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Optional
 
 from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
@@ -9,10 +9,11 @@ from ..utils.api.api import DeltaApi
 from ..utils.database.models import DFUser
 
 DF_PASSWORD_SV = SV("三角洲密码")
+DF_DEPOT_SV = SV("三角洲仓库")
 NO_VALID_ACCOUNT_MSG = '所有已绑定账号已过期，请先用"三角洲登录"命令登录至少一个账号'
 
 
-async def _get_password_for_user(user_data: Any) -> Optional[str]:
+async def _get_password_for_user(user_data: DFUser) -> Optional[str]:
     """为单个用户获取密码信息
     参数:
         user_data: 用户数据对象
@@ -71,3 +72,15 @@ async def handle_password_query(bot: Bot, event: Event) -> None:
     except Exception as e:
         logger.error(f"[DF] 处理密码查询时发生错误: {str(e)}")
         await bot.send("查询过程中发生错误，请稍后重试", at_sender=True)
+
+
+# @DF_DEPOT_SV.on_command("仓库", block=True)
+# async def handle_depot_query(bot: Bot, ev: Event) -> None:
+#     """仓库总览查询命令
+#     参数:
+#         bot: Bot实例，用于发送消息
+#         event: 事件对象，包含命令和用户信息
+#     """
+#     user_id = ev.user_id
+#     data = MsgInfo(user_id, bot.bot_id)
+#     depot = await data.get_depot_text()

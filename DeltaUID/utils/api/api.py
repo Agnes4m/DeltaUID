@@ -10,7 +10,7 @@ import httpx
 from gsuid_core.logger import logger
 
 from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
-from ..models import Sign, SignMsg, UserInfo, LoginStatus
+from ..models import Sign, SignMsg, UserInfo, LoginStatus, OwnPriceData
 
 CONSTANTS = API_CONSTANTS
 
@@ -459,7 +459,7 @@ class DeltaApi:
                     "referer": "https://df.qq.com/",
                 }
 
-                url = "https://comm.aci.game.qq.com/main"
+                url = API_CONSTANTS["GAME_API_URL"]
                 response = await self.client.get(url, params=params, headers=headers)
                 result = response.text
                 # logger.debug(f"获取角色信息结果: {result}")
@@ -783,7 +783,7 @@ class DeltaApi:
         access_type = self.platform
         try:
             # 参数验证
-            if not openid or not access_token or not object_id:
+            if not openid or not access_token:
                 return {"status": False, "message": "缺少参数", "data": {}}
 
             # 创建cookie
@@ -1425,10 +1425,10 @@ class DeltaApi:
                 "referer": "https://df.qq.com/",
             }
 
-            url = "https://comm.aci.game.qq.com/main"
+            url = API_CONSTANTS["GAME_API_URL"]
             response = await self.client.get(url, params=params, headers=headers)
             result = response.text
-            # logger.debug(f"获取角色信息结果: {result}")
+            logger.debug(f"获取角色信息结果: {result}")
 
             # 解析响应数据
             pattern = r"propcapital=(\d+)"
@@ -1448,6 +1448,50 @@ class DeltaApi:
             }
         except Exception as e:
             logger.exception(f"获取角色信息失败: {e}")
+            return {
+                "status": False,
+                "message": "获取角色信息失败，详情请查看日志",
+                "data": {},
+            }
+
+    async def get_depot_info(self, access_token: str, openid: str):
+        """
+        获取大红收藏信息
+        """
+        if not access_token or not openid:
+            return {"status": False, "message": "缺少参数", "data": {}}
+
+        try:
+            params = {
+                "iChartId": 316969,
+                "iSubChartId": 316969,
+                "sIdeToken": "NoOapI",
+                "method": "dfm/center.recent.redUnlockRecord",
+                "source": "2",
+            }
+
+            headers = CONSTANTS["REQUEST_HEADERS_BASE"]
+            url = API_CONSTANTS["GAME_API_URL"]
+            response = await self.client.get(url, params=params, headers=headers, cookies=headers["cookie"])
+            result = response.json()
+            logger.debug(f"获取仓库信息结果: {result}")
+
+            # 解析响应数据
+            if result["iRet"] != 0:
+                return {
+                    "status": False,
+                    "message": "获取仓库信息失败",
+                    "data": {},
+                }
+
+            data = cast(OwnPriceData, result["jData"])
+            return {
+                "status": True,
+                "message": "获取仓库信息成功",
+                "data": data,
+            }
+        except Exception as e:
+            logger.exception(f"获取仓库信息失败: {e}")
             return {
                 "status": False,
                 "message": "获取角色信息失败，详情请查看日志",
