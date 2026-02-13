@@ -4,6 +4,7 @@ import asyncio
 from gsuid_core.aps import scheduler
 
 # from gsuid_core.logger import logger
+from gsuid_core.bot import logger
 from gsuid_core.subscribe import gs_subscribe
 
 from ..Delta_user.msg_info import MsgInfo
@@ -11,7 +12,7 @@ from ..utils.database.models import DFUser
 
 
 @scheduler.scheduled_job("cron", minute="*/2")
-async def df_notify_rank():
+async def df_tqc_rank():
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe("ss特勤处订阅")
     if not datas:

@@ -339,39 +339,40 @@ class MsgInfo:
         Returns:
             Union[InfoData, str]: 玩家信息数据或错误信息
         """
-        # 验证用户
         if not await self._validate_user():
             return ERROR_UNBOUND_ACCOUNT
 
-        deltaapi = await self._get_delta_api()
         assert self.user_data is not None
-        player_info_res = await self._get_player_info(deltaapi)
+        deltaapi = await self._get_delta_api()
+        cookie = self.user_data.cookie
+        openid = self.user_data.uid
+
+        player_info_res, basic_info, sol_info, tdm_info = await asyncio.gather(
+            deltaapi.get_player_info(access_token=cookie, openid=openid),
+            deltaapi.get_role_basic_info(access_token=cookie, openid=openid),
+            deltaapi.get_person_center_info(
+                access_token=cookie,
+                openid=openid,
+                resource_type="sol",
+            ),
+            deltaapi.get_person_center_info(
+                access_token=cookie,
+                openid=openid,
+                resource_type="mp",
+            ),
+            return_exceptions=True,
+        )
+
+        for result, name in zip(
+            [player_info_res, basic_info, sol_info, tdm_info],
+            ["player_info", "basic_info", "sol_info", "tdm_info"],
+        ):
+            if isinstance(result, Exception):
+                logger.error(f"获取{name}失败: {str(result)}")
+                return ERROR_SERVER_BUSY
+
         if player_info_res is None:
             return ERROR_LOGIN_EXPIRED
-
-        try:
-            basic_info, sol_info, tdm_info = await asyncio.gather(
-                deltaapi.get_role_basic_info(access_token=self.user_data.cookie, openid=self.user_data.uid),
-                deltaapi.get_person_center_info(
-                    access_token=self.user_data.cookie,
-                    openid=self.user_data.uid,
-                    resource_type="sol",
-                ),
-                deltaapi.get_person_center_info(
-                    access_token=self.user_data.cookie,
-                    openid=self.user_data.uid,
-                    resource_type="mp",
-                ),
-                return_exceptions=True,
-            )
-
-            for result, name in zip([basic_info, sol_info, tdm_info], ["basic_info", "sol_info", "tdm_info"]):
-                if isinstance(result, Exception):
-                    logger.error(f"获取{name}失败: {str(result)}")
-                    return ERROR_SERVER_BUSY
-        except Exception as e:
-            logger.error(f"并行获取玩家数据失败: {str(e)}")
-            return ERROR_SERVER_BUSY
 
         # 检查数据有效性
         if not sol_info.get("data"):
@@ -525,25 +526,29 @@ class MsgInfo:
                         "请输入正确参数，格式：三角洲战绩 [模式] [页码] L[战绩条数上限]",
                     )
 
-        # 获取玩家信息
+        # 获取玩家信息和战绩数据
         deltaapi = DeltaApi(self.user_data.platform)
-        res = await deltaapi.get_player_info(access_token=self.user_data.cookie, openid=self.user_data.uid)
-        if not res["status"] or not res["data"].get("player"):
-            return 0, "获取玩家信息失败，可能需要重新登录"
-        user_name = res["data"]["player"]["charac_name"]
+        cookie = self.user_data.cookie
+        openid = self.user_data.uid
+        player_info_res, record_res = await asyncio.gather(
+            deltaapi.get_player_info(access_token=cookie, openid=openid),
+            deltaapi.get_record(cookie, openid, type_id, page),
+        )
 
-        # 获取战绩数据
-        res = await deltaapi.get_record(self.user_data.cookie, self.user_data.uid, type_id, page)
-        if not res["status"]:
-            return 0, res["message"]
+        if not player_info_res["status"] or not player_info_res["data"].get("player"):
+            return 0, "获取玩家信息失败，可能需要重新登录"
+        user_name = player_info_res["data"]["player"]["charac_name"]
+
+        if not record_res["status"]:
+            return 0, record_res["message"]
 
         card_list = []
         # 处理烽火模式战绩
         if type_id == 4:
-            if not res["data"]["gun"]:
+            if not record_res["data"]["gun"]:
                 return 1, "最近7天没有战绩"
 
-            for index, record in enumerate(res["data"]["gun"], start=1):
+            for index, record in enumerate(record_res["data"]["gun"], start=1):
                 if index > line_limit:
                     break
                 # 解析战绩数据
@@ -588,13 +593,26 @@ class MsgInfo:
 
         # 处理战场模式战绩
         elif type_id == 5:
-            if not res["data"]["operator"]:
+            if not record_res["data"]["operator"]:
                 return 2, "最近7天没有战绩"
 
-            for index, record in enumerate(res["data"]["operator"], start=1):
-                if index > line_limit:
-                    break
+            operator_records = record_res["data"]["operator"][:line_limit]
+            room_ids = [r.get("RoomId", "") for r in operator_records]
 
+            detail_results = await asyncio.gather(
+                *[deltaapi.get_tdm_detail(cookie, openid, rid) for rid in room_ids], return_exceptions=True
+            )
+
+            detail_map = {}
+            for rid, detail_res in zip(room_ids, detail_results):
+                if isinstance(detail_res, dict) and detail_res.get("status") and detail_res.get("data"):
+                    mpDetailList = detail_res["data"].get("mpDetailList", [])
+                    for mpDetail in mpDetailList:
+                        if mpDetail.get("isCurrentUser", False):
+                            detail_map[rid] = mpDetail.get("rescueTeammateCount", 0)
+                            break
+
+            for index, record in enumerate(operator_records, start=1):
                 # 解析战绩数据
                 event_time = record.get("dtEventTime", "")
                 map_id = record.get("MapID", "")
@@ -614,18 +632,10 @@ class MsgInfo:
                 RescueTeammateCount = record.get("RescueTeammateCount", 0)
                 RoomId = record.get("RoomId", "")
 
-                # 获取战绩详情
-                res_detail = await deltaapi.get_tdm_detail(self.user_data.cookie, self.user_data.uid, RoomId)
-                if res_detail["status"] and res_detail["data"]:
-                    mpDetailList = res_detail["data"].get("mpDetailList", [])
-                    for mpDetail in mpDetailList:
-                        if mpDetail.get("isCurrentUser", False):
-                            rescueTeammateCount = mpDetail.get("rescueTeammateCount", 0)
-                            if rescueTeammateCount > 0:
-                                RescueTeammateCount = rescueTeammateCount
-                                break
-                else:
-                    logger.error(f"获取战绩详情失败: {res_detail}")
+                if RoomId in detail_map:
+                    rescue_val = detail_map[RoomId]
+                    if rescue_val > 0:
+                        RescueTeammateCount = rescue_val
 
                 TotalScore = record.get("TotalScore", 0)
                 avgScorePerMinute = int(TotalScore * 60 / gametime) if gametime > 0 else 0
@@ -775,15 +785,25 @@ class MsgInfo:
         platform = self.user_data.platform
 
         deltaapi = DeltaApi(platform)
-        res = await deltaapi.get_player_info(access_token=access_token, openid=openid)
 
-        if not (res["status"] and "charac_name" in res["data"]["player"]):
+        statDate1, statDate_str1 = Util.get_Sunday_date(1)
+        statDate2, statDate_str2 = Util.get_Sunday_date(2)
+
+        player_info_res, weekly_res1, weekly_res2 = await asyncio.gather(
+            deltaapi.get_player_info(access_token=access_token, openid=openid),
+            deltaapi.get_weekly_report(access_token=access_token, openid=openid, statDate=statDate1),
+            deltaapi.get_weekly_report(access_token=access_token, openid=openid, statDate=statDate2),
+        )
+
+        if not (player_info_res["status"] and "charac_name" in player_info_res["data"]["player"]):
             return "获取角色信息失败，可能需要重新登录"
 
-        user_name = res["data"]["player"]["charac_name"]
-        for i in range(1, 3):
-            statDate, statDate_str = Util.get_Sunday_date(i)
-            res = await deltaapi.get_weekly_report(access_token=access_token, openid=openid, statDate=statDate)
+        user_name = player_info_res["data"]["player"]["charac_name"]
+
+        for res, statDate, statDate_str in [
+            (weekly_res1, statDate1, statDate_str1),
+            (weekly_res2, statDate2, statDate_str2),
+        ]:
             if res["status"] and res["data"]:
                 # 解析总带出
                 Gained_Price = int(res["data"].get("Gained_Price", 0))
@@ -950,7 +970,7 @@ class MsgInfo:
         msg_info = []
         record_id = record_id_tdm = None
         # 获取之前的最新战绩ID
-        latest_record_data = await self._get_lastest_id(uid)
+        latest_record_data = await self.user_data.get_latest_record(uid)
         for mode in ["sol", "tdm"]:
             if mode == "sol":
                 type_id = 4
@@ -972,7 +992,7 @@ class MsgInfo:
                     # 获取最新战绩
                     if gun_records:
                         latest_record: dict = gun_records[0]  # 第一条是最新的
-                        # logger.debug(f"最新战绩：{latest_record}")
+                        logger.debug(f"最新战绩：{latest_record}")
 
                         # 检查时间限制
                         if not Util.is_record_within_time_limit(latest_record):
@@ -984,7 +1004,7 @@ class MsgInfo:
                         logger.debug(f"[DF][sol]最新战绩ID：{record_id}")
 
                         # 如果是新战绩（ID不同）
-                        if not latest_record_data or latest_record_data.latest_record != record_id:
+                        if latest_record_data is None or latest_record_data != record_id:
                             RoomId = latest_record.get("RoomId", "")
                             res = await deltaapi.get_tdm_detail(
                                 self.user_data.cookie,
@@ -1042,7 +1062,7 @@ class MsgInfo:
                             continue
 
                         # 如果是新战绩（ID不同）
-                        if not latest_record_data or latest_record_data.latest_tdm_record != record_id_tdm:
+                        if latest_record_data is None or latest_record_data != record_id_tdm:
                             # 格式化播报消息
                             result_tdm = await self.format_tdm_record_message(latest_record, user_name)
                             msg_info = result_tdm
@@ -1258,7 +1278,7 @@ class MsgInfo:
         if raw_text == "开启" or raw_text == "":
             await gs_subscribe.add_subscribe(
                 "single",
-                "三角洲战绩订阅",
+                "ss战绩订阅",
                 ev,
                 extra_message=self.user_data.uid,
             )

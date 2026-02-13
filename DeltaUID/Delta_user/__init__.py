@@ -137,18 +137,19 @@ async def watch_record(
 
     msg = await data.scheduler_record(ev, bot)
     if isinstance(msg, str):
-        return await bot.send(msg)
+        await bot.send(msg)
     # 测试输出
-    logger.debug("测试输出")
+    logger.info("测试输出")
     uid = await DFBind.get_uid_by_game(user_id, bot.bot_id)
-
     if msg and uid:
+        logger.info("执行")
         record = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
         await bot.send(str(record[0])) if record else None
 
 
 @scheduler.scheduled_job("cron", minute="*/2")
 async def df_notify_rank():
+    logger.info("[DF]正在执行战绩推送功能")
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe("ss战绩订阅")
     if not datas:

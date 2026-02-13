@@ -46,6 +46,19 @@ class DFUser(User, table=True):
         )
 
     @classmethod
+    async def get_latest_record(cls, uid: str, mode: str = "sol") -> str | None:
+        data = await cls.select_data_by_uid(uid)
+        if data is None:
+            return None
+        data = cast(DFUser, data)
+        if mode == "sol":
+            return data.latest_record
+        elif mode == "tdm":
+            return data.latest_tdm_record
+        else:
+            return None
+
+    @classmethod
     async def update_record(
         cls,
         bot_id: str,
