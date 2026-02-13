@@ -44,13 +44,16 @@ class DeltaApi:
         return int(time.time() * 1000000)
 
     def create_cookie(self, openid: str, access_token: str, is_qq: bool = True) -> dict:
-        cookies = {
+        return {
             "openid": openid,
             "access_token": access_token,
             "acctype": "qc" if is_qq else "wx",
             "appid": str(101491592),
         }
-        return cookies
+
+    def _get_cookies(self, openid: str, access_token: str) -> dict:
+        is_qq = self.platform == "qq"
+        return self.create_cookie(openid, access_token, is_qq)
 
     async def get_login_token(self) -> bool:
         headers = CONSTANTS["REQUEST_HEADERS_BASE"]

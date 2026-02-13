@@ -1,6 +1,7 @@
 import datetime
 from typing import Literal
 from pathlib import Path
+from functools import lru_cache
 from urllib.parse import unquote
 
 from PIL import Image
@@ -109,8 +110,6 @@ class Util:
         Returns:
             格式化的时间字符串，如 "2025-01-21 14:30:00"
         """
-        import datetime
-
         try:
             dt = datetime.datetime.fromtimestamp(timestamp)
             return dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -193,6 +192,7 @@ class Util:
             20003: "蜂医",
             40005: "露娜",
             40010: "骇爪",
+            40011: "银翼",
         }
 
         return armed_force_dict.get(armed_force_id, "未知干员")
@@ -328,6 +328,7 @@ class Util:
         return record_data.get("dtEventTime", "")
 
     @staticmethod
+    @lru_cache(maxsize=20)
     async def armed_to_img(armed: str) -> Image.Image:
         name = armed_dict.get(armed, "Default")
         if name != "Default":

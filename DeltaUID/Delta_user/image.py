@@ -5,6 +5,7 @@ from functools import lru_cache
 from PIL import Image, ImageDraw
 from PIL.ImageDraw import ImageDraw as ID
 
+from gsuid_core.logger import logger
 from gsuid_core.models import Event
 
 # from gsuid_core.utils.cache import gs_cache
@@ -443,6 +444,9 @@ async def draw_record_sol(
     week_data: WeeklyData,
     msg: InfoData,
 ):
+    logger.info(data)
+    logger.info(week_data)
+    logger.info(msg)
     if len(data) == 0:
         img = Image.open(TEXTURE / "bg.jpg").convert("RGBA").resize((1000, 2300))
     else:

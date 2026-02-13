@@ -184,6 +184,7 @@ class MsgInfo:
         if not await self._fetch_user_data():
             raise ValueError(ERROR_UNBOUND_ACCOUNT)
 
+        assert self.user_data is not None
         self._delta_api = DeltaApi(self.user_data.platform)
         return self._delta_api
 
@@ -343,6 +344,7 @@ class MsgInfo:
             return ERROR_UNBOUND_ACCOUNT
 
         deltaapi = await self._get_delta_api()
+        assert self.user_data is not None
         player_info_res = await self._get_player_info(deltaapi)
         if player_info_res is None:
             return ERROR_LOGIN_EXPIRED
@@ -472,6 +474,8 @@ class MsgInfo:
         self.user_data = await self._fetch_user_data()
         if self.user_data is None:
             return 0, '未绑定三角洲账号，请先用"ss登录"命令登录'
+
+        assert self.user_data is not None
 
         # 参数解析
         type_id = 4  # 默认模式为烽火
@@ -659,6 +663,7 @@ class MsgInfo:
         if not self.user_data:
             return '未绑定三角洲账号，请先用"ss登录"命令登录'
 
+        assert self.user_data is not None
         try:
             deltaapi = DeltaApi(self.user_data.platform)
             res = await deltaapi.get_safehousedevice_status(
@@ -725,12 +730,7 @@ class MsgInfo:
         messages = []
         for device in devices:
             if device["status"] == "producing":
-                msg = (
-                    f"{device['place_name']}："
-                    f"{device['object_name']}，剩余时间："
-                    f"{device['left_time']}，完成时间："
-                    f"{device['finish_time']}"
-                )
+                msg = f"{device['place_name']}：{device['object_name']}[{device['left_time']}]："
             else:
                 msg = f"{device['place_name']}：闲置中"
             messages.append(msg)
@@ -746,6 +746,7 @@ class MsgInfo:
         if not await self._validate_user() or not self.user_data:
             return ERROR_UNBOUND_ACCOUNT
 
+        assert self.user_data is not None
         try:
             deltaapi = DeltaApi(self.user_data.platform)
             res = await deltaapi.get_daily_report(self.user_data.cookie, self.user_data.uid)
@@ -767,6 +768,8 @@ class MsgInfo:
         self.user_data = await self._fetch_user_data()
         if not self.user_data:
             return '未绑定三角洲账号，请先用"ss登录"命令登录'
+
+        assert self.user_data is not None
         access_token = self.user_data.cookie
         openid = self.user_data.uid
         platform = self.user_data.platform
@@ -940,6 +943,7 @@ class MsgInfo:
         if not self.user_data:
             return ERROR_UNBOUND_ACCOUNT
 
+        assert self.user_data is not None
         deltaapi = DeltaApi(self.user_data.platform)
         logger.debug(f"开始获取玩家{user_name}的战绩")
 
@@ -1067,6 +1071,7 @@ class MsgInfo:
         if not self.user_data:
             return ERROR_UNBOUND_ACCOUNT
 
+        assert self.user_data is not None
         if latest_record_sol is None:
             logger.debug(f"玩家{user_name}没有sol模式战绩")
             latest_record_sol = self.user_data.latest_record
