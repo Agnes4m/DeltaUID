@@ -14,7 +14,6 @@ from .image import draw_record_sol, draw_record_tdm, draw_df_info_img
 from .utils import get_user_id, check_last_call, update_last_call
 from .msg_info import MsgInfo
 from ..utils.models import InfoData, WeeklyData, RecordSolData, RecordTdmData
-from ..utils.database.models import DFBind
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}
@@ -56,6 +55,7 @@ async def login(bot: Bot, ev: Event):
 @df_record.on_command(("战绩"), block=True)
 async def get_record(bot: Bot, ev: Event):
     logger.info("[DF]执行战绩查询功能")
+    await bot.send("正在检索战绩，请等待", at_sender=True)
     user_id = await get_user_id(ev)
 
     # 限流检查

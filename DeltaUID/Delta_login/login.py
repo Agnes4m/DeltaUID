@@ -107,10 +107,12 @@ async def _login_with_qq(bot: Bot, ev: Event) -> Optional[UserData]:
     attempts = 0
     while attempts < MAX_LOGIN_ATTEMPTS:
         res = await deltaapi.get_login_status(cookie, qrSig, qrToken, loginSig)
+        # logger.info(f"[DF] QQ登录尝试 {attempts + 1}: {res}")
 
         if res["code"] == 0:
             cookie = json.dumps(res["data"]["cookie"])
             token_res = await deltaapi.get_access_token(cookie)
+            logger.info(f"[DF] 获取QQ访问令牌成功: {token_res}")
             return await _process_login_result(bot, ev, token_res, "qq")
         elif res["code"] in (-4, -2, -3):
             await bot.logger.info(f"[DF] QQ登录失败: {res.get('message', '未知错误')}")

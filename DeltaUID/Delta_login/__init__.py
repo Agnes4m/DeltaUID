@@ -101,6 +101,62 @@ async def login(bot: Bot, ev: Event):
         )
 
 
+def extract_openid_token_platform(text_list):
+    """
+    从text_list中提取openid、token和platform信息
+
+    Args:
+        text_list: 包含cookie信息的字符串，可以是单个字符串或按行分割的列表
+
+    Returns:
+        dict: 包含openid、access_token和platform的字典
+    """
+    if isinstance(text_list, str):
+        parts = []
+        for line in text_list.split("\n"):
+            line_parts = [part.strip() for part in line.split(";") if part.strip()]
+            parts.extend(line_parts)
+        text_list = parts
+
+    openid = ""
+    access_token = ""
+    platform = ""
+
+    for item in text_list:
+        item = item.strip()
+        if "=" in item:
+            key, value = item.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+
+            if key.lower() == "openid":
+                openid = value
+            elif key.lower() == "access_token":
+                access_token = value
+            elif key.lower() == "acctype":
+                if value.lower() in ["qc"]:
+                    platform = "qq"
+                elif value.lower() in ["wx"]:
+                    platform = "wx"
+                else:
+                    platform = value
+            elif key.lower() == "login_origin":
+                if not platform and "milo" in value.lower():
+                    pass
+
+    if not platform:
+        # 检查是否有qc相关的标识
+        text_combined = ";".join(text_list) if isinstance(text_list, list) else text_list
+        if "qc" in text_combined.lower() or "qq" in text_combined.lower() or "milo.qq.com" in text_combined:
+            platform = "qq"
+        elif "wx" in text_combined.lower() or "wechat" in text_combined.lower():
+            platform = "wx"
+        else:
+            platform = "qq"
+
+    return {"openid": openid, "access_token": access_token, "platform": platform}
+
+
 @df_login.on_command(
     keyword=("添加", "添加ck"),
     block=True,
@@ -109,19 +165,32 @@ async def add_ck(bot: Bot, ev: Event):
     logger.info(f"{MSG_PREFIX} 添加ck")
     text = ev.text.strip()
     text_list = text.split("\n")
-    if len(text_list) <= 2:
-        return await bot.send(f"{MSG_PREFIX} 请正确输入ck信息!")
 
     openid = access_token = platform = ""
+    is_standard_format = False
+
     for i in text_list:
         if i.startswith("openid:"):
             openid = i.replace("openid:", "").strip()
+            is_standard_format = True
         elif i.startswith("token:"):
             access_token = i.replace("token:", "").strip()
+            is_standard_format = True
         elif i.startswith("platform:"):
             platform = i.replace("platform:", "").strip()
+            is_standard_format = True
+
+    if not is_standard_format and len(text) > 10:
+        extracted_data = extract_openid_token_platform(text)
+        openid = extracted_data["openid"]
+        access_token = extracted_data["access_token"]
+        platform = extracted_data["platform"]
+
     if not all([openid, access_token, platform]):
-        return await bot.send(f"{MSG_PREFIX} 请正确输入ck信息!")
+        return await bot.send(
+            f"{MSG_PREFIX} 请正确输入ck信息!\n支持格式：\n1. 标准格式：\nopenid:xxx\ntoken:xxx\nplatform:xxx\n\n2."
+            f"Cookie格式：\n直接粘贴浏览器cookie字符串"
+        )
 
     user_data = cast(
         UserData,
@@ -154,8 +223,6 @@ async def out_l(bot: Bot, ev: Event):
 
     login_info = await out_login(bot, ev)
     logger.info(f"{MSG_PREFIX} 导出信息: {login_info}")
-
-    # 确保返回的信息是字符串
     if login_info is None:
         return
     else:

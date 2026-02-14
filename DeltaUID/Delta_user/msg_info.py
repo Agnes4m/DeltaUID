@@ -3,7 +3,7 @@ import json
 import asyncio
 import datetime
 import urllib.parse
-from typing import Any, Dict, List, Tuple, Union, Optional, cast
+from typing import Any, Dict, Tuple, Union, Optional, cast
 from functools import lru_cache
 from dataclasses import dataclass
 
@@ -20,7 +20,6 @@ from ..utils.models import (
     InfoData,
     RecordSol,
     RecordTdm,
-    BigRedData,
     WeeklyData,
     DayInfoData,
     DayListData,

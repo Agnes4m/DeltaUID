@@ -48,9 +48,8 @@ TEXT_PATH = Path(__file__).parent.parent / "texture2d/record/armed"
 
 class Util:
     @staticmethod
-    def get_gtk(p_skey: str) -> int:
+    def get_gtk(p_skey: str, h: int = 5381) -> int:
         """计算g_tk值"""
-        h = 5381
         for c in p_skey:
             h += (h << 5) + ord(c)
         return h & 0x7FFFFFFF

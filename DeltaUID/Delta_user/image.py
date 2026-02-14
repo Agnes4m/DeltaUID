@@ -212,8 +212,7 @@ async def draw_tqc_section(img: Image.Image, tqc_data: list[TQCData], y_pos: int
     for i, tqc_item in enumerate(tqc_data[:4]):  # 最多显示4个
         tqc_sth = deepcopy(tqc_bar)
         tqc_sth_draw = ImageDraw.Draw(tqc_sth)
-        item_icon = Image.open(MAIN_PATH / f"res/{tqc_item['object_id']}.png").convert("RGBA").resize((250, 250))
-        easy_paste(tqc_sth, item_icon, (150, 250), "cc")
+
         # 绘制地点名称
         tqc_sth_draw.text(
             (150, 100),
@@ -225,6 +224,14 @@ async def draw_tqc_section(img: Image.Image, tqc_data: list[TQCData], y_pos: int
 
         # 绘制状态信息
         if tqc_item.get("status") == "producing":
+            try:
+                item_icon = (
+                    Image.open(MAIN_PATH / f"res/{tqc_item['object_id']}.png").convert("RGBA").resize((250, 250))
+                )
+                easy_paste(tqc_sth, item_icon, (150, 250), "cc")
+            except FileNotFoundError:
+                logger.warning(f"物品图标 {tqc_item['object_id']} 不存在")
+
             tqc_sth_draw.text(
                 (150, 170),
                 f"{tqc_item['object_name']}",

@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://github.com/Agnes4m/DeltaUID"><img src="./icon.png" width="256" height="256" alt="DeltaUID"></a>
 </p>
-<h1 align = "center">三角洲UID DeltaUID 0.0.1</h1>
+<h1 align = "center">三角洲UID DeltaUID 0.2.0</h1>
 <h4 align = "center">🚧支持QQ群/频道、OneBot、微信、KOOK、Tg、飞书、Discord的三角洲查询插件🚧</h4>
 <div align = "center">
         <a href="http://docs.gsuid.gbots.work/#/" target="_blank">安装文档</a>
@@ -19,15 +19,15 @@
 
 ## 丨安装方式
 
-
 ### | 方法一
+
 1. 发送`core安装插件DeltaUID`
-2. 发送`gs重启`应用插件
+2. 发送`core重启`应用插件
 
 ### | 方法二
 
-1. 进入 plugins 目录，`git clone --depth 1 https://github.com/Agnes4m/DeltaUID.git`
-2. 发送`gs重启`应用插件
+1. 进入 plugins 目录，`git clone --depth 1 https://github.com/Agnes4m/DeltaUID.git --depth=1 --single-branch`
+2. 发送`core重启`应用插件
 
 ## 丨说明
 
@@ -49,6 +49,16 @@
 - `ss导出` 导出当前账号的信息
 - `ss添加` 增加账号的信息(并不会直接绑定，需要再使用绑定指令绑定)
 - `ss绑定` 绑定新的UID账号
+- `ss添加ck` 从浏览器抓取cookie并添加到账号信息中
+
+### 浏览器获取cookie
+
+1. 准备via浏览器(或其他类似浏览器)，在浏览器中打开 [https://pvp.qq.com/cp/a20161115tyf/page1.shtml](https://pvp.qq.com/cp/a20161115tyf/page1.shtml)
+2. 在网页中进行QQ登陆
+3. 点击左上角的网页名左侧的盾图标
+4. 点击查看cookies，然后复制全部内容
+5. 返回QQ，私聊机器人，发送 `ss添加ck` 刚刚复制的cookies
+6. 成功登陆
 
 ## 丨其他
 

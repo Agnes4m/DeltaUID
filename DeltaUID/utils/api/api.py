@@ -126,7 +126,7 @@ class DeltaApi:
 
         headers = CONSTANTS["REQUEST_HEADERS_BASE"]
         params = {
-            "appid": 716027609,
+            "appid": LOGIN_APP_ID,
             "e": 2,
             "l": "M",
             "s": 3,
@@ -205,7 +205,7 @@ class DeltaApi:
                 "js_type": 1,
                 "login_sig": loginSig,
                 "pt_uistyle": 40,
-                "aid": 716027609,
+                "aid": LOGIN_APP_ID,
                 "daid": 383,
                 "pt_3rd_aid": LOGIN_APP_ID,
                 "o1vId": "378b06c889d9113b39e814ca627809e3",
@@ -304,15 +304,18 @@ class DeltaApi:
                 cookie = cookie.replace("\\", "")  # 去除转义字符
 
             cookies = json.loads(cookie)
+            logger.info(f"[DF] 获取访问令牌请求cookie: {cookie}")
 
             # 第一步：发送授权请求
             headers = {
                 "referer": "https://xui.ptlogin2.qq.com/",
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-G-TK": str(self.get_gtk(cookies.get("p_skey", ""))),
             }
 
             form_data = {
                 "response_type": "code",
-                "client_id": LOGIN_APP_ID,
+                "client_id": "101491592",
                 "redirect_uri": "https://milo.qq.com/comm-htdocs/login/qc_redirect.html?parent_domain=https://df.qq.com&isMiloSDK=1&isPc=1",
                 "scope": "",
                 "state": "STATE",
@@ -325,10 +328,10 @@ class DeltaApi:
                 "auth_time": int(time.time()),
                 "ui": "979D48F3-6CE2-4E95-A789-3BD3187648B6",
             }
-
+            logger.info(f"[DF] 授权请求参数: {form_data}")
             url = "https://graph.qq.com/oauth2.0/authorize"
             response = await self.client.post(url, data=form_data, headers=headers, cookies=cookies)
-
+            logger.info(f"[DF] 授权请求响应: {response.status_code} {response.text}, 响应头: {response.headers}")
             # 从Location头中提取code
             location = response.headers.get("Location", "")
             code_match = re.search(r"code=(.*?)&", location)
@@ -1179,7 +1182,7 @@ class DeltaApi:
 
             qrcode_path = qrcode_match.group(0)
             uuid = qrcode_path[16:]  # 从第16个字符开始截取UUID
-            qrcode_url = "https://open.weixin.qq.com" + qrcode_path
+            qrcode_url = f"https://open.weixin.qq.com{qrcode_path}"
 
             # 返回成功响应
             return {
