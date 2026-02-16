@@ -188,8 +188,13 @@ async def add_ck(bot: Bot, ev: Event):
 
     if not all([openid, access_token, platform]):
         return await bot.send(
-            f"{MSG_PREFIX} 请正确输入ck信息!\n支持格式：\n1. 标准格式：\nopenid:xxx\ntoken:xxx\nplatform:xxx\n\n2."
-            f"Cookie格式：\n直接粘贴浏览器cookie字符串"
+            f"{MSG_PREFIX} 正确获取ck方法!"
+            f"准备via浏览器(或其他类似浏览器)，在浏览器中打开 https://pvp.qq.com/cp/a20161115tyf/page1.shtml"
+            f"在网页中进行QQ登陆"
+            f"点击左上角的网页名左侧的盾图标"
+            f"点击查看cookies，然后复制全部内容"
+            f"返回QQ，私聊机器人，发送 ss添加ck 刚刚复制的cookies"
+            f"成功登陆"
         )
 
     user_data = cast(

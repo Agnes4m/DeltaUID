@@ -18,7 +18,7 @@ extra_standard_library = ["typing_extensions"]
 distribution = false
 [tool.poetry]
 name = "DeltaUID"
-version = "0.0.1"
+version = "0.2.0"
 description = "基于GsCore, 支持OneBot(QQ)、OneBotV12、QQ频道、微信、KOOK（开黑啦）、Telegram（电报）、FeiShu（飞书）、Discord的全功能HoshinoBot/NoneBot2/Koishi/yunzai/ZeroBot鼠鼠模拟器小游戏"
 authors = ["Agnes4m <Z735803792@163.com>"]
 readme = "README.md"
@@ -41,10 +41,7 @@ deprecateTypingAliases = false
 name = "DeltaUID"
 version = "0.0.1"
 description = "基于GsCore, 支持OneBot(QQ)、OneBotV12、QQ频道、微信、KOOK（开黑啦）、Telegram（电报）、FeiShu（飞书）、Discord的全功能HoshinoBot/NoneBot2/Koishi/yunzai/ZeroBot鼠鼠模拟器小游戏"
-authors = [
-  { name = "Agnes4m", email = "Z735803792@163.com" },
-]
-dependencies = [
-]
+authors = [{ name = "Agnes4m", email = "Z735803792@163.com" }]
+dependencies = []
 requires-python = "==3.12.*"
 readme = "README.md"

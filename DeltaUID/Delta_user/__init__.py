@@ -155,7 +155,7 @@ async def cancel_watch_record(
     logger.info("[DF]正在执行取消订阅功能")
     await gs_subscribe.delete_subscribe(
         "single",
-        "ss特勤处订阅",
+        "ss战绩订阅",
         ev,
     )
     await bot.send("取消订阅成功！")
