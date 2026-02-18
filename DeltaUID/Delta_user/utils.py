@@ -1,7 +1,18 @@
+import sys
+import json
 import time
+from typing import cast
 
 from gsuid_core.models import Event
+from gsuid_core.data_store import get_res_path
+from gsuid_core.utils.download_resource.download_file import download
 
+from ..utils.models import ItemIdData
+
+MAIN_PATH = get_res_path() / "DeltaUID"
+sys.path.append(str(MAIN_PATH))
+RESOURCE_PATH = MAIN_PATH / "res"
+RESOURCE_PATH.mkdir(parents=True, exist_ok=True)
 last_call_times = {}
 
 
@@ -20,3 +31,18 @@ def check_last_call(user_id: str, limit: int = 60) -> bool:
 
 def update_last_call(user_id: str):
     last_call_times[user_id] = time.time()
+
+
+def read_item_json():
+    with open(RESOURCE_PATH.parent / "item.json", mode="r", encoding="utf-8") as f:
+        data = json.load(f)
+    return cast(list[ItemIdData], data)
+
+
+async def create_item_json(depot: list, dl: bool = True):
+    with open(RESOURCE_PATH.parent / "item.json", mode="w", encoding="utf-8") as f:
+        json.dump(depot, f, ensure_ascii=False, indent=4)
+    if dl:
+        for one in depot:
+            await download(one["pic"], RESOURCE_PATH, name=f"{one['objectID']}.png", tag="[DF]")
+    return "ss全部资源下载完成!"

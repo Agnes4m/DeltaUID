@@ -24,6 +24,7 @@ df_tqc = SV("三角洲特勤处")
 df_day = SV("三角洲日报/周报")
 df_record = SV("三角洲战绩查询")
 df_watch_record = SV("三角洲战绩订阅")
+df_pa = SV("三角洲仓库")
 
 
 @df_day.on_command(("日报"), block=True)
@@ -159,6 +160,17 @@ async def cancel_watch_record(
         ev,
     )
     await bot.send("取消订阅成功！")
+
+
+@df_pa.on_command(("藏馆"), block=True)
+async def get_depot(
+    bot: Bot,
+    ev: Event,
+):
+    logger.info("[DF]正在执行三角洲藏馆功能")
+    data = MsgInfo(ev.user_id, bot.bot_id)
+    a = await data.get_depot_red_info()
+    await bot.send(message=a, at_sender=True) if a is not None else None
 
 
 @scheduler.scheduled_job("cron", minute="*/2")

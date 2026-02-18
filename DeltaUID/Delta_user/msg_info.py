@@ -13,9 +13,12 @@ from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
+from gsuid_core.utils.image.convert import text2pic
 
 from .image import draw_sol_record
+from .utils import read_item_json
 from ..utils.models import (
+    BigRed,
     TQCData,
     InfoData,
     RecordSol,
@@ -1303,7 +1306,7 @@ class MsgInfo:
         return msg
 
     async def get_depot_text(self):
-        """获取仓库信息文本 - 修复版本
+        """获取仓库信息文本
 
         Returns:
             Optional[List[Any]]: 仓库数据或None
@@ -1328,3 +1331,51 @@ class MsgInfo:
         except Exception as e:
             logger.error(f"获取仓库信息异常: {str(e)}")
             return None
+
+    async def get_depot_red_info(self):
+        """获取仓库信息
+
+        Returns:
+            Optional[List[Any]]: 仓库数据或None
+        """
+        if not await self._validate_user() or not self.user_data:
+            logger.warning(f"用户{self.user_id}未绑定账号")
+            return None
+        deltaapi = await self._get_delta_api()
+        cookie = self.user_data.cookie
+        openid = self.user_data.uid
+        res = await deltaapi.get_depot_red_info(cookie, openid)
+
+        if res["status"] and res["data"]:
+            data = cast(BigRed, res["data"])
+
+        else:
+            logger.warning(f"获取仓库信息失败: {res.get('message', '未知错误')}")
+            return None
+        # 文字输出
+        msg = f"===仓库中共有{data['total']}个大红===\n"
+        try:
+            data_json = read_item_json()
+        except FileNotFoundError as e:
+            logger.error(f"读取item.json失败: {str(e)}")
+            return None
+        data_list = data["list"]
+        for index, item in enumerate(data_list):
+            # 核对名称和图片
+            nameid = item["itemId"]
+            item_data = next((i for i in data_json if str(i["objectID"]) == nameid), None)
+            logger.info(str(item_data))
+            if item_data is not None and str(item_data["objectID"]) == str(item["itemId"]):
+                name = item_data["thirdClassCN"] if item_data.get("thirdClassCN") else item_data["secondClassCN"]
+                # pic = item_data["prePic"]
+                length = item_data["length"]
+                width = item_data["width"]
+                weight = item_data["weight"]
+                # avg_price = item_data["avgPrice"]
+                prop = item_data["propsDetail"]
+                prop_local = prop.get("propsSource") if prop.get("propsSource") else "未知"
+                msg += f"""{index}: [{prop["type"]}]{name}({length}*{width}|{weight}kg)
+    获取日期:{item["time"]}
+    掉落位置:{prop_local}
+"""
+        return await text2pic(msg)

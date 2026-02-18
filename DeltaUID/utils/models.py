@@ -416,10 +416,69 @@ class OwnPriceData(TypedDict):
 class BigRedData(TypedDict):
     """大红色物品数据"""
 
+    time: str
+    """年月日，时分秒"""
+    itemId: str
+    """物品id"""
+    mapid: int
+    """属性id"""
+    num: int
+    """物品数量"""
+    des: str
+    """物品描述"""
+
+
+class BigRed(TypedDict):
+    total: int
+    """总数量"""
+    list: list[BigRedData]
+
+
+"""
+    {
+        "id": 10087,
+        "objectID": 14060000003,
+        "objectName": "高级头盔维修组合",
+        "length": 2,
+        "width": 2,
+        "grade": 6,
+        "weight": "3",
+        "primaryClass": "props",
+        "secondClass": "consume",
+        "secondClassCN": "消耗品",
+        "thirdClass": "repair",
+        "thirdClassCN": "维修套件",
+        "desc": "针对6级装备的局内维修工具，能快速修复头盔耐久度。每块插板消耗工具包25点耐久；启用时间4.5秒。",
+        "pic": "https://playerhub.df.qq.com/playerhub/60004/object/14060000003.png",
+        "prePic": "https://playerhub.df.qq.com/playerhub/60004/object/p_14060000003.png",
+        "avgPrice": 347624,
+        "propsDetail": {
+            "repairPoints": 100,
+            "repairArea": "头盔",
+            "repairEfficiency": "低",
+            "activeTime": "4.5",
+            "replyEffect": "回复头盔耐久度"
+        }
+    },
+"""
+
+
+class PropsDetail(TypedDict):
+    """物品属性详情"""
+
+    type: str
+    """物品类型"""
+    propsSource: str
+    """掉落位置"""
+
+
+class ItemIdData(TypedDict):
+    """物品数据"""
+
     id: int
     """物品id"""
     objectID: int
-    """物品编号"""
+    """物品id"""
     objectName: str
     """物品名称"""
     length: int
@@ -436,6 +495,11 @@ class BigRedData(TypedDict):
     """物品次分类"""
     secondClassCN: str
     """物品次分类中文"""
+    # 下面两个是部分有的
+    thirdClass: str
+    """物品三级分类"""
+    thirdClassCN: str
+    """物品三级分类中文"""
     desc: str
     """物品描述"""
     pic: str
@@ -444,5 +508,5 @@ class BigRedData(TypedDict):
     """物品预览图片"""
     avgPrice: int
     """物品平均价格"""
-    propsDetail: dict[str, str]
-    """物品详细信息"""
+    propsDetail: PropsDetail
+    """物品属性详情"""

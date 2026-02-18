@@ -56,9 +56,9 @@
         "need_admin": false
       },
       {
-        "name": "订阅",
-        "desc": "订阅战绩推送",
-        "eg": "订阅",
+        "name": "藏馆",
+        "desc": "查询藏馆大红",
+        "eg": "藏馆",
         "need_ck": true,
         "need_sk": false,
         "need_admin": false
@@ -109,7 +109,7 @@
         "name": "导出",
         "desc": "导出uid和ck",
         "eg": "导出",
-        "need_ck": false,
+        "need_ck": true,
         "need_sk": false,
         "need_admin": false
       },

@@ -10,7 +10,7 @@ import httpx
 from gsuid_core.logger import logger
 
 from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
-from ..models import Sign, SignMsg, UserInfo, LoginStatus, OwnPriceData
+from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus
 
 CONSTANTS = API_CONSTANTS
 
@@ -1457,7 +1457,7 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_depot_info(self, access_token: str, openid: str):
+    async def get_depot_red_info(self, access_token: str, openid: str):
         """
         获取大红收藏信息
         """
@@ -1475,7 +1475,10 @@ class DeltaApi:
 
             headers = CONSTANTS["REQUEST_HEADERS_BASE"]
             url = API_CONSTANTS["GAME_API_URL"]
-            response = await self.client.get(url, params=params, headers=headers, cookies=headers["cookie"])
+            access_type = self.platform
+            is_qq = access_type == "qq"
+            cookies = self.create_cookie(openid, access_token, is_qq)
+            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
             result = response.json()
             logger.debug(f"获取仓库信息结果: {result}")
 
@@ -1487,7 +1490,7 @@ class DeltaApi:
                     "data": {},
                 }
 
-            data = cast(OwnPriceData, result["jData"])
+            data = cast(list[BigRedData], result["jData"]["data"]["data"])
             return {
                 "status": True,
                 "message": "获取仓库信息成功",
