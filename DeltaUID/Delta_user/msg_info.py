@@ -1374,7 +1374,7 @@ class MsgInfo:
                 # avg_price = item_data["avgPrice"]
                 prop = item_data["propsDetail"]
                 prop_local = prop.get("propsSource") if prop.get("propsSource") else "未知"
-                msg += f"""{index}: [{prop["type"]}]{name}({length}*{width}|{weight}kg)
+                msg += f"""{index + 1}: [{prop["type"]}]{name}({length}*{width}|{weight}kg)
     获取日期:{item["time"]}
     掉落位置:{prop_local}
 """

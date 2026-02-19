@@ -163,13 +163,15 @@ def extract_openid_token_platform(text_list):
 )
 async def add_ck(bot: Bot, ev: Event):
     logger.info(f"{MSG_PREFIX} 添加ck")
-    text = ev.text.strip()
+    text = ev.text.replace("ck", "").strip()
     text_list = text.split("\n")
 
     openid = access_token = platform = ""
     is_standard_format = False
 
     for i in text_list:
+        i = i.strip()
+        logger.info(f"{i}")
         if i.startswith("openid:"):
             openid = i.replace("openid:", "").strip()
             is_standard_format = True
@@ -185,7 +187,7 @@ async def add_ck(bot: Bot, ev: Event):
         openid = extracted_data["openid"]
         access_token = extracted_data["access_token"]
         platform = extracted_data["platform"]
-
+    logger.info(f"{openid} {access_token} {platform}")
     if not all([openid, access_token, platform]):
         return await bot.send(
             f"{MSG_PREFIX} 正确获取ck方法!"
@@ -234,4 +236,5 @@ async def out_l(bot: Bot, ev: Event):
         msg = ""
         for k, v in login_info.items():
             msg += f"{k}: {v}\n"
+        msg += "私聊bot发送[ss添加]+上述内容,即可添加ck."
         return await bot.send(msg)
