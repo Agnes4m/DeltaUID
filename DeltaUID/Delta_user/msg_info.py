@@ -23,9 +23,11 @@ from ..utils.models import (
     InfoData,
     RecordSol,
     RecordTdm,
+    ItemIdData,
     WeeklyData,
     DayInfoData,
     DayListData,
+    ItemHourPriceData,
 )
 from ..utils.api.api import DeltaApi
 from ..utils.api.utils import Util
@@ -1322,7 +1324,7 @@ class MsgInfo:
             res = await deltaapi.get_object_info(cookie, openid)
 
             if res["status"] and res["data"]:
-                data = cast(list[Any], res["data"]["list"])
+                data = cast(list[ItemIdData], res["data"]["list"])
                 return data
             else:
                 logger.warning(f"获取仓库信息失败: {res.get('message', '未知错误')}")
@@ -1364,18 +1366,49 @@ class MsgInfo:
             # 核对名称和图片
             nameid = item["itemId"]
             item_data = next((i for i in data_json if str(i["objectID"]) == nameid), None)
-            logger.info(str(item_data))
+            # logger.info(str(item_data))
             if item_data is not None and str(item_data["objectID"]) == str(item["itemId"]):
-                name = item_data["thirdClassCN"] if item_data.get("thirdClassCN") else item_data["secondClassCN"]
+                name = item_data["objectName"]
+                name_type = item_data["thirdClassCN"] if item_data.get("thirdClassCN") else item_data["secondClassCN"]
                 # pic = item_data["prePic"]
                 length = item_data["length"]
                 width = item_data["width"]
                 weight = item_data["weight"]
+                if "E" in str(weight):
+                    weight = f"{float(weight):.2e}"
+                else:
+                    weight = f"{float(weight):.2f}"
                 # avg_price = item_data["avgPrice"]
                 prop = item_data["propsDetail"]
                 prop_local = prop.get("propsSource") if prop.get("propsSource") else "未知"
-                msg += f"""{index + 1}: [{prop["type"]}]{name}({length}*{width}|{weight}kg)
+                msg += f"""{index + 1}: [{prop["type"]} | {name_type}] {name} ({length}*{width} | {weight}kg)
     获取日期:{item["time"]}
     掉落位置:{prop_local}
 """
         return await text2pic(msg)
+
+    async def get_item_price(self, item_id: str, item_name: str):
+        """获取物品小时均价
+
+        Args:
+            item_id (str): 物品id
+
+        Returns:
+            Optional[ItemHourPriceData]: 物品小时均价数据或None
+        """
+        if not await self._validate_user() or not self.user_data:
+            logger.warning(f"用户{self.user_id}未绑定账号")
+            return None
+        deltaapi = await self._get_delta_api()
+        cookie = self.user_data.cookie
+        openid = self.user_data.uid
+        res = await deltaapi.get_item_hour_price(cookie, openid, item_id)
+
+        if res["status"] and res["data"]:
+            data = cast(ItemHourPriceData, res["data"])
+            logger.info(data)
+            msg = f"{item_name}: 当前价格{data[item_id]['avg_buyprice']:.0f}哈夫币"
+            return msg
+        else:
+            logger.warning(f"获取物品小时均价失败: {res.get('message', '未知错误')}")
+            return None

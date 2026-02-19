@@ -72,15 +72,3 @@ async def handle_password_query(bot: Bot, event: Event) -> None:
     except Exception as e:
         logger.error(f"[DF] 处理密码查询时发生错误: {str(e)}")
         await bot.send("查询过程中发生错误，请稍后重试", at_sender=True)
-
-
-# @DF_DEPOT_SV.on_command("仓库", block=True)
-# async def handle_depot_query(bot: Bot, ev: Event) -> None:
-#     """仓库总览查询命令
-#     参数:
-#         bot: Bot实例，用于发送消息
-#         event: 事件对象，包含命令和用户信息
-#     """
-#     user_id = ev.user_id
-#     data = MsgInfo(user_id, bot.bot_id)
-#     depot = await data.get_depot_text()

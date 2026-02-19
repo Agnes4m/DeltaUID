@@ -14,6 +14,7 @@ from .image import draw_record_sol, draw_record_tdm, draw_df_info_img
 from .utils import get_user_id, check_last_call, update_last_call
 from .msg_info import MsgInfo
 from ..utils.models import InfoData, WeeklyData, RecordSolData, RecordTdmData
+from ..Delta_download.utils import create_item_json
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}
@@ -205,3 +206,36 @@ async def df_notify_rank():
         else:
             logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
+
+
+@df_pa.on_command("价格", block=True)
+async def handle_price_query(bot: Bot, event: Event) -> None:
+    """处理价格查询命令
+    参数:
+        bot: Bot实例，用于发送消息
+        event: 事件对象，包含命令和用户信息
+    """
+    logger.info(f"[DF] 用户 {event.user_id} 正在执行价格查询")
+    data = MsgInfo(event.user_id, bot.bot_id)
+    item_name = event.text.strip() if event.text else ""
+    # 物品检索id
+    a = await create_item_json(event, bot, dl=False)
+    item_id: str | None = None
+    if isinstance(a, list) and len(a) > 0:
+        for item in a:
+            if str(item.get("objectName", "")) == item_name:
+                item_id = str(item.get("objectID", ""))
+                # logger.info(f"[DF] 用户 {event.user_id} 输入物品名称 {item_id} 对应物品id {item_id}")
+                break
+    else:
+        await bot.send(a, at_sender=True)
+        return
+
+    if item_id is None:
+        await bot.send("请输入物品id", at_sender=True)
+        return
+    item_price_data = await data.get_item_price(item_id, item_name)
+    if item_price_data:
+        await bot.send(item_price_data, at_sender=True)
+    else:
+        await bot.send("未找到该物品", at_sender=True)

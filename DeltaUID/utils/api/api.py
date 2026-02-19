@@ -10,7 +10,7 @@ import httpx
 from gsuid_core.logger import logger
 
 from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
-from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus
+from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus, ItemHourPriceData
 
 CONSTANTS = API_CONSTANTS
 
@@ -1501,5 +1501,79 @@ class DeltaApi:
             return {
                 "status": False,
                 "message": "获取角色信息失败，详情请查看日志",
+                "data": {},
+            }
+
+    async def get_item_hour_price(
+        self,
+        access_token: str,
+        openid: str,
+        propid: str,
+    ):
+        """
+        获取物品小时均价（指定ID）
+
+        Args:
+            access_token: 访问令牌
+            openid: 用户openid
+            propid: 物品ID，只能单ID查询（示例：15010050001）
+
+        Returns:
+            dict: 包含物品小时均价信息的字典
+        """
+        if not access_token or not openid:
+            return {"status": False, "message": "缺少参数", "data": {}}
+
+        if not propid:
+            return {"status": False, "message": "缺少物品ID参数", "data": {}}
+
+        try:
+            params = {
+                "iChartId": 329101,
+                "iSubChartId": 329101,
+                "sIdeToken": "qkJMkB",
+                "propid": propid,
+                "stat_hour": "stat_hour",
+            }
+
+            headers = {
+                **CONSTANTS["REQUEST_HEADERS_BASE"],
+                "content-type": "application/x-www-form-urlencoded",
+            }
+
+            is_qq = self.platform == "qq"
+            cookies = self.create_cookie(openid, access_token, is_qq)
+
+            url = API_CONSTANTS["GAME_API_URL"]
+            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            result = response.json()
+            logger.debug(f"获取物品小时均价结果: {result}")
+
+            if result.get("iRet") != 0:
+                return {
+                    "status": False,
+                    "message": result.get("sMsg", "获取物品小时均价失败"),
+                    "data": {},
+                }
+
+            j_data = result.get("jData", {})
+            if str(j_data.get("iRet", "-1")) != "0":
+                return {
+                    "status": False,
+                    "message": j_data.get("sMsg", "获取物品小时均价失败"),
+                    "data": {},
+                }
+
+            return {
+                "status": True,
+                "message": "获取物品小时均价成功",
+                "data": cast(ItemHourPriceData, j_data.get("data", {})),
+            }
+
+        except Exception as e:
+            logger.exception(f"获取物品小时均价失败: {e}")
+            return {
+                "status": False,
+                "message": "获取物品小时均价失败，详情请查看日志",
                 "data": {},
             }

@@ -1,5 +1,17 @@
-from ..Delta_user.utils import get_user_id, create_item_json
+import sys
+import json
+
+from gsuid_core.data_store import get_res_path
+from gsuid_core.utils.download_resource.download_file import download
+
+from ..Delta_user.utils import get_user_id
 from ..Delta_user.msg_info import MsgInfo
+
+MAIN_PATH = get_res_path() / "DeltaUID"
+sys.path.append(str(MAIN_PATH))
+RESOURCE_PATH = MAIN_PATH / "res"
+RESOURCE_PATH.mkdir(parents=True, exist_ok=True)
+last_call_times = {}
 
 # with open(Path(__file__).parent / "item.json", mode="r", encoding="utf-8") as fp:
 #     ITEM_DICT: Dict[str, Dict[str, List[str]]] = json.load(fp)
@@ -15,11 +27,22 @@ from ..Delta_user.msg_info import MsgInfo
 
 
 async def check_use(bot, ev):
+    a = await create_item_json(ev, bot)
+    # await download_all_file("DeltaUID", NEW_DICT)
+    return a
+
+
+async def create_item_json(ev, bot, dl: bool = True):
     user_id = await get_user_id(ev)
     data = MsgInfo(user_id, bot.bot_id)
     depot = await data.get_depot_text()
     if depot is None:
         return "用户仓库为空！"
-    a = await create_item_json(depot)
-    # await download_all_file("DeltaUID", NEW_DICT)
-    return a
+    with open(RESOURCE_PATH.parent / "item.json", mode="w", encoding="utf-8") as f:
+        json.dump(depot, f, ensure_ascii=False, indent=4)
+    if dl:
+        for one in depot:
+            await download(one["pic"], RESOURCE_PATH, name=f"{one['objectID']}.png", tag="[DF]")
+        return "ss全部资源下载完成!"
+    else:
+        return depot

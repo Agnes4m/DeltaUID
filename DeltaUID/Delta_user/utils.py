@@ -5,7 +5,6 @@ from typing import cast
 
 from gsuid_core.models import Event
 from gsuid_core.data_store import get_res_path
-from gsuid_core.utils.download_resource.download_file import download
 
 from ..utils.models import ItemIdData
 
@@ -37,12 +36,3 @@ def read_item_json():
     with open(RESOURCE_PATH.parent / "item.json", mode="r", encoding="utf-8") as f:
         data = json.load(f)
     return cast(list[ItemIdData], data)
-
-
-async def create_item_json(depot: list, dl: bool = True):
-    with open(RESOURCE_PATH.parent / "item.json", mode="w", encoding="utf-8") as f:
-        json.dump(depot, f, ensure_ascii=False, indent=4)
-    if dl:
-        for one in depot:
-            await download(one["pic"], RESOURCE_PATH, name=f"{one['objectID']}.png", tag="[DF]")
-    return "ss全部资源下载完成!"

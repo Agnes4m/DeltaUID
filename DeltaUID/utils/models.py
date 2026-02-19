@@ -1,4 +1,4 @@
-from typing import Literal, TypedDict
+from typing import Dict, Literal, TypedDict
 
 
 class UserData(TypedDict):
@@ -510,3 +510,10 @@ class ItemIdData(TypedDict):
     """物品平均价格"""
     propsDetail: PropsDetail
     """物品属性详情"""
+
+
+class ItemHourPriceData(TypedDict):
+    """物品小时均价数据"""
+
+    itemid: Dict[str, Dict[Literal["avg_buyprice"], float]]
+    """物品小时均价数据"""
