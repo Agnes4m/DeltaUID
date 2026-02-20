@@ -12,9 +12,8 @@ from gsuid_core.utils.image.image_tools import get_pic, get_event_avatar
 
 from .image import draw_record_sol, draw_record_tdm, draw_df_info_img
 from .utils import get_user_id, check_last_call, update_last_call
-from .msg_info import MsgInfo
+from .msg_info import MsgInfo, create_item_json
 from ..utils.models import InfoData, WeeklyData, RecordSolData, RecordTdmData
-from ..Delta_download.utils import create_item_json
 
 # 用户调用记录：{user_id: last_call_timestamp}
 last_call_times = {}

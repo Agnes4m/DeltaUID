@@ -466,10 +466,42 @@ class BigRed(TypedDict):
 class PropsDetail(TypedDict):
     """物品属性详情"""
 
-    type: str
-    """物品类型"""
-    propsSource: str
-    """掉落位置"""
+    # --- 消耗品 (维修套件) 相关字段 ---
+    repairPoints: int  # 维修点数，例如: 100
+    repairArea: str  # 维修区域，例如: "头盔", "胸甲"
+    repairEfficiency: str  # 维修效率，例如: "低"
+    activeTime: str  # 启用时间，例如: "4.5"
+    replyEffect: str  # 回复效果，例如: "回复头盔耐久度"
+
+    # --- 收集品相关字段 ---
+    type: str  # 藏品细分类型，例如: "工艺藏品", "电子物品", "能源燃料"
+    propsSource: str  # 物品来源/产出地，例如: "长弓溪谷-钻石皇后酒店"
+
+    # --- 钥匙相关字段 ---
+    useMap: str  # 使用地图，例如: "零号大坝", "航天基地"
+    usePlace: str  # 使用地点，例如: "行政楼经理室"
+    durability: int  # 耐久度/使用次数，例如: 20
+    keyCardType: int  # 钥匙卡类型/等级，例如: 1 (仅部分钥匙包含)
+
+    # --- 曼德尔砖相关字段 ---
+    mandel: dict
+    """曼德尔砖属性"""
+
+    # --- 医疗 | 针 相关字段 ---
+    # activeTime: str
+    # """启用时间"""
+    availableCount: int
+    """可用次数, 仅多使用次数类"""
+    bearEnhance: str
+    """仅特效强化类描述，如听觉视觉"""
+
+    # --- 子弹相关字段 ---
+    penetrationLevel: int
+    """穿透等级"""
+    harmRatio: float
+    """伤害比例"""
+    armorHarmLevel: str
+    """穿甲能力，高中低"""
 
 
 class ItemIdData(TypedDict):
@@ -517,3 +549,8 @@ class ItemHourPriceData(TypedDict):
 
     itemid: Dict[str, Dict[Literal["avg_buyprice"], float]]
     """物品小时均价数据"""
+
+
+class TQCPriceData(TypedDict):
+    list: list[ItemHourPriceData]
+    relateMap: Dict[str, ItemIdData]

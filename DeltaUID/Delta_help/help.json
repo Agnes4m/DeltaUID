@@ -133,6 +133,14 @@
         "need_ck": false,
         "need_sk": false,
         "need_admin": false
+      },
+      {
+        "name": "下载全部资源",
+        "desc": "下载全部图片资源",
+        "eg": "下载全部资源",
+        "need_ck": false,
+        "need_sk": false,
+        "need_admin": false
       }
     ]
   }

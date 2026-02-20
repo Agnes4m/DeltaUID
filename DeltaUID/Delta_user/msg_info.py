@@ -1,4 +1,5 @@
 import re
+import sys
 import json
 import asyncio
 import datetime
@@ -13,7 +14,9 @@ from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.subscribe import gs_subscribe
+from gsuid_core.data_store import get_res_path
 from gsuid_core.utils.image.convert import text2pic
+from gsuid_core.utils.download_resource.download_file import download
 
 from .image import draw_sol_record
 from .utils import read_item_json
@@ -31,6 +34,7 @@ from ..utils.models import (
 )
 from ..utils.api.api import DeltaApi
 from ..utils.api.utils import Util
+from ..Delta_user.utils import get_user_id
 from ..utils.database.models import DFBind, DFUser
 
 # 常量定义
@@ -46,6 +50,12 @@ ERROR_SERVER_BUSY = "服务器忙碌,请稍后重试"
 # 游戏模式常量
 MODE_SOL = 4  # 烽火模式
 MODE_TDM = 5  # 战场模式
+
+MAIN_PATH = get_res_path() / "DeltaUID"
+sys.path.append(str(MAIN_PATH))
+RESOURCE_PATH = MAIN_PATH / "res"
+RESOURCE_PATH.mkdir(parents=True, exist_ok=True)
+last_call_times = {}
 
 
 # 战绩结果映射
@@ -1322,14 +1332,23 @@ class MsgInfo:
             cookie = self.user_data.cookie
             openid = self.user_data.uid
             res = await deltaapi.get_object_info(cookie, openid)
+            res_2 = await deltaapi.get_place_list_with_profit(cookie, openid)
 
             if res["status"] and res["data"]:
                 data = cast(list[ItemIdData], res["data"]["list"])
-                return data
+
             else:
                 logger.warning(f"获取仓库信息失败: {res.get('message', '未知错误')}")
                 return None
-
+            # if res_2["status"] and res_2["data"]:
+            logger.info(f"获取仓库信息成功: {res_2}")
+            data_2 = cast(Dict[str, ItemIdData], res_2["data"]["relateMap"])
+            for _, item in data_2.items():
+                data.append(item)
+            # else:
+            #     logger.warning(f"获取仓库信息失败: {res.get('message', '未知错误')}")
+            #     return None
+            return data
         except Exception as e:
             logger.error(f"获取仓库信息异常: {str(e)}")
             return None
@@ -1412,3 +1431,19 @@ class MsgInfo:
         else:
             logger.warning(f"获取物品小时均价失败: {res.get('message', '未知错误')}")
             return None
+
+
+async def create_item_json(ev, bot, dl: bool = True):
+    user_id = await get_user_id(ev)
+    data = MsgInfo(user_id, bot.bot_id)
+    depot = await data.get_depot_text()
+    if depot is None:
+        return "用户仓库为空！"
+    with open(RESOURCE_PATH.parent / "item.json", mode="w", encoding="utf-8") as f:
+        json.dump(depot, f, ensure_ascii=False, indent=4)
+    if dl:
+        for one in depot:
+            await download(one["pic"], RESOURCE_PATH, name=f"{one['objectID']}.png", tag="[DF]")
+        return "ss全部资源下载完成!"
+    else:
+        return depot

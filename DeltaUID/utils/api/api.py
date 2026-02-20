@@ -10,7 +10,7 @@ import httpx
 from gsuid_core.logger import logger
 
 from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
-from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus, ItemHourPriceData
+from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus, TQCPriceData, ItemHourPriceData
 
 CONSTANTS = API_CONSTANTS
 
@@ -707,8 +707,15 @@ class DeltaApi:
 
             url = CONSTANTS["GAMEBASEURL"]
             response = await self.client.post(url, data=form_data, cookies=cookies)
-
-            data = response.json()
+            try:
+                data = response.json()
+            except json.JSONDecodeError:
+                logger.error("获取战绩失败: 响应不是JSON格式")
+                return {
+                    "status": False,
+                    "message": "获取战绩失败，响应不是JSON格式",
+                    "data": {},
+                }
             # print(data["ret"])
             if data["ret"] == 0 and data["jData"]["data"]:
                 # 合并数据
@@ -1575,5 +1582,88 @@ class DeltaApi:
             return {
                 "status": False,
                 "message": "获取物品小时均价失败，详情请查看日志",
+                "data": {},
+            }
+
+    async def get_place_list_with_profit(
+        self,
+        access_token: str,
+        openid: str,
+        place: str = "workbench",
+        hasPriceData: bool = True,
+    ):
+        """
+        获取特勤处利润&信息（含利润数据）
+
+        传入 param 参数（hasPriceData=true），在基础信息之上附带利润相关数据。
+
+        Args:
+            access_token: 访问令牌
+            openid: 用户openid
+            place: 特勤处类型，默认 "workbench"
+
+        Returns:
+            dict: 结构与 get_place_list 相同，relateMap 中各物品额外包含
+                  利润相关字段（如 avgPrice 等价格数据已填充）
+        """
+        if not access_token or not openid:
+            return {"status": False, "message": "缺少参数", "data": {}}
+
+        try:
+            import json as _json
+
+            param_value = _json.dumps(
+                {"type": "place", "place": place, "hasPriceData": hasPriceData},
+                ensure_ascii=False,
+                separators=(",", ":"),
+            )
+
+            params = {
+                "iChartId": 316969,
+                "iSubChartId": 316969,
+                "sIdeToken": "NoOapI",
+                "method": "dfm/place.list",
+                "source": "2",
+                "param": param_value,
+            }
+
+            headers = {
+                "content-type": "application/x-www-form-urlencoded",
+            }
+
+            is_qq = self.platform == "qq"
+            cookies = self.create_cookie(openid, access_token, is_qq)
+
+            url = API_CONSTANTS["GAMEBASEURL"]
+            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            result = response.json()
+            # logger.info(f"获取特勤处利润信息结果: {result}")
+
+            if result.get("iRet") != 0:
+                return {
+                    "status": False,
+                    "message": result.get("sMsg", "获取特勤处利润信息失败"),
+                    "data": {},
+                }
+
+            j_data = result.get("jData", {}).get("data", {})
+            # logger.info(f"获取特勤处利润信息jData: {j_data}")
+            inner = cast(TQCPriceData, j_data.get("data", {}))
+            # logger.info(f"获取特勤处利润信息inner: {inner}")
+
+            return {
+                "status": True,
+                "message": "获取特勤处利润信息成功",
+                "data": {
+                    "list": inner.get("list", []),
+                    "relateMap": inner.get("relateMap", {}),
+                },
+            }
+
+        except Exception as e:
+            logger.exception(f"获取特勤处利润信息失败: {e}")
+            return {
+                "status": False,
+                "message": "获取特勤处利润信息失败，详情请查看日志",
                 "data": {},
             }
