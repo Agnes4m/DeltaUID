@@ -1,5 +1,5 @@
 # from gsuid_core.logger import logger
-from typing import cast
+from typing import Dict, List, Union, cast
 
 from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
@@ -19,10 +19,11 @@ df_login = SV("三角洲登录")
 
 def get_response_message(retcode: int) -> str:
     """根据返回码获取响应消息"""
-    return {
+    response_messages = {
         0: f"{MSG_PREFIX} 删除UID成功！",
         -1: f"{MSG_PREFIX} 该UID不在已绑定列表中！",
-    }.get(retcode, f"{MSG_PREFIX} 操作失败，错误码: {retcode}")
+    }
+    return response_messages.get(retcode, f"{MSG_PREFIX} 操作失败，错误码: {retcode}")
 
 
 @df_login.on_command(
@@ -101,7 +102,7 @@ async def login(bot: Bot, ev: Event):
         )
 
 
-def extract_openid_token_platform(text_list):
+def extract_openid_token_platform(text_list: Union[str, List[str]]) -> Dict[str, str]:
     """
     从text_list中提取openid、token和platform信息
 
@@ -111,18 +112,22 @@ def extract_openid_token_platform(text_list):
     Returns:
         dict: 包含openid、access_token和platform的字典
     """
+    processed_list: List[str] = []
+
     if isinstance(text_list, str):
         parts = []
         for line in text_list.split("\n"):
             line_parts = [part.strip() for part in line.split(";") if part.strip()]
             parts.extend(line_parts)
-        text_list = parts
+        processed_list = parts
+    else:
+        processed_list = text_list
 
     openid = ""
     access_token = ""
     platform = ""
 
-    for item in text_list:
+    for item in processed_list:
         item = item.strip()
         if "=" in item:
             key, value = item.split("=", 1)
@@ -146,7 +151,7 @@ def extract_openid_token_platform(text_list):
 
     if not platform:
         # 检查是否有qc相关的标识
-        text_combined = ";".join(text_list) if isinstance(text_list, list) else text_list
+        text_combined = ";".join(processed_list)
         if "qc" in text_combined.lower() or "qq" in text_combined.lower() or "milo.qq.com" in text_combined:
             platform = "qq"
         elif "wx" in text_combined.lower() or "wechat" in text_combined.lower():
@@ -187,8 +192,11 @@ async def add_ck(bot: Bot, ev: Event):
         openid = extracted_data["openid"]
         access_token = extracted_data["access_token"]
         platform = extracted_data["platform"]
-    logger.info(f"{openid} {access_token} {platform}")
-    if not all([openid, access_token, platform]):
+    logger.info(f"{MSG_PREFIX} 提取结果: openid={openid}, access_token={access_token}, platform={platform}")
+
+    # 检查必需字段是否为空
+    required_fields = [openid, access_token, platform]
+    if not all(required_fields):
         return await bot.send(
             f"{MSG_PREFIX} 正确获取ck方法!"
             f"准备via浏览器(或其他类似浏览器)，在浏览器中打开 https://pvp.qq.com/cp/a20161115tyf/page1.shtml"
@@ -217,7 +225,7 @@ async def add_ck(bot: Bot, ev: Event):
     keyword=("导出"),
     block=True,
 )
-async def out_l(bot: Bot, ev: Event):
+async def out_l(bot: Bot, ev: Event) -> None:
     logger.info(f"{MSG_PREFIX} 开始执行[导出用户信息]")
 
     # 检查是否在私聊中
@@ -237,4 +245,4 @@ async def out_l(bot: Bot, ev: Event):
         for k, v in login_info.items():
             msg += f"{k}: {v}\n"
         msg += "私聊bot发送[ss添加]+上述内容,即可添加ck."
-        return await bot.send(msg)
+        await bot.send(msg)

@@ -345,6 +345,7 @@ class RecordTdm(TypedDict):
     badge_text: Literal["1000+分均得分", "1000+击杀"]
 
 
+# 物品
 class OwnUserData(TypedDict):
     """资产数据"""
 
@@ -432,35 +433,6 @@ class BigRed(TypedDict):
     total: int
     """总数量"""
     list: list[BigRedData]
-
-
-"""
-    {
-        "id": 10087,
-        "objectID": 14060000003,
-        "objectName": "高级头盔维修组合",
-        "length": 2,
-        "width": 2,
-        "grade": 6,
-        "weight": "3",
-        "primaryClass": "props",
-        "secondClass": "consume",
-        "secondClassCN": "消耗品",
-        "thirdClass": "repair",
-        "thirdClassCN": "维修套件",
-        "desc": "针对6级装备的局内维修工具，能快速修复头盔耐久度。每块插板消耗工具包25点耐久；启用时间4.5秒。",
-        "pic": "https://playerhub.df.qq.com/playerhub/60004/object/14060000003.png",
-        "prePic": "https://playerhub.df.qq.com/playerhub/60004/object/p_14060000003.png",
-        "avgPrice": 347624,
-        "propsDetail": {
-            "repairPoints": 100,
-            "repairArea": "头盔",
-            "repairEfficiency": "低",
-            "activeTime": "4.5",
-            "replyEffect": "回复头盔耐久度"
-        }
-    },
-"""
 
 
 class PropsDetail(TypedDict):
@@ -551,6 +523,60 @@ class ItemHourPriceData(TypedDict):
     """物品小时均价数据"""
 
 
+# 特勤处
+class PlaceWithProfitData(TypedDict):
+    """特勤处物品利润数据"""
+
+    salePrice: int
+    """售价"""
+    costPrice: int
+    """成本价"""
+    fee: int
+    """手续费"""
+    bail: int
+    """保证金"""
+    objectID: int
+    """物品id"""
+    perCount: int
+    """每小时利润"""
+    period: str
+    """时间周期, 单位小时"""
+    formulaID: int
+    """配方公式id"""
+    upgFormulaID: int
+    """升级配方公式id"""
+    required: list[Dict[Literal["objectID", "count"], int]]
+    """所需物品, 格式: {"objectID": 物品id, "count": 数量}"""
+
+
+class TQCPlaceDetail(TypedDict):
+    """特勤处工作台详情数据"""
+
+    hafCount: int
+    """升级需要的哈夫币"""
+    condition: str
+    """解锁需要等级条件"""
+    unlock: Dict[Literal["props"], PlaceWithProfitData]
+    """解锁需要物品"""
+
+
+class TQCPlaceData(TypedDict):
+    """特勤处工作台数据"""
+
+    id: int
+    type: Literal["place"]
+    """物品类型"""
+    place: Literal["workbench"]
+    """物品地点"""
+    level: int
+    """物品等级"""
+    detail: str
+    """物品详情"""
+    placeDetail: TQCPlaceDetail
+
+
 class TQCPriceData(TypedDict):
-    list: list[ItemHourPriceData]
+    """特勤处物品总数据"""
+
+    list: list[TQCPlaceData]
     relateMap: Dict[str, ItemIdData]

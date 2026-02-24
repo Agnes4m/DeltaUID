@@ -104,7 +104,7 @@ class DeltaApi:
             "hide_border": 1,
             "target": "self",
             "s_url": "https://graph.qq.com/oauth2.0/login_jump",
-            "pt_3rd_aid": 101944512,
+            "pt_3rd_aid": 101491592,
             "pt_feedback_link": "https://support.qq.com/products/77942?customInfo=milo.qq.com.appid101491592",
             "theme": 2,
             "verify_theme": "",
@@ -134,7 +134,7 @@ class DeltaApi:
             "v": 4,
             "t": 0.6142752744667854,
             "daid": 383,
-            "pt_3rd_aid": LOGIN_APP_ID,
+            "pt_3rd_aid": 101491592,
             "u1": "https://graph.qq.com/oauth2.0/login_jump",
         }
         url = CONSTANTS["SIG"]
@@ -184,7 +184,7 @@ class DeltaApi:
             if not cookie:
                 return {"code": -1, "message": "缺少cookie参数", "data": {}}
 
-            cookies = json.loads(cookie)
+            cookies: dict = json.loads(cookie)
             # 确保所有cookie值都是字符串类型
             for key in cookies:
                 cookies[key] = str(cookies[key])
@@ -207,7 +207,7 @@ class DeltaApi:
                 "pt_uistyle": 40,
                 "aid": LOGIN_APP_ID,
                 "daid": 383,
-                "pt_3rd_aid": LOGIN_APP_ID,
+                "pt_3rd_aid": 101491592,
                 "o1vId": "378b06c889d9113b39e814ca627809e3",
                 "pt_js_version": "530c3f68",
             }
@@ -355,7 +355,7 @@ class DeltaApi:
             params = {
                 "a": "qcCodeToOpenId",
                 "qc_code": qc_code,
-                "appid": LOGIN_APP_ID,
+                "appid": 101491592,
                 "redirect_uri": "https://milo.qq.com/comm-htdocs/login/qc_redirect.html",
                 "callback": "miloJsonpCb_86690",
                 "_": self.get_micro_time(),
@@ -365,7 +365,7 @@ class DeltaApi:
             response = await self.client.get(url, params=params, cookies=cookies, headers=headers)
 
             result = response.text
-            # logger.debug(f"AccessToken获取结果: {result}")
+            logger.debug(f"AccessToken获取结果: {result}")
 
             # 解析JSONP响应
             # 匹配 try{miloJsonpCb_86690({...});}catch(e){} 格式
@@ -1650,15 +1650,7 @@ class DeltaApi:
             # logger.info(f"获取特勤处利润信息jData: {j_data}")
             inner = cast(TQCPriceData, j_data.get("data", {}))
             # logger.info(f"获取特勤处利润信息inner: {inner}")
-
-            return {
-                "status": True,
-                "message": "获取特勤处利润信息成功",
-                "data": {
-                    "list": inner.get("list", []),
-                    "relateMap": inner.get("relateMap", {}),
-                },
-            }
+            return {"status": True, "message": "获取特勤处利润信息成功", "data": inner}
 
         except Exception as e:
             logger.exception(f"获取特勤处利润信息失败: {e}")

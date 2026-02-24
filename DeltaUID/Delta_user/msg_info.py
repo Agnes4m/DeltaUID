@@ -4,7 +4,7 @@ import json
 import asyncio
 import datetime
 import urllib.parse
-from typing import Any, Dict, Tuple, Union, Optional, cast
+from typing import Any, Dict, List, Tuple, Union, Optional, cast
 from functools import lru_cache
 from dataclasses import dataclass
 
@@ -31,6 +31,7 @@ from ..utils.models import (
     DayInfoData,
     DayListData,
     ItemHourPriceData,
+    PlaceWithProfitData,
 )
 from ..utils.api.api import DeltaApi
 from ..utils.api.utils import Util
@@ -1430,6 +1431,26 @@ class MsgInfo:
             return msg
         else:
             logger.warning(f"获取物品小时均价失败: {res.get('message', '未知错误')}")
+            return None
+
+    async def get_best_tqc_price(self):
+        """获取特勤处利润最佳"""
+        if not await self._validate_user() or not self.user_data:
+            logger.warning(f"用户{self.user_id}未绑定账号")
+            return None
+        deltaapi = await self._get_delta_api()
+        cookie = self.user_data.cookie
+        openid = self.user_data.uid
+        tqc = await deltaapi.get_place_list_with_profit(cookie, openid)
+        if tqc["status"] and tqc["data"]:
+            data = cast(List[PlaceWithProfitData], tqc["data"])
+            logger.info(data)
+            msg = "特勤处利润最佳:\n"
+            for index, item in enumerate(data):
+                msg += f"{index + 1}: {item['placeName']} ({item['profit']:.0f}哈夫币)\n"
+            return msg
+        else:
+            logger.warning(f"获取特勤处利润最佳失败: {tqc.get('message', '未知错误')}")
             return None
 
 

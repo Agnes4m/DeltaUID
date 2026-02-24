@@ -15,10 +15,10 @@ API_CONSTANTS: Dict[str, Any] = {
     "SIG": "https://xui.ptlogin2.qq.com/ssl/ptqrshow",
     "GETLOGINTICKET": "https://xui.ptlogin2.qq.com/cgi-bin/xlogin",
     "GETLOGINSTATUS": "https://ssl.ptlogin2.qq.com/ptqrlogin",
-    "GAMEBASEURL": "https://ams.shallow.ink/ide/",
-    # "GAMEBASEURL": "https://comm.ams.game.qq.com/ide/", 测试
-    "GAME_API_URL": "https://ams.shallow.ink/ide/",
-    # "GAME_API_URL": "https://comm.aci.game.qq.com/main", 测试
+    # "GAMEBASEURL": "https://ams.shallow.ink/ide/",
+    "GAMEBASEURL": "https://comm.ams.game.qq.com/ide/",  # 测试
+    # "GAME_API_URL": "https://ams.shallow.ink/ide/",
+    "GAME_API_URL": "https://comm.aci.game.qq.com/main",  # 测试
     "REQUEST_HEADERS_BASE": {
         "platform": "android",
         "Content-Type": "application/x-www-form-urlencoded",

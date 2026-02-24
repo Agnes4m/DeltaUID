@@ -31,17 +31,14 @@ exclude = ["tests", "deploy"]
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/Agnes4m/DeltaUID/issues"
 
-[tool.pyright]
-disableBytesTypePromotions = false
-
 [tool.basedpyright]
 deprecateTypingAliases = false
 
 [project]
 name = "DeltaUID"
-version = "0.0.1"
+version = "0.2.0"
 description = "基于GsCore, 支持OneBot(QQ)、OneBotV12、QQ频道、微信、KOOK（开黑啦）、Telegram（电报）、FeiShu（飞书）、Discord的全功能HoshinoBot/NoneBot2/Koishi/yunzai/ZeroBot鼠鼠模拟器小游戏"
 authors = [{ name = "Agnes4m", email = "Z735803792@163.com" }]
 dependencies = []
-requires-python = "==3.12.*"
+requires-python = ">=3.9"
 readme = "README.md"

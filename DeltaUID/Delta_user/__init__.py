@@ -175,36 +175,42 @@ async def get_depot(
 
 @scheduler.scheduled_job("cron", minute="*/2")
 async def df_notify_rank():
-    logger.info("[DF]正在执行战绩推送功能")
+    times = 0
+    logger.debug("[DF]正在执行战绩推送功能")
     await asyncio.sleep(random.randint(0, 1))
     datas = await gs_subscribe.get_subscribe("ss战绩订阅")
     if not datas:
         return
     for subscribe in datas:
-        logger.info(f"[DF]正在为订阅用户 {subscribe.user_id} 推送战绩")
+        logger.debug(f"[DF]正在为订阅用户 {subscribe.user_id} 推送战绩")
         uid = subscribe.extra_message
         if uid is None:
-            logger.info(f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过")
+            logger.debug(f"[DF]用户 {subscribe.user_id} 未绑定三角洲账号，跳过")
             continue
         user_id = subscribe.user_id
         data = MsgInfo(user_id, subscribe.bot_id)
 
         msg = await data.get_msg_info()
         if isinstance(msg, str):
-            logger.info(f"[DF]{user_id}账号: {msg}")
+            logger.debug(f"[DF]{user_id}账号: {msg}")
             continue
 
         record_sol = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
         if not record_sol:
-            logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
+            logger.debug(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
         elif isinstance(record_sol, list):
             await subscribe.send(str(record_sol[0]))
+            times += 1
+
         elif isinstance(record_sol, str | bytes):
             await subscribe.send(record_sol)
+            times += 1
         else:
-            logger.info(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
+            logger.debug(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
+    if times > 0:
+        logger.debug(f"[DF] 共为 {times} 个用户推送战绩")
 
 
 @df_pa.on_command("价格", block=True)

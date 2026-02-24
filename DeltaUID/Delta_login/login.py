@@ -26,8 +26,8 @@ async def _process_login_result(bot: Bot, ev: Event, res: Dict[str, Any], platfo
         await bot.send(f"登录失败：{res.get('message', '未知错误')}", at_sender=True)
         return None
 
-    access_token = res["data"]["access_token"]
-    openid = res["data"]["openid"]
+    access_token: str = res["data"]["access_token"]
+    openid: str = res["data"]["openid"]
     qq_id = ev.user_id
     group_id = ev.group_id if ev.group_id else 0
 

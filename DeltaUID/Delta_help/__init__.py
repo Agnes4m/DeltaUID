@@ -11,7 +11,7 @@ from .get_help import ICON, get_help
 sv_df_help = SV("鼠鼠帮助")
 
 
-@sv_df_help.on_fullmatch(("帮助"))
+@sv_df_help.on_command(("帮助"))
 async def send_help_img(bot: Bot, ev: Event):
     logger.info("开始执行[鼠鼠帮助]")
     im = await get_help()
