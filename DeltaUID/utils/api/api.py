@@ -10,7 +10,15 @@ import httpx
 from gsuid_core.logger import logger
 
 from .utils import LOGIN_APP_ID, API_CONSTANTS, Util
-from ..models import Sign, SignMsg, UserInfo, BigRedData, LoginStatus, TQCPriceData, ItemHourPriceData
+from ..models import (
+    Sign,
+    SignMsg,
+    UserInfo,
+    BigRedData,
+    LoginStatus,
+    TQCPriceData,
+    ItemHourPriceData,
+)
 
 CONSTANTS = API_CONSTANTS
 
@@ -175,7 +183,9 @@ class DeltaApi:
                 "message": "获取二维码失败，详情请查看日志",
             }
 
-    async def get_login_status(self, cookie: str, qrSig: str, qrToken: str, loginSig: str) -> LoginStatus:
+    async def get_login_status(
+        self, cookie: str, qrSig: str, qrToken: str, loginSig: str
+    ) -> LoginStatus:
         headers = CONSTANTS["REQUEST_HEADERS_BASE"]
         url = CONSTANTS["GETLOGINSTATUS"]
 
@@ -219,7 +229,9 @@ class DeltaApi:
                 if value != "":
                     httpx_cookies[name] = str(value)
 
-            response = await self.client.get(url, params=params, cookies=httpx_cookies, headers=headers)
+            response = await self.client.get(
+                url, params=params, cookies=httpx_cookies, headers=headers
+            )
 
             if response.status_code != 200:
                 return {"code": -5, "message": "响应错误", "data": {}}
@@ -231,9 +243,7 @@ class DeltaApi:
                 return {"code": -1, "message": "qrSig参数不正确", "data": {}}
 
             # 使用正则表达式解析ptuiCB响应
-            pattern = (
-                r"ptuiCB\s*\(\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*\)"
-            )
+            pattern = r"ptuiCB\s*\(\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*,\s*'(.*?)'\s*\)"
             matches = re.search(pattern, result)
 
             if not matches:
@@ -263,7 +273,9 @@ class DeltaApi:
             # qq = qq_match.group(1)
 
             # 访问重定向URL获取完整cookie
-            redirect_response = await self.client.get(q_url, cookies=httpx_cookies, headers=headers)
+            redirect_response = await self.client.get(
+                q_url, cookies=httpx_cookies, headers=headers
+            )
 
             # 合并所有cookie，保持与PHP版本一致
             all_cookies = {}
@@ -330,8 +342,12 @@ class DeltaApi:
             }
             logger.info(f"[DF] 授权请求参数: {form_data}")
             url = "https://graph.qq.com/oauth2.0/authorize"
-            response = await self.client.post(url, data=form_data, headers=headers, cookies=cookies)
-            logger.info(f"[DF] 授权请求响应: {response.status_code} {response.text}, 响应头: {response.headers}")
+            response = await self.client.post(
+                url, data=form_data, headers=headers, cookies=cookies
+            )
+            logger.info(
+                f"[DF] 授权请求响应: {response.status_code} {response.text}, 响应头: {response.headers}"
+            )
             # 从Location头中提取code
             location = response.headers.get("Location", "")
             code_match = re.search(r"code=(.*?)&", location)
@@ -362,14 +378,18 @@ class DeltaApi:
             }
 
             url = "https://ams.game.qq.com/ams/userLoginSvr"
-            response = await self.client.get(url, params=params, cookies=cookies, headers=headers)
+            response = await self.client.get(
+                url, params=params, cookies=cookies, headers=headers
+            )
 
             result = response.text
             logger.debug(f"AccessToken获取结果: {result}")
 
             # 解析JSONP响应
             # 匹配 try{miloJsonpCb_86690({...});}catch(e){} 格式
-            jsonp_match = re.search(r"try\{miloJsonpCb_86690\((\{.*?\})\);\}catch\(e\)\{\}", result)
+            jsonp_match = re.search(
+                r"try\{miloJsonpCb_86690\((\{.*?\})\);\}catch\(e\)\{\}", result
+            )
             if not jsonp_match:
                 # 尝试匹配不带try-catch的格式
                 jsonp_match = re.search(r"miloJsonpCb_86690\((\{.*?\})\)", result)
@@ -431,7 +451,9 @@ class DeltaApi:
             }
 
             url = "https://comm.ams.game.qq.com/ide/"
-            response = await self.client.post(CONSTANTS["GAMEBASEURL"], data=form_data, cookies=cookies)
+            response = await self.client.post(
+                CONSTANTS["GAMEBASEURL"], data=form_data, cookies=cookies
+            )
 
             data = response.json()
             if data["ret"] != 0:
@@ -575,14 +597,18 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=form_params, cookies=cookies, headers=headers)
+            response = await self.client.post(
+                url, params=form_params, cookies=cookies, headers=headers
+            )
 
             data = response.json()
             # logger.debug(f"玩家基础信息：{data}")
             if data["ret"] == 0:
                 # 处理玩家数据
                 player_data = data["jData"]["userData"].copy()
-                player_data["charac_name"] = urllib.parse.unquote(player_data["charac_name"])
+                player_data["charac_name"] = urllib.parse.unquote(
+                    player_data["charac_name"]
+                )
                 game_data["player"] = player_data
                 game_data["game"] = data["jData"]["careerData"]
 
@@ -666,7 +692,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_record(self, access_token: str, openid: str, type_id: int = 4, page: int = 1):
+    async def get_record(
+        self, access_token: str, openid: str, type_id: int = 4, page: int = 1
+    ):
         """
         获取战绩记录
         :param openid: openid
@@ -789,7 +817,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_object_info(self, access_token: str, openid: str, object_id: str = ""):
+    async def get_object_info(
+        self, access_token: str, openid: str, object_id: str = ""
+    ):
         access_type = self.platform
         try:
             # 参数验证
@@ -894,7 +924,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_weekly_report(self, access_token: str, openid: str, statDate: str = ""):
+    async def get_weekly_report(
+        self, access_token: str, openid: str, statDate: str = ""
+    ):
         access_type = self.platform
         try:
             # 参数验证
@@ -947,7 +979,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_weekly_friend_report(self, access_token: str, openid: str, statDate: str = ""):
+    async def get_weekly_friend_report(
+        self, access_token: str, openid: str, statDate: str = ""
+    ):
         access_type = self.platform
         try:
             # 参数验证
@@ -1000,7 +1034,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_user_info(self, access_token: str, openid: str, user_openid: str = ""):
+    async def get_user_info(
+        self, access_token: str, openid: str, user_openid: str = ""
+    ):
         access_type = self.platform
         try:
             # 参数验证
@@ -1047,7 +1083,9 @@ class DeltaApi:
                 "data": {},
             }
 
-    async def get_person_center_info(self, access_token: str, openid: str, resource_type: str = "sol"):
+    async def get_person_center_info(
+        self, access_token: str, openid: str, resource_type: str = "sol"
+    ):
         access_type = self.platform
         try:
             # 参数验证
@@ -1250,7 +1288,9 @@ class DeltaApi:
             wx_errcode = int(errcode_match.group(1)) if errcode_match else None
             wx_code = code_match.group(1) if code_match else None
 
-            logger.info(f"微信登录状态检查 - UUID: {uuid}, errcode: {wx_errcode}, code: {wx_code}")
+            logger.info(
+                f"微信登录状态检查 - UUID: {uuid}, errcode: {wx_errcode}, code: {wx_code}"
+            )
 
             # 根据错误码返回不同的状态
             if wx_errcode == 402:
@@ -1297,7 +1337,9 @@ class DeltaApi:
                 }
 
             # 其他错误代码
-            logger.error(f"微信登录状态检查 - UUID: {uuid}, errcode: {wx_errcode}, code: {wx_code}")
+            logger.error(
+                f"微信登录状态检查 - UUID: {uuid}, errcode: {wx_errcode}, code: {wx_code}"
+            )
             return {
                 "status": False,
                 "message": "其他错误代码",
@@ -1372,7 +1414,9 @@ class DeltaApi:
                 try:
                     token_data = json.loads(data["sMsg"])
 
-                    logger.info(f"微信访问令牌获取成功，openid: {token_data.get('openid', 'unknown')}")
+                    logger.info(
+                        f"微信访问令牌获取成功，openid: {token_data.get('openid', 'unknown')}"
+                    )
 
                     return {
                         "status": True,
@@ -1485,7 +1529,9 @@ class DeltaApi:
             access_type = self.platform
             is_qq = access_type == "qq"
             cookies = self.create_cookie(openid, access_token, is_qq)
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            response = await self.client.get(
+                url, params=params, headers=headers, cookies=cookies
+            )
             result = response.json()
             logger.debug(f"获取仓库信息结果: {result}")
 
@@ -1552,7 +1598,9 @@ class DeltaApi:
             cookies = self.create_cookie(openid, access_token, is_qq)
 
             url = API_CONSTANTS["GAME_API_URL"]
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            response = await self.client.get(
+                url, params=params, headers=headers, cookies=cookies
+            )
             result = response.json()
             logger.debug(f"获取物品小时均价结果: {result}")
 
@@ -1635,7 +1683,9 @@ class DeltaApi:
             cookies = self.create_cookie(openid, access_token, is_qq)
 
             url = API_CONSTANTS["GAMEBASEURL"]
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            response = await self.client.get(
+                url, params=params, headers=headers, cookies=cookies
+            )
             result = response.json()
             # logger.info(f"获取特勤处利润信息结果: {result}")
 
