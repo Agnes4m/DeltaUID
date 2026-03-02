@@ -70,7 +70,10 @@ async def get_record(bot: Bot, ev: Event):
     index, record = await data.get_record(ev.text.strip() if ev.text else "")
 
     if any(isinstance(x, str) for x in [msg, week_data, record]):
-        await bot.send(next(x for x in [msg, week_data, record] if isinstance(x, str)), at_sender=True)
+        await bot.send(
+            next(x for x in [msg, week_data, record] if isinstance(x, str)),
+            at_sender=True,
+        )
         return
     logger.info(record)
     if index == 1:
@@ -83,7 +86,9 @@ async def get_record(bot: Bot, ev: Event):
         )
     elif index == 2:
         record_tdm = cast(list[RecordTdmData], record)
-        img = await draw_record_tdm(await get_event_avatar(ev), record_tdm, cast(InfoData, msg))
+        img = await draw_record_tdm(
+            await get_event_avatar(ev), record_tdm, cast(InfoData, msg)
+        )
     else:
         img = None
 
@@ -195,7 +200,9 @@ async def df_notify_rank():
             logger.debug(f"[DF]{user_id}账号: {msg}")
             continue
 
-        record_sol = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
+        record_sol = await data.watch_record(
+            msg["user_name"], uid, await get_pic(msg["avatar"])
+        )
         if not record_sol:
             logger.debug(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
