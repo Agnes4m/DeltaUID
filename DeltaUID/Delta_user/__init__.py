@@ -127,17 +127,17 @@ async def get_tqc(
 
 @df_watch_record.on_command(("订阅"), block=True)
 async def watch_record(
-    bot: Bot,
-    ev: Event,
+    bot: Bot,  # Bot对象，用于与机器人交互
+    ev: Event,  # 事件对象，包含事件相关信息
 ):
-    logger.info("[DF]正在执行三角洲战绩订阅功能")
+    logger.info("[DF]正在执行三角洲战绩订阅功能")  # 记录日志，表示正在执行三角洲战绩订阅功能
 
-    user_id = ev.user_id
-    data = MsgInfo(user_id, bot.bot_id)
-    await data.scheduler_record(ev, bot)
+    user_id = ev.user_id  # 获取用户ID
+    data = MsgInfo(user_id, bot.bot_id)  # 创建MsgInfo对象，用于处理消息相关信息
+    await data.scheduler_record(ev, bot)  # 调度记录功能，传入事件和机器人对象
 
-    msg = await data.scheduler_record(ev, bot)
-    if isinstance(msg, str):
+    msg = await data.scheduler_record(ev, bot)  # 再次调用调度记录功能，获取返回的消息
+    if isinstance(msg, str):  # 检查返回的消息是否为字符串类型
         await bot.send(msg)
     # 测试输出
     # logger.info("测试输出")
@@ -160,6 +160,118 @@ async def cancel_watch_record(
         ev,
     )
     await bot.send("取消订阅成功！")
+
+
+@df_watch_record.on_command(("检查订阅", "清理订阅"), block=True)
+async def check_subscriptions(
+    bot: Bot,
+    ev: Event,
+):
+    """检查并清理失效的订阅"""
+    logger.info("[DF]正在执行检查订阅功能")
+
+    # 解析参数
+    raw_text = ev.text.strip() if ev.text else ""
+    cleanup_mode = "清理" in raw_text or ev.command in ["清理订阅"]
+
+    # 获取当前用户的所有订阅
+    datas = await gs_subscribe.get_subscribe("ss战绩订阅")
+    if not datas:
+        await bot.send("您当前没有订阅记录。", at_sender=True)
+        return
+
+    # 筛选当前用户的订阅
+    user_subscriptions = []
+    for subscribe in datas:
+        if subscribe.user_id == ev.user_id and subscribe.bot_id == bot.bot_id:
+            user_subscriptions.append(subscribe)
+
+    if not user_subscriptions:
+        await bot.send("您当前没有订阅记录。", at_sender=True)
+        return
+
+    await bot.send(f"开始检查您的 {len(user_subscriptions)} 个订阅，每个订阅将进行三次验证...", at_sender=True)
+
+    failed_subscriptions = []
+    success_count = 0
+
+    for i, subscribe in enumerate(user_subscriptions):
+        uid = subscribe.extra_message
+        if uid is None:
+            logger.warning(f"[DF]订阅 {i + 1} 没有关联的UID，跳过检查")
+            continue
+
+        # 创建MsgInfo对象
+        data = MsgInfo(subscribe.user_id, subscribe.bot_id)
+
+        # 进行三次验证
+        all_failed = True
+        failure_reasons = []
+
+        for attempt in range(3):
+            try:
+                msg = await data.get_msg_info()
+                if isinstance(msg, str):
+                    # 失败，记录原因
+                    failure_reasons.append(msg)
+                    logger.debug(f"[DF]订阅 {i + 1} 第{attempt + 1}次验证失败: {msg}")
+                else:
+                    # 成功
+                    all_failed = False
+                    logger.debug(f"[DF]订阅 {i + 1} 第{attempt + 1}次验证成功")
+                    break
+            except Exception as e:
+                failure_reason = f"验证异常: {str(e)}"
+                failure_reasons.append(failure_reason)
+                logger.error(f"[DF]订阅 {i + 1} 第{attempt + 1}次验证异常: {e}")
+
+            # 如果不是最后一次尝试，等待30秒
+            if attempt < 2:
+                await asyncio.sleep(30)
+
+        if all_failed:
+            failed_subscriptions.append({"subscribe": subscribe, "uid": uid, "reasons": failure_reasons})
+            logger.info(f"[DF]订阅 {i + 1} 三次验证均失败，标记为失效")
+        else:
+            success_count += 1
+            logger.debug(f"[DF]订阅 {i + 1} 验证成功")
+
+    # 生成报告
+    report = "检查完成！\n"
+    report += f"总订阅数: {len(user_subscriptions)}\n"
+    report += f"有效订阅: {success_count}\n"
+    report += f"失效订阅: {len(failed_subscriptions)}\n"
+
+    if failed_subscriptions:
+        report += "\n失效订阅详情：\n"
+        for i, failed in enumerate(failed_subscriptions):
+            report += f"{i + 1}. UID: {failed['uid']}\n"
+            report += f"   失败原因: {failed['reasons'][0] if failed['reasons'] else '未知原因'}\n"
+
+    # 处理失效订阅
+    cleaned_count = 0
+    if cleanup_mode and failed_subscriptions:
+        report += "\n正在清理失效订阅...\n"
+        for failed in failed_subscriptions:
+            try:
+                # 尝试直接使用当前事件删除订阅
+                # 注意：这里假设订阅名称是"ss战绩订阅"
+                await gs_subscribe.delete_subscribe(
+                    "single",
+                    "ss战绩订阅",
+                    ev,
+                )
+                cleaned_count += 1
+                logger.info(f"[DF]成功清理失效订阅 UID: {failed['uid']}")
+            except Exception as e:
+                logger.error(f"[DF]清理订阅失败 UID: {failed['uid']}: {e}")
+                report += f"清理失败 UID: {failed['uid']}: {str(e)}\n"
+
+        report += f"已清理 {cleaned_count} 个失效订阅。"
+    elif failed_subscriptions and not cleanup_mode:
+        report += "\n提示：使用'检查订阅 清理'或'清理订阅'命令可以自动清理这些失效订阅。"
+
+    await bot.send(report, at_sender=True)
 
 
 @df_pa.on_command(("藏馆"), block=True)
