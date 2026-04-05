@@ -24,7 +24,7 @@ class ResourceManager:
 
     def get_texture_path(self, name: str) -> Path:
         """获取纹理资源路径"""
-        return self._base_path / "utils" / "texture2d" / name
+        return self._base_path / "Delta_help" / "texture2d" / name
 
     @lru_cache(maxsize=32)
     def load_image(self, path: Path) -> Image.Image:

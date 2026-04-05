@@ -13,6 +13,8 @@ from ..utils.const import ICON_PATH, PLUGIN_NAME
 from ..utils.image import get_footer
 from ..utils.resource_manager import resource_manager
 
+# 保持向后兼容导出
+ICON = ICON_PATH
 HELP_DATA = Path(__file__).parent / "help.json"
 ICON_PATH_MODULE = Path(__file__).parent / "icon_path"
 

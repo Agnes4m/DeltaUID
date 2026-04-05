@@ -1486,7 +1486,20 @@ class DeltaApi:
             is_qq = access_type == "qq"
             cookies = self.create_cookie(openid, access_token, is_qq)
             response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
-            result = response.json()
+
+            # 安全校验响应
+            response.raise_for_status()
+
+            try:
+                result = response.json()
+            except ValueError:
+                logger.error(
+                    f"""API返回非JSON响应: 状态码={response.status_code},
+                    内容长度={len(response.content)}, 内容预览={response.text[:200]}
+                    """
+                )
+                raise Exception("服务器返回格式异常")
+
             logger.debug(f"获取仓库信息结果: {result}")
 
             # 解析响应数据
