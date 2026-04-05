@@ -10,7 +10,7 @@ class ResourceManager:
 
     _instance: Optional["ResourceManager"] = None
     _image_cache: Dict[Path, Image.Image] = {}
-    _base_path: Path
+    _base_path: Path = Path()
 
     def __new__(cls) -> "ResourceManager":
         if cls._instance is None:

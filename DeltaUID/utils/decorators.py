@@ -28,7 +28,7 @@ def handle_errors(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[...
     return wrapper
 
 
-def retry(retries: int = 3, delay: float = 1.0) -> Callable:
+def retry(retries: int = 3, delay: float = 1.0) -> Callable[..., Any]:
     """重试装饰器 - 失败后自动重试指定次数"""
 
     def decorator(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
