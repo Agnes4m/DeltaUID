@@ -67,7 +67,9 @@ def load_image_cached(path: str, mode: str = "RGBA") -> Image.Image:
 
 
 @lru_cache(maxsize=64)
-def load_image_resized(path: str, size: tuple[int, int], mode: str = "RGBA") -> Image.Image:
+def load_image_resized(
+    path: str, size: tuple[int, int], mode: str = "RGBA"
+) -> Image.Image:
     """缓存加载并调整大小的图片"""
     return Image.open(path).convert(mode).resize(size, Image.Resampling.LANCZOS)
 
@@ -99,7 +101,9 @@ def get_header_center() -> Image.Image:
     return Image.open(TEXTURE / "头像背景.png").convert("RGBA")
 
 
-async def draw_title(data: InfoData, avatar: Image.Image | None, mode: int = 0) -> Image.Image:
+async def draw_title(
+    data: InfoData, avatar: Image.Image | None, mode: int = 0
+) -> Image.Image:
     """绘制用户头像标题区域 - 优化版本
 
     Args:
@@ -126,7 +130,9 @@ async def draw_title(data: InfoData, avatar: Image.Image | None, mode: int = 0) 
     font_medium = get_cached_font(FONT_MEDIUM)
 
     # 添加圆环
-    avatar = await draw_pic_with_ring(avatar.resize((AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS), HEADER_SIZE)
+    avatar = await draw_pic_with_ring(
+        avatar.resize((AVATAR_SIZE, AVATAR_SIZE), Image.Resampling.LANCZOS), HEADER_SIZE
+    )
 
     easy_paste(header_center, avatar, (150, 150), "cc")
     easy_paste(title, header_center, (150, 160), "cc")
@@ -140,19 +146,25 @@ async def draw_title(data: InfoData, avatar: Image.Image | None, mode: int = 0) 
     y_offset = 150
     if mode in [0, 2]:
         rank_sol = Util.get_rank_by_score_sol(int(data["rankpoint"]))
-        texts_to_draw.append((f"烽火段位: {rank_sol}", (290, y_offset), WHITE, font_large, "lt"))
+        texts_to_draw.append(
+            (f"烽火段位: {rank_sol}", (290, y_offset), WHITE, font_large, "lt")
+        )
         y_offset += 45
 
     if mode in [0, 1]:
         rank_tdm = Util.get_rank_by_score_tdm(int(data["tdmrankpoint"]))
-        texts_to_draw.append((f"全战段位:{rank_tdm}", (290, y_offset), WHITE, font_large, "lt"))
+        texts_to_draw.append(
+            (f"全战段位:{rank_tdm}", (290, y_offset), WHITE, font_large, "lt")
+        )
         if mode == 0:
             y_offset += 45
 
     # 时间
     time = data.get("time")
     if time:
-        texts_to_draw.append((f"截至时间: {time}", (290, y_offset), WHITE, font_large, "lt"))
+        texts_to_draw.append(
+            (f"截至时间: {time}", (290, y_offset), WHITE, font_large, "lt")
+        )
 
     # 排位分
     texts_to_draw.append((data["rankpoint"], (860, 250), WHITE, font_large, "mm"))
@@ -196,7 +208,9 @@ async def draw_one_msg(
     draw.text((x_pos, y_pos_name), name, GREEN, font_label, "mm")
 
 
-async def draw_tqc_section(img: Image.Image, tqc_data: list[TQCData], y_pos: int) -> None:
+async def draw_tqc_section(
+    img: Image.Image, tqc_data: list[TQCData], y_pos: int
+) -> None:
     """绘制特勤处信息区域
 
     Args:
@@ -226,7 +240,9 @@ async def draw_tqc_section(img: Image.Image, tqc_data: list[TQCData], y_pos: int
         if tqc_item.get("status") == "producing":
             try:
                 item_icon = (
-                    Image.open(MAIN_PATH / f"res/{tqc_item['object_id']}.png").convert("RGBA").resize((250, 250))
+                    Image.open(MAIN_PATH / f"res/{tqc_item['object_id']}.png")
+                    .convert("RGBA")
+                    .resize((250, 250))
                 )
                 easy_paste(tqc_sth, item_icon, (150, 250), "cc")
             except FileNotFoundError:
@@ -270,7 +286,9 @@ async def draw_property_section(img: Image.Image, data: InfoData, y_pos: int) ->
     # 现金信息
     prop_bar_1 = deepcopy(prop_bar)
     prop_draw_1 = ImageDraw.Draw(prop_bar_1)
-    prop_draw_1.text((90, 30), f"现金: {data['money']}", WHITE, df_font(FONT_MEDIUM), "lt")
+    prop_draw_1.text(
+        (90, 30), f"现金: {data['money']}", WHITE, df_font(FONT_MEDIUM), "lt"
+    )
     easy_paste(prop_bar_1, money_icon, (30, 20), "lt")
     easy_paste(img, prop_bar_1, (60, y_pos), "lt")
 
@@ -366,7 +384,9 @@ async def draw_tdm_stats_section(img: Image.Image, data: InfoData, y_pos: int) -
         await draw_one_msg(img_draw, name, value, (base_x + indent * i, y_pos + 120))
 
 
-async def draw_daily_section(img: Image.Image, day_data: DayInfoData, y_pos: int) -> None:
+async def draw_daily_section(
+    img: Image.Image, day_data: DayInfoData, y_pos: int
+) -> None:
     """绘制日报信息区域
 
     Args:
@@ -411,7 +431,9 @@ async def draw_daily_section(img: Image.Image, day_data: DayInfoData, y_pos: int
 
 
 # @gs_cache()
-async def draw_df_info_img(data: InfoData, day: DayInfoData, tqc: list[TQCData], ev: Event) -> bytes:
+async def draw_df_info_img(
+    data: InfoData, day: DayInfoData, tqc: list[TQCData], ev: Event
+) -> bytes:
     """绘制用户信息完整图片
 
     Args:
@@ -569,7 +591,9 @@ async def draw_record_sol(
         easy_paste(img, hero_img, (x, y), "lt")
 
     for i in range(min(3, len(week_data["total_ArmedForceId_num_list"]))):
-        hero_name = Util.get_armed_force_name(week_data["total_ArmedForceId_num_list"][i]["ArmedForceId"])
+        hero_name = Util.get_armed_force_name(
+            week_data["total_ArmedForceId_num_list"][i]["ArmedForceId"]
+        )
         draw_hero(
             hero_name,
             week_data["total_ArmedForceId_num_list"][i]["inum"],
@@ -666,7 +690,9 @@ async def draw_record_sol(
             easy_paste(img_base, bg_map, (78, 22), "lt")
 
             # 头像
-            avatar = Image.open(avatar_path / f"{data[i]['armed_force']}.png").resize((120, 120))
+            avatar = Image.open(avatar_path / f"{data[i]['armed_force']}.png").resize(
+                (120, 120)
+            )
             easy_paste(img_base, avatar, (140, 20), "lt")
 
             # 内容
@@ -724,7 +750,9 @@ async def draw_record_sol(
     return await convert_img(img)
 
 
-async def draw_record_tdm(avatar: Image.Image | None, data: list[RecordTdmData], msg: InfoData):
+async def draw_record_tdm(
+    avatar: Image.Image | None, data: list[RecordTdmData], msg: InfoData
+):
     img = Image.open(TEXTURE / "bg.jpg").convert("RGBA")
     data_one = cast(
         InfoData,
