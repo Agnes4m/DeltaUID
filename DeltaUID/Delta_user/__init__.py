@@ -70,7 +70,10 @@ async def get_record(bot: Bot, ev: Event):
     index, record = await data.get_record(ev.text.strip() if ev.text else "")
 
     if any(isinstance(x, str) for x in [msg, week_data, record]):
-        await bot.send(next(x for x in [msg, week_data, record] if isinstance(x, str)), at_sender=True)
+        await bot.send(
+            next(x for x in [msg, week_data, record] if isinstance(x, str)),
+            at_sender=True,
+        )
         return
     logger.info(record)
     if index == 1:
@@ -83,7 +86,9 @@ async def get_record(bot: Bot, ev: Event):
         )
     elif index == 2:
         record_tdm = cast(list[RecordTdmData], record)
-        img = await draw_record_tdm(await get_event_avatar(ev), record_tdm, cast(InfoData, msg))
+        img = await draw_record_tdm(
+            await get_event_avatar(ev), record_tdm, cast(InfoData, msg)
+        )
     else:
         img = None
 
@@ -130,7 +135,9 @@ async def watch_record(
     bot: Bot,  # Bot对象，用于与机器人交互
     ev: Event,  # 事件对象，包含事件相关信息
 ):
-    logger.info("[DF]正在执行三角洲战绩订阅功能")  # 记录日志，表示正在执行三角洲战绩订阅功能
+    logger.info(
+        "[DF]正在执行三角洲战绩订阅功能"
+    )  # 记录日志，表示正在执行三角洲战绩订阅功能
 
     user_id = ev.user_id  # 获取用户ID
     data = MsgInfo(user_id, bot.bot_id)  # 创建MsgInfo对象，用于处理消息相关信息
@@ -190,7 +197,10 @@ async def check_subscriptions(
         await bot.send("您当前没有订阅记录。", at_sender=True)
         return
 
-    await bot.send(f"开始检查您的 {len(user_subscriptions)} 个订阅，每个订阅将进行三次验证...", at_sender=True)
+    await bot.send(
+        f"开始检查您的 {len(user_subscriptions)} 个订阅，每个订阅将进行三次验证...",
+        at_sender=True,
+    )
 
     failed_subscriptions = []
     success_count = 0
@@ -230,7 +240,9 @@ async def check_subscriptions(
                 await asyncio.sleep(30)
 
         if all_failed:
-            failed_subscriptions.append({"subscribe": subscribe, "uid": uid, "reasons": failure_reasons})
+            failed_subscriptions.append(
+                {"subscribe": subscribe, "uid": uid, "reasons": failure_reasons}
+            )
             logger.info(f"[DF]订阅 {i + 1} 三次验证均失败，标记为失效")
         else:
             success_count += 1
@@ -269,7 +281,9 @@ async def check_subscriptions(
 
         report += f"已清理 {cleaned_count} 个失效订阅。"
     elif failed_subscriptions and not cleanup_mode:
-        report += "\n提示：使用'检查订阅 清理'或'清理订阅'命令可以自动清理这些失效订阅。"
+        report += (
+            "\n提示：使用'检查订阅 清理'或'清理订阅'命令可以自动清理这些失效订阅。"
+        )
 
     await bot.send(report, at_sender=True)
 
@@ -307,7 +321,9 @@ async def df_notify_rank():
             logger.debug(f"[DF]{user_id}账号: {msg}")
             continue
 
-        record_sol = await data.watch_record(msg["user_name"], uid, await get_pic(msg["avatar"]))
+        record_sol = await data.watch_record(
+            msg["user_name"], uid, await get_pic(msg["avatar"])
+        )
         if not record_sol:
             logger.debug(f"[DF]用户 {subscribe.user_id} 未找到新战绩，跳过")
             continue
