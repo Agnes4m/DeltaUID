@@ -8,7 +8,6 @@ from typing import Any, Optional, cast
 from functools import wraps
 
 import httpx
-from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 
 from gsuid_core.logger import logger
 
@@ -34,8 +33,8 @@ async def get_global_client() -> httpx.AsyncClient:
                 _global_client = httpx.AsyncClient(
                     timeout=DEFAULT_TIMEOUT,
                     limits=httpx.Limits(max_connections=100, max_keepalive_connections=20),
-                    follow_redirects=True,
-                    http2=True,
+                    follow_redirects=False,  # 不自动跟随重定向，以获取Location header
+                    http2=False,  # 禁用HTTP/2保持与delta-helper一致
                 )
     return _global_client
 
@@ -49,17 +48,22 @@ async def close_global_client():
 
 
 def api_retry(func):
-    """API请求重试装饰器"""
+    """API请求重试装饰器 使用原生asyncio实现"""
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=1, max=5),
-        retry=retry_if_exception_type((httpx.TransportError, httpx.TimeoutException)),
-        reraise=True,
-    )
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        return await func(*args, **kwargs)
+        max_attempts = 3
+        for attempt in range(1, max_attempts + 1):
+            try:
+                return await func(*args, **kwargs)
+            except (httpx.TransportError, httpx.TimeoutException) as e:
+                if attempt == max_attempts:
+                    logger.exception(f"请求失败已达到最大重试次数: {e}")
+                    raise
+                # 指数退避: 1, 2, 4 秒 (multiplier=1, min=1, max=5)
+                wait_time = min(2 ** (attempt - 1), 5)
+                logger.warning(f"请求失败 (尝试 {attempt}/{max_attempts}), {wait_time}秒后重试: {e}")
+                await asyncio.sleep(wait_time)
 
     return wrapper
 
@@ -167,7 +171,8 @@ class DeltaApi:
         }
 
         try:
-            response = await self.client.get(url, headers=headers, params=params)
+            client = await get_global_client()
+            response = await client.get(url, headers=headers, params=params)
             if response.status_code == 200:
                 return True
             else:
@@ -196,7 +201,8 @@ class DeltaApi:
         url = CONSTANTS["SIG"]
 
         try:
-            response = await self.client.get(url, headers=headers, params=params)
+            client = await get_global_client()
+            response = await client.get(url, headers=headers, params=params)
 
             if response.status_code == 200:
                 qrSig = response.cookies.get("qrsig", "")
@@ -275,7 +281,8 @@ class DeltaApi:
                 if value != "":
                     httpx_cookies[name] = str(value)
 
-            response = await self.client.get(url, params=params, cookies=httpx_cookies, headers=headers)
+            client = await get_global_client()
+            response = await client.get(url, params=params, cookies=httpx_cookies, headers=headers)
 
             if response.status_code != 200:
                 return {"code": -5, "message": "响应错误", "data": {}}
@@ -319,7 +326,8 @@ class DeltaApi:
             # qq = qq_match.group(1)
 
             # 访问重定向URL获取完整cookie
-            redirect_response = await self.client.get(q_url, cookies=httpx_cookies, headers=headers)
+            client = await get_global_client()
+            redirect_response = await client.get(q_url, cookies=httpx_cookies, headers=headers)
 
             # 合并所有cookie，保持与PHP版本一致
             all_cookies = {}
@@ -365,8 +373,6 @@ class DeltaApi:
             # 第一步：发送授权请求
             headers = {
                 "referer": "https://xui.ptlogin2.qq.com/",
-                "Content-Type": "application/x-www-form-urlencoded",
-                "X-G-TK": str(self.get_gtk(cookies.get("p_skey", ""))),
             }
 
             form_data = {
@@ -386,7 +392,8 @@ class DeltaApi:
             }
             logger.info(f"[DF] 授权请求参数: {form_data}")
             url = "https://graph.qq.com/oauth2.0/authorize"
-            response = await self.client.post(url, data=form_data, headers=headers, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, data=form_data, headers=headers, cookies=cookies)
             logger.info(f"[DF] 授权请求响应: {response.status_code} {response.text}, 响应头: {response.headers}")
             # 从Location头中提取code
             location = response.headers.get("Location", "")
@@ -401,7 +408,8 @@ class DeltaApi:
             qc_code = code_match.group(1)
 
             # 访问重定向URL
-            await self.client.get(location, cookies=cookies, headers=headers)
+            client = await get_global_client()
+            await client.get(location, cookies=cookies, headers=headers)
 
             # 第二步：获取openid和access_token
             headers = {
@@ -418,7 +426,8 @@ class DeltaApi:
             }
 
             url = "https://ams.game.qq.com/ams/userLoginSvr"
-            response = await self.client.get(url, params=params, cookies=cookies, headers=headers)
+            client = await get_global_client()
+            response = await client.get(url, params=params, cookies=cookies, headers=headers)
 
             result = response.text
             logger.debug(f"AccessToken获取结果: {result}")
@@ -487,7 +496,8 @@ class DeltaApi:
             }
 
             url = "https://comm.ams.game.qq.com/ide/"
-            response = await self.client.post(CONSTANTS["GAMEBASEURL"], data=form_data, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(CONSTANTS["GAMEBASEURL"], data=form_data, cookies=cookies)
 
             data = response.json()
             if data["ret"] != 0:
@@ -519,7 +529,8 @@ class DeltaApi:
                 }
 
                 url = API_CONSTANTS["GAME_API_URL"]
-                response = await self.client.get(url, params=params, headers=headers)
+                client = await get_global_client()
+                response = await client.get(url, params=params, headers=headers)
                 result = response.text
                 # logger.debug(f"获取角色信息结果: {result}")
 
@@ -574,7 +585,8 @@ class DeltaApi:
                 }
 
                 url = "https://comm.ams.game.qq.com/ide/"
-                response = await self.client.post(url, data=form_data, cookies=cookies)
+                client = await get_global_client()
+                response = await client.post(url, data=form_data, cookies=cookies)
                 result = response.json()
 
                 if result["ret"] != 0:
@@ -708,7 +720,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, data=form_data, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, data=form_data, cookies=cookies)
 
             data = response.json()
             if data["ret"] != 0:
@@ -772,7 +785,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, data=form_data, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, data=form_data, cookies=cookies)
             try:
                 data = response.json()
             except json.JSONDecodeError:
@@ -831,7 +845,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -882,7 +897,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -929,7 +945,8 @@ class DeltaApi:
 
             url = CONSTANTS["GAMEBASEURL"]
 
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -989,7 +1006,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -1042,7 +1060,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -1089,7 +1108,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -1141,7 +1161,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -1187,7 +1208,8 @@ class DeltaApi:
             }
 
             url = CONSTANTS["GAMEBASEURL"]
-            response = await self.client.post(url, params=params, cookies=cookies)
+            client = await get_global_client()
+            response = await client.post(url, params=params, cookies=cookies)
 
             data = response.json()
             if data["ret"] == 0:
@@ -1236,7 +1258,8 @@ class DeltaApi:
 
             # 发送GET请求
             url = "https://open.weixin.qq.com/connect/qrconnect"
-            response = await self.client.get(url, params=params, headers=headers)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers)
 
             # 获取响应内容
             result = response.text
@@ -1301,7 +1324,8 @@ class DeltaApi:
 
             # 发送GET请求检查登录状态
             url = "https://lp.open.weixin.qq.com/connect/l/qrconnect"
-            response = await self.client.get(url, params=params)
+            client = await get_global_client()
+            response = await client.get(url, params=params)
 
             # 获取响应内容
             result = response.text
@@ -1416,7 +1440,8 @@ class DeltaApi:
 
             # 发送GET请求获取访问令牌
             url = "https://apps.game.qq.com/ams/ame/codeToOpenId.php"
-            response = await self.client.get(url, params=params, headers=headers)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers)
 
             # 获取响应内容
             result = response.text
@@ -1502,7 +1527,8 @@ class DeltaApi:
             }
 
             url = API_CONSTANTS["GAME_API_URL"]
-            response = await self.client.get(url, params=params, headers=headers)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers)
             result = response.text
             logger.debug(f"获取角色信息结果: {result}")
 
@@ -1551,7 +1577,8 @@ class DeltaApi:
             access_type = self.platform
             is_qq = access_type == "qq"
             cookies = self.create_cookie(openid, access_token, is_qq)
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers, cookies=cookies)
 
             # 安全校验响应
             response.raise_for_status()
@@ -1631,7 +1658,8 @@ class DeltaApi:
             cookies = self.create_cookie(openid, access_token, is_qq)
 
             url = API_CONSTANTS["GAME_API_URL"]
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers, cookies=cookies)
             result = response.json()
             logger.debug(f"获取物品小时均价结果: {result}")
 
@@ -1714,7 +1742,8 @@ class DeltaApi:
             cookies = self.create_cookie(openid, access_token, is_qq)
 
             url = API_CONSTANTS["GAMEBASEURL"]
-            response = await self.client.get(url, params=params, headers=headers, cookies=cookies)
+            client = await get_global_client()
+            response = await client.get(url, params=params, headers=headers, cookies=cookies)
             result = response.json()
             # logger.info(f"获取特勤处利润信息结果: {result}")
 
