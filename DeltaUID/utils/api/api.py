@@ -855,6 +855,14 @@ class DeltaApi:
                     "message": "获取成功",
                     "data": data["jData"]["data"]["data"],
                 }
+            elif data["ret"] == 101:
+                logger.error(f"登录状态已过期: {data}")
+                return {
+                    "status": False,
+                    "message": "登录状态已过期，请重新登录",
+                    "data": {},
+                    "login_expired": True,
+                }
             else:
                 logger.error(f"获取特勤处状态失败: {data}")
                 return {
@@ -962,6 +970,14 @@ class DeltaApi:
                         "message": "获取成功，但无数据",
                         "data": {},
                     }
+            elif data["ret"] == 101:
+                logger.error(f"登录状态已过期: {data}")
+                return {
+                    "status": False,
+                    "message": "登录状态已过期，请重新登录",
+                    "data": {},
+                    "login_expired": True,
+                }
             else:
                 logger.error(f"获取每日报告失败: {data}")
                 return {
@@ -1170,6 +1186,14 @@ class DeltaApi:
                     "status": True,
                     "message": "获取成功",
                     "data": data["jData"]["data"]["data"],
+                }
+            elif data["ret"] == 101:
+                logger.error(f"登录状态已过期: {data}")
+                return {
+                    "status": False,
+                    "message": "登录状态已过期，请重新登录",
+                    "data": {},
+                    "login_expired": True,
                 }
             else:
                 logger.error(f"获取用户中心信息失败: {data}")

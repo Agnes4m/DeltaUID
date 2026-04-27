@@ -392,12 +392,18 @@ class MsgInfo:
 
         # 检查数据有效性
         if not sol_info.get("data"):
+            # 检查是否是登录过期
+            if sol_info.get("login_expired"):
+                return ERROR_LOGIN_EXPIRED
             return ERROR_SERVER_BUSY
 
         if sol_info["data"].get("rat") == 101:
             return "登录信息已过期，请重新登录"
 
         if not tdm_info.get("data"):
+            # 检查是否是登录过期
+            if tdm_info.get("login_expired"):
+                return ERROR_LOGIN_EXPIRED
             return ERROR_SERVER_BUSY
 
         # 处理基本数据
@@ -405,6 +411,9 @@ class MsgInfo:
 
         # 检查所有响应是否成功
         if not all([player_info_res["status"], sol_info["status"], tdm_info["status"]]):
+            # 检查是否是登录过期
+            if player_info_res.get("login_expired") or sol_info.get("login_expired") or tdm_info.get("login_expired"):
+                return ERROR_LOGIN_EXPIRED
             return ERROR_SERVER_BUSY
 
         # 提取玩家信息 - 使用辅助函数提高可读性
@@ -697,6 +706,9 @@ class MsgInfo:
             )
 
             if not res.get("status"):
+                # 检查是否是登录过期
+                if res.get("login_expired"):
+                    return ERROR_LOGIN_EXPIRED
                 return f"获取特勤处状态失败：{res.get('message', '未知错误')}"
 
             return self._process_tqc_data(res["data"])
@@ -780,6 +792,9 @@ class MsgInfo:
             res = await deltaapi.get_daily_report(self.user_data.cookie, self.user_data.uid)
 
             if not res.get("status"):
+                # 检查是否是登录过期
+                if res.get("login_expired"):
+                    return ERROR_LOGIN_EXPIRED
                 return f"获取日报失败：{res.get('message', '未知错误')}"
 
             sol_detail = res["data"].get("solDetail")
