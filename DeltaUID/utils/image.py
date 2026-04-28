@@ -13,4 +13,7 @@ def get_footer():
 
 @lru_cache(maxsize=1)
 def get_ICON():
-    return Image.open(Path(__file__).parents[2] / "ICON.png")
+    icon = Image.open(Path(__file__).parents[2] / "ICON.png")
+    if icon.mode != "RGBA":
+        icon = icon.convert("RGBA")
+    return icon

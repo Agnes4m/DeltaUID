@@ -128,13 +128,27 @@ class DFUser(User, table=True):
     @with_session
     async def get_all_cookie(cls, session: AsyncSession) -> list["DFUser"]:
         """获取所有用户的cookie数据"""
-        return await cls.select_all_data(session=session)
+        logger.debug(f"get_all_cookie called with session: {session}")
+        try:
+            result = await cls.select_all_data()
+            logger.debug(f"get_all_cookie result type: {type(result)}, value: {result}")
+            return result if result is not None else []
+        except Exception as e:
+            logger.error(f"get_all_cookie error: {e}")
+            return []
 
     @classmethod
     @with_session
     async def get_all_data(cls, session: AsyncSession) -> list["DFUser"]:
         """获取所有用户数据"""
-        return await cls.select_all_data(session=session)
+        logger.debug(f"get_all_data called with session: {session}")
+        try:
+            result = await cls.select_all_data()
+            logger.debug(f"get_all_data result type: {type(result)}, value: {result}")
+            return result if result is not None else []
+        except Exception as e:
+            logger.error(f"get_all_data error: {e}")
+            return []
 
     @classmethod
     @with_session

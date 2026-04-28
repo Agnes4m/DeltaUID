@@ -11,11 +11,23 @@ ICON = Path(__file__).parent.parent.parent / "icon.png"
 
 
 def get_ICON():
-    return Image.open(ICON)
+    icon = Image.open(ICON)
+    if icon.mode != "RGBA":
+        icon = icon.convert("RGBA")
+        r, g, b, a = icon.split()
+        a = a.point(lambda x: 255 if x > 0 else 0)
+        icon = Image.merge("RGBA", (r, g, b, a))
+    return icon
 
 
 async def get_user_num():
+    from gsuid_core.logger import logger
+
+    logger.debug("get_user_num called")
     datas = await DFUser.get_all_cookie()
+    logger.debug(f"get_user_num got datas: type={type(datas)}, value={datas}")
+    if datas is None:
+        return 0
     return len(datas)
 
 
