@@ -1,6 +1,6 @@
 from typing import Optional, cast
 
-from sqlmodel import Field
+from sqlmodel import Field, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from gsuid_core.bot import Event
@@ -130,9 +130,10 @@ class DFUser(User, table=True):
         """获取所有用户的cookie数据"""
         logger.debug(f"get_all_cookie called with session: {session}")
         try:
-            result = await cls.select_all_data()
+            result = await session.execute(select(cls))
+            result = result.scalars().all()
             logger.debug(f"get_all_cookie result type: {type(result)}, value: {result}")
-            return result if result is not None else []
+            return list(result) if result is not None else []
         except Exception as e:
             logger.error(f"get_all_cookie error: {e}")
             return []
@@ -143,9 +144,10 @@ class DFUser(User, table=True):
         """获取所有用户数据"""
         logger.debug(f"get_all_data called with session: {session}")
         try:
-            result = await cls.select_all_data()
+            result = await session.execute(select(cls))
+            result = result.scalars().all()
             logger.debug(f"get_all_data result type: {type(result)}, value: {result}")
-            return result if result is not None else []
+            return list(result) if result is not None else []
         except Exception as e:
             logger.error(f"get_all_data error: {e}")
             return []
