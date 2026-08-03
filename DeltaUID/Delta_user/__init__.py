@@ -282,7 +282,13 @@ async def get_depot(
     logger.info("[DF]正在执行三角洲藏馆功能")
     data = MsgInfo(ev.user_id, bot.bot_id)
     a = await data.get_depot_red_info()
-    await bot.send(message=a, at_sender=True) if a is not None else None
+    if a is not None:
+        await bot.send(message=a, at_sender=True)
+    else:
+        await bot.send(
+            "获取藏馆信息失败，接口可能已失效或数据获取异常，请稍后重试或联系管理员",
+            at_sender=True,
+        )
 
 
 @scheduler.scheduled_job("cron", minute="*/2")
