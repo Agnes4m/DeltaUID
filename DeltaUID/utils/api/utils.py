@@ -70,7 +70,9 @@ class Util:
         }
 
     @staticmethod
-    def parse_api_response(data: dict, success_key: str = "ret", data_key: str = "jData") -> Dict[str, Any]:
+    def parse_api_response(
+        data: dict, success_key: str = "ret", data_key: str = "jData"
+    ) -> Dict[str, Any]:
         """解析API响应，返回标准化格式"""
         ret = data.get(success_key, -1)
         if ret == 0:
@@ -87,7 +89,9 @@ class Util:
             }
 
     @staticmethod
-    def build_game_params(chart_id: int, sub_chart_id: int, token: str, method: str = "", **extra) -> Dict[str, Any]:
+    def build_game_params(
+        chart_id: int, sub_chart_id: int, token: str, method: str = "", **extra
+    ) -> Dict[str, Any]:
         """构建游戏API通用参数"""
         params = {
             "iChartId": chart_id,
