@@ -80,7 +80,9 @@ async def login(bot: Bot, ev: Event):
         elif retcode == -3:
             now_uid = await DFBind.get_uid_by_game(qid, ev.bot_id)
             if now_uid:
-                await bot.send(f"{MSG_PREFIX} 你目前只绑定了一个UID{now_uid}, 无法切换!")
+                await bot.send(
+                    f"{MSG_PREFIX} 你目前只绑定了一个UID{now_uid}, 无法切换!"
+                )
             else:
                 await bot.send(f"{MSG_PREFIX} 你尚未绑定任何UID, 无法切换!")
         else:
@@ -152,7 +154,11 @@ def extract_openid_token_platform(text_list: Union[str, List[str]]) -> Dict[str,
     if not platform:
         # 检查是否有qc相关的标识
         text_combined = ";".join(processed_list)
-        if "qc" in text_combined.lower() or "qq" in text_combined.lower() or "milo.qq.com" in text_combined:
+        if (
+            "qc" in text_combined.lower()
+            or "qq" in text_combined.lower()
+            or "milo.qq.com" in text_combined
+        ):
             platform = "qq"
         elif "wx" in text_combined.lower() or "wechat" in text_combined.lower():
             platform = "wx"
@@ -192,7 +198,9 @@ async def add_ck(bot: Bot, ev: Event):
         openid = extracted_data["openid"]
         access_token = extracted_data["access_token"]
         platform = extracted_data["platform"]
-    logger.info(f"{MSG_PREFIX} 提取结果: openid={openid}, access_token={access_token}, platform={platform}")
+    logger.info(
+        f"{MSG_PREFIX} 提取结果: openid={openid}, access_token={access_token}, platform={platform}"
+    )
 
     # 检查必需字段是否为空
     required_fields = [openid, access_token, platform]
