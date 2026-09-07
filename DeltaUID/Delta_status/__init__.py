@@ -1,9 +1,8 @@
 from pathlib import Path
 
-from PIL import Image
-
-from gsuid_core.subscribe import gs_subscribe
 from gsuid_core.status.plugin_status import register_status
+from gsuid_core.subscribe import gs_subscribe
+from PIL import Image
 
 from ..utils.database.models import DFBind, DFUser
 
