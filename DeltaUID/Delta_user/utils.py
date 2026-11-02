@@ -1,10 +1,10 @@
-import sys
 import json
+import sys
 import time
 from typing import cast
 
-from gsuid_core.models import Event
 from gsuid_core.data_store import get_res_path
+from gsuid_core.models import Event
 
 from ..utils.models import ItemIdData
 

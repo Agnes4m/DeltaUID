@@ -1,6 +1,6 @@
-from typing import Dict, Optional
-from pathlib import Path
 from functools import lru_cache
+from pathlib import Path
+from typing import Dict, Optional
 
 from PIL import Image
 

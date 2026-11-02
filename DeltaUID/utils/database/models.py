@@ -1,14 +1,13 @@
 from typing import Optional, cast
 
-from sqlmodel import Field, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from gsuid_core.bot import Event
 from gsuid_core.logger import logger
+from gsuid_core.utils.database.base_models import Bind, User, with_session
+from gsuid_core.utils.database.startup import exec_list
 from gsuid_core.webconsole import site
 from gsuid_core.webconsole.mount_app import GsAdminModel
-from gsuid_core.utils.database.startup import exec_list
-from gsuid_core.utils.database.base_models import Bind, User, with_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import Field, select
 
 from ..models import UserData
 
@@ -195,7 +194,7 @@ class DFUser(User, table=True):
         data = await cls.select_data_by_uid(uid=uid)
         if data is None:
             logger.debug(f"未找到用户 {uid}，无法更新战绩")
-            return None
+            return
         data = cast(DFUser, data)
         if data is None:
             raise ValueError(f"未找到用户 {uid}")
