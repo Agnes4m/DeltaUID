@@ -1,9 +1,9 @@
 from typing import Optional
 
-from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
 from gsuid_core.models import Event
+from gsuid_core.sv import SV
 
 from ..utils.api.api import DeltaApi
 from ..utils.database.models import DFUser
@@ -42,7 +42,7 @@ async def _get_password_for_user(user_data: DFUser) -> Optional[str]:
 
         return "\n".join(msgs)
     except Exception as e:
-        logger.error(f"[DF] 获取用户密码时发生错误: {str(e)}")
+        logger.error(f"[DF] 获取用户密码时发生错误: {e!s}")
         return None
 
 
@@ -70,5 +70,5 @@ async def handle_password_query(bot: Bot, event: Event) -> None:
         # 如果所有账号都无效，发送提示消息
         await bot.send(NO_VALID_ACCOUNT_MSG, at_sender=True)
     except Exception as e:
-        logger.error(f"[DF] 处理密码查询时发生错误: {str(e)}")
+        logger.error(f"[DF] 处理密码查询时发生错误: {e!s}")
         await bot.send("查询过程中发生错误，请稍后重试", at_sender=True)

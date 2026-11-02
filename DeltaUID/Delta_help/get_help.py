@@ -1,17 +1,16 @@
 import json
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
 import aiofiles
-
-from gsuid_core.sv import get_plugin_available_prefix
-from gsuid_core.help.model import PluginHelp
 from gsuid_core.help.draw_new_plugin_help import get_new_help
+from gsuid_core.help.model import PluginHelp
+from gsuid_core.sv import get_plugin_available_prefix
 
-from ..version import DeltaUID_version
 from ..utils.const import ICON_PATH, PLUGIN_NAME
 from ..utils.image import get_footer
 from ..utils.resource_manager import resource_manager
+from ..version import DeltaUID_version
 
 # 保持向后兼容导出
 ICON = ICON_PATH

@@ -1,14 +1,17 @@
 import asyncio
 import logging
-from typing import Any, Callable, Coroutine
+from collections.abc import Coroutine
 from functools import wraps
+from typing import Any, Callable
 
 from .const import ERROR_MESSAGE
 
 logger = logging.getLogger("DeltaUID")
 
 
-def handle_errors(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
+def handle_errors(
+    func: Callable[..., Coroutine[Any, Any, Any]],
+) -> Callable[..., Coroutine[Any, Any, Any]]:
     """统一异常处理装饰器 - 捕获异常并返回友好错误消息"""
 
     @wraps(func)
@@ -22,7 +25,7 @@ def handle_errors(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[...
             logger.exception(f"[Connection] 函数 {func.__name__} 连接失败")
             return "网络好像出问题了，等下再试吧~"
         except Exception as e:
-            logger.exception(f"[Error] 函数 {func.__name__} 发生异常: {str(e)}")
+            logger.exception(f"[Error] 函数 {func.__name__} 发生异常: {e!s}")
             return ERROR_MESSAGE
 
     return wrapper
@@ -31,7 +34,9 @@ def handle_errors(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[...
 def retry(retries: int = 3, delay: float = 1.0) -> Callable[..., Any]:
     """重试装饰器 - 失败后自动重试指定次数"""
 
-    def decorator(func: Callable[..., Coroutine[Any, Any, Any]]) -> Callable[..., Coroutine[Any, Any, Any]]:
+    def decorator(
+        func: Callable[..., Coroutine[Any, Any, Any]],
+    ) -> Callable[..., Coroutine[Any, Any, Any]]:
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
             last_exception: Exception | None = None
@@ -40,7 +45,9 @@ def retry(retries: int = 3, delay: float = 1.0) -> Callable[..., Any]:
                     return await func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    logger.warning(f"[Retry] 函数 {func.__name__} 第 {attempt + 1} 次尝试失败: {str(e)}")
+                    logger.warning(
+                        f"[Retry] 函数 {func.__name__} 第 {attempt + 1} 次尝试失败: {e!s}"
+                    )
                     if attempt < retries - 1:
                         await asyncio.sleep(delay)
 
